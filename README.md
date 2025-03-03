@@ -6,6 +6,8 @@ Funktionen:
 - ✅ Erstellen und Verwalten von Mahlzeiten für das Lager
 - ✅ Automatische Berechnung von Zutatenmengen basierend auf der Teilnehmerzahl
 - ✅ Generierung von Einkaufslisten
-- ✅ Anpassbare Rezepte und Portionsgrößen
+- ✅ Zuordnung von Teilnehmern zu verschiedenen Mahlzeiten
 
 Die App erleichtert die Küchenplanung und sorgt dafür, dass alle satt werden – ohne unnötigen Aufwand! 🚀
+
+Die App basiert dabei auf dem hier erhältlichem Futterbock: https://bockbuecher.de/futterbock

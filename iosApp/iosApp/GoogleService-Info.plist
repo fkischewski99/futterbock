@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyDe6_5KQvMsB1d1GiZIp4qrGq78jJX6h2s</string>
+	<key>GCM_SENDER_ID</key>
+	<string>514355224867</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>org.futterbock.app.Futterbock-App</string>
+	<key>PROJECT_ID</key>
+	<string>futterbockapp-13404</string>
+	<key>STORAGE_BUCKET</key>
+	<string>futterbockapp-13404.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:514355224867:ios:06e3729512aee17283ec96</string>
+</dict>
+</plist>

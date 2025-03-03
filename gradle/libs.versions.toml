@@ -1,0 +1,75 @@
+[versions]
+agp = "8.3.2"
+android-compileSdk = "34"
+android-minSdk = "24"
+android-targetSdk = "34"
+androidx-activityCompose = "1.9.3"
+androidx-appcompat = "1.7.0"
+androidx-constraintlayout = "2.2.0"
+androidx-core-ktx = "1.15.0"
+androidx-espresso-core = "3.6.1"
+androidx-material = "1.12.0"
+androidx-test-junit = "1.2.1"
+androidx-lifecycle = "2.8.7"
+compose-plugin = "1.7.1"
+junit = "4.13.2"
+kermit = "2.0.4"
+kotlin = "2.0.20"
+compose-dnd = "0.2.0"
+voyager = "1.1.0-beta01"
+koin = "3.6.0-alpha3"
+koin-compose = "1.2.0-Beta5"
+compose = "1.7.8"
+kotlin-x-datetime = "0.6.0"
+kotlin-x-coroutines = "1.9.0-RC.2"
+androidx-navigation = "2.8.0-alpha10"
+kotlinx-serialization-plugin = "2.0.20"
+kotlinx-serialization = "1.7.2"
+pdfbox = "3.0.2"
+google-services = "4.4.2"
+firebase-bom = "33.9.0"
+gitlive = "2.1.0"
+junitJupiter = "5.8.1"
+buildkonfig = "0.16.0"
+
+[libraries]
+kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core-ktx" }
+androidx-test-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-junit" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "androidx-espresso-core" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "androidx-appcompat" }
+androidx-material = { group = "com.google.android.material", name = "material", version.ref = "androidx-material" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "androidx-constraintlayout" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
+koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin-compose" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlin-x-datetime" }
+kotlinx-couroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-x-coroutines" }
+androidx-navigation = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+pdfbox = { group = "org.apache.pdfbox", name = "pdfbox", version.ref = "pdfbox" }
+kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlin-x-coroutines" }
+
+#Preview
+compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
+#firebase
+android-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
+gitlive-firebase-firestore = { group = "dev.gitlive", name = "firebase-firestore", version.ref = "gitlive" }
+gitlive-firebase-auth = { group = "dev.gitlive", name = "firebase-auth", version.ref = "gitlive" }
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junitJupiter" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+androidLibrary = { id = "com.android.library", version.ref = "agp" }
+jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinx-serialization-plugin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
+kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotlin" }
+buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }

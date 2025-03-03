@@ -1,0 +1,7 @@
+<resources>
+    <string name="email">E-Mail</string>
+    <string name="login_submit">Anmelden</string>
+    <string name="register_prefix">Noch keinen Account?</string>
+    <string name="register_link">Hier registrieren</string>
+    <string name="stamm">Stamm</string>
+</resources>

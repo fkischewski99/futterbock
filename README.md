@@ -11,3 +11,5 @@ Funktionen:
 Die App erleichtert die Küchenplanung und sorgt dafür, dass alle satt werden – ohne unnötigen Aufwand! 🚀
 
 Die App basiert dabei auf dem hier erhältlichem Futterbock: https://bockbuecher.de/futterbock
+
+Fragen oder Feedback gerne an: <a href="mailto:kontakt@bockbuecher.de">kontakt@bockbuecher.de</a>

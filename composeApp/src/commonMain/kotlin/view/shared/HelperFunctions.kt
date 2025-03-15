@@ -46,6 +46,11 @@ class HelperFunctions {
             return "" + date.dayOfMonth + "." + date.monthNumber + "." + date.year;
         }
 
+        fun dateToNumberString(date: LocalDate): String {
+            return "" + date.dayOfMonth.toString().padStart(2, '0') + date.monthNumber.toString()
+                .padStart(2, '0') + date.year;
+        }
+
         fun formatDate(date: Instant): String {
             return formatLongDate(date.epochSeconds * 1000);
         }
@@ -61,6 +66,17 @@ class HelperFunctions {
             val localDate = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
             return getInstant(localDate)
 
+        }
+
+        fun parseDate(dateString: String): Instant {
+            require(dateString.length == 8) { "Invalid date format" }
+
+            val day = dateString.substring(0, 2).toInt()
+            val month = dateString.substring(2, 4).toInt()
+            val year = dateString.substring(4, 8).toInt()
+
+            val localDate = LocalDate(year, month, day)
+            return localDate.atStartOfDayIn(TimeZone.currentSystemDefault())
         }
     }
 }

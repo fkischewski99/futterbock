@@ -46,6 +46,8 @@ import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
 import view.shared.date.DatePickerDialog
+import view.shared.date.PastOrPresentSelectableDates
+import view.shared.date.dateinputfield.DateInputField
 import view.theme.AppTheme
 
 @Composable
@@ -125,10 +127,14 @@ fun NewParicipant(
                             )
                         }
                         Row {
-                            OutlinedTextField(
-                                value = if (state.data.birthDate == null) "" else {
-                                    HelperFunctions.formatDate(state.data.birthDate)
+                            DateInputField(
+                                date = state.data.birthDate,
+                                onDateChange = { dateAsInstant ->
+                                    ActionsNewParticipant.SelectBirthDate(dateAsInstant.toEpochMilliseconds())
                                 },
+                                label = "Geburtsdatum:",
+                                selectableDates = PastOrPresentSelectableDates,
+                                selecteableDateError = "Geburtsdatum darf nicht in der Zukunft liegen",
                                 trailingIcon = {
                                     IconButton(
                                         onClick = {
@@ -142,12 +148,6 @@ fun NewParicipant(
                                         )
                                     }
                                 },
-                                label = { Text("Geburtsdatum:") },
-                                onValueChange = { },
-                                readOnly = true,
-                                enabled = true,
-                                modifier = Modifier
-                                    .padding(8.dp).height(IntrinsicSize.Min).fillMaxWidth()
                             )
 
                         }

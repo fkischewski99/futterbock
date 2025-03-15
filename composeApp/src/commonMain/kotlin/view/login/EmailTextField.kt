@@ -1,6 +1,7 @@
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -22,7 +23,7 @@ fun EmailTextField(
     loading: Boolean,
     onNext: () -> Unit = {},
 ) {
-    TextField(
+    OutlinedTextField(
         value = email,
         onValueChange = onEmailChange,
         label = { Text(text = stringResource(Res.string.email)) },

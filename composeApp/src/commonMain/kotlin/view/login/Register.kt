@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -111,14 +112,13 @@ fun Register(
     }) {
         Column(
             modifier = Modifier.fillMaxSize().navigationBarsPadding().imePadding()
-                .verticalScroll(rememberScrollState()).padding(16.dp)
-                .clickable { focusManager.clearFocus() },
+                .verticalScroll(rememberScrollState()).padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
             Image(
                 painter = painterResource(Res.drawable.startPage),
-                contentDescription = "logo",
+                contentDescription = "futterbock",
             )
             Spacer(modifier = Modifier.padding(8.dp))
             EmailTextField(
@@ -141,14 +141,12 @@ fun Register(
                 password = password,
                 onPasswordChange = { value: String -> password = value },
                 loading = loading,
-                onDone = { focusManager.clearFocus() },
             )
             Spacer(modifier = Modifier.padding(4.dp))
             PasswordTextField(
                 password = passwordConfirm,
                 onPasswordChange = { value: String -> passwordConfirm = value },
                 loading = loading,
-                onDone = { focusManager.clearFocus() },
                 passwordName = "Passwort bestätigen"
             )
             Spacer(modifier = Modifier.padding(8.dp))
@@ -180,7 +178,7 @@ fun GroupTextField(
     loading: Boolean,
     onNext: () -> Unit = {},
 ) {
-    TextField(
+    OutlinedTextField(
         value = group,
         onValueChange = onStammChange,
         label = { Text(text = stringResource(Res.string.stamm)) },

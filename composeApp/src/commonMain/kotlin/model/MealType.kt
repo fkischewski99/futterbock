@@ -5,6 +5,4 @@ enum class MealType(val stringValue: String) {
     MITTAG("MITTAG"),
     ABENDESSEN("ABENDESSEN"),
     SNACK("SNACK");
-
-
 }

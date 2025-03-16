@@ -39,7 +39,7 @@ object EatingHabitSerializer : KSerializer<EatingHabit> {
         val entry = EatingHabit.entries.find { it.name.lowercase() == value.lowercase() }
         if (entry != null)
             return entry
-        Logger.e("IngredientUnit with the name: $value has no matching enum")
+        Logger.e("EatingHabit with the name: $value has no matching enum")
         return EatingHabit.OMNIVORE
     }
 }

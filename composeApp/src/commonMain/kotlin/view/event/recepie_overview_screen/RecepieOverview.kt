@@ -123,6 +123,13 @@ fun RecipeDetails(recipeSelection: RecipeSelection) {
                     label = "Saison:",
                     text = recipeSelection.recipe!!.season.joinToString { season: Season -> season.displayName })
             }
+            if (recipeSelection.recipe!!.season.isNotEmpty()) {
+                println(recipeSelection.recipe!!.season)
+                CaptionedText(
+                    label = "Rezeptart:",
+                    text = recipeSelection.recipe!!.dietaryHabit.toString()
+                )
+            }
             if (recipeSelection.recipe!!.type.isNotEmpty()) {
                 CaptionedText(
                     label = "Rezeptart:",

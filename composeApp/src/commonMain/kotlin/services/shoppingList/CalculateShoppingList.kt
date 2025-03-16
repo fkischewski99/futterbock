@@ -18,7 +18,7 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
         val map: MutableMap<String, ShoppingIngredient> = HashMap()
         addExistingIngredients(shoppingIngredients, map)
         addAllAmounts(eventId, map)
-        return map.values.toList()
+        return map.values.toList().sortedBy { it.ingredient?.name }
     }
 
 

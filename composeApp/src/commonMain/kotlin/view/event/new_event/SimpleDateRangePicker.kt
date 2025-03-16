@@ -60,7 +60,7 @@ fun SimpleDateRangePickerInDatePickerDialog(
             label = "Start:",
         )
         DateInputField(
-            date = from,
+            date = to,
             onDateChange = { dateAsInstant ->
                 onSelect(
                     from?.toEpochMilliseconds() ?: Clock.System.now()

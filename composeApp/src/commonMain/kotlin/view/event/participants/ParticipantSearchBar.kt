@@ -97,7 +97,7 @@ fun ParticipantSearchBar(
                     SearchBar(
                         modifier = Modifier.fillMaxWidth(),
                         query = searchText,
-                        placeholder = { Text(text = "Teilnehmer hinzufügen") },
+                        placeholder = { Text(text = "Teilnehmende hinzufügen") },
                         onQueryChange = {
                             searchText = it
                         },
@@ -211,7 +211,7 @@ fun ParticipantSearchBar(
                                         imageVector = Icons.Default.Add,
                                         contentDescription = "Add Icon"
                                     )
-                                    Text("Teilnehmer anlegen       ")
+                                    Text("Teilnehmende anlegen       ")
                                 }
                                 ExtendedFloatingActionButton(
                                     onClick = {
@@ -226,7 +226,7 @@ fun ParticipantSearchBar(
                                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                         contentDescription = "Add Icon"
                                     )
-                                    Text("Teilnehmer übernehmen")
+                                    Text("Teilnehmende übernehmen")
                                 }
                             }
                         }

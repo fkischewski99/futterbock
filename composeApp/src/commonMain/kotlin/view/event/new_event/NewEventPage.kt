@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -125,10 +126,11 @@ fun NewEventPage(
                                 value = "" + sharedState.data.participantList.size,
                                 readOnly = true,
                                 onValueChange = { },
-                                label = { Text("Teilnehmeranzahl:") },
+                                supportingText = { Text("Änderung über Teilnehmenden-Icon") },
+                                label = { Text("Teilnehmendenanzahl:") },
                                 modifier = Modifier.padding(8.dp),
                                 trailingIcon = {
-                                    IconButton(
+                                    TextButton(
                                         // Calendar icon to open DatePicker
                                         onClick = {
                                             onAction(

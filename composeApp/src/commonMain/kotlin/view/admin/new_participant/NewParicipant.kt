@@ -89,7 +89,7 @@ fun NewParicipant(
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(title = {
-                    Text(text = "Teilnehmer bearbeiten")
+                    Text(text = "Teilnehmende bearbeiten")
                 }, navigationIcon = {
                     NavigationIconButton(onLeave = { onAction(ActionsNewParticipant.GoBack) })
                 })

@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import getPlatformName
 import kotlinx.coroutines.delay
 import model.Event
 import org.koin.compose.koinInject
@@ -275,11 +277,16 @@ private fun sharePdfButton(onAction: (BaseAction) -> Unit) {
         modifier = Modifier.clip(shape = RoundedCornerShape(75))
             .background(MaterialTheme.colorScheme.tertiary),
     ) {
+        val imageVector = when (getPlatformName()) {
+            "desktop" -> Icons.Default.Save
+            else -> Icons.Default.Share
+        }
         Icon(
-            imageVector = Icons.Default.Share,
+            imageVector = imageVector,
             contentDescription = "Printer Icon",
             tint = MaterialTheme.colorScheme.onTertiary
         )
+
     }
 }
 

@@ -46,7 +46,10 @@ actual class PdfServiceImpl {
     private val pdfFileURL = NSURL.fileURLWithPath(pdfFilePath)
 
     @OptIn(ExperimentalForeignApi::class)
-    actual fun createPdf(shoppingList: Map<String, List<ShoppingIngredient>>) {
+    actual fun createPdf(
+        shoppingList: Map<String, List<ShoppingIngredient>>,
+        materialList: Map<String, Int>
+    ) {
         val pdfData = NSMutableData()
 
         // Define PDF context

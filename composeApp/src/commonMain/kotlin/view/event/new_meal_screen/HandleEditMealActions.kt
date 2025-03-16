@@ -161,7 +161,7 @@ class HandleEditMealActions(
                 mealsGroupedByDate = groupMealsByDate(
                     currentState.event.from,
                     currentState.event.to,
-                    currentState.mealList
+                    newMealList
                 )
             )
         )

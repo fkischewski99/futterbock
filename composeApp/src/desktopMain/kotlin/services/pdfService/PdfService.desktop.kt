@@ -22,7 +22,10 @@ private const val PDF_PAGE_HEIGHT = 842 // 11.69 Inch
 actual class PdfServiceImpl {
     var currentDocument: PDDocument? = null
 
-    actual fun createPdf(shoppingList: Map<String, List<ShoppingIngredient>>) {
+    actual fun createPdf(
+        shoppingList: Map<String, List<ShoppingIngredient>>,
+        materialList: Map<String, Int>
+    ) {
         val document = PDDocument()
         var page = PDPage()
         document.addPage(page)
@@ -30,18 +33,11 @@ actual class PdfServiceImpl {
         var contentStream = PDPageContentStream(document, page)
         val fontNameHeading = Standard14Fonts.getMappedFontName("Helvetica-Bold")
         val pdfFontHeading: PDFont = PDType1Font(fontNameHeading)
-        contentStream.setFont(pdfFontHeading, 24f)
 
         // Draw the heading
-        contentStream.beginText()
-        contentStream.newLineAtOffset(80f, PDF_PAGE_HEIGHT - 100F)
-        contentStream.showText("Einkaufsliste")
-        contentStream.endText()
-
-        var yPosition = PDF_PAGE_HEIGHT - 150F // Adjust yPosition for the next line
-        val fontName = Standard14Fonts.getMappedFontName("Helvetica")
-        val pdfFont: PDFont = PDType1Font(fontName)
-        contentStream.setFont(pdfFont, 12f)
+        val pair = setTitleOfCurrentPage(contentStream, "Einkaufsliste")
+        var yPosition = pair.first // Adjust yPosition for the next line
+        val pdfFont: PDFont = pair.second
 
         // Draw category headers and ingredients
         for ((category, ingredients) in shoppingList) {
@@ -77,9 +73,65 @@ actual class PdfServiceImpl {
             yPosition -= 10f
         }
 
+        createMaterialList(document = document, materialList = materialList)
+
 
         contentStream.close()
         currentDocument = document
+    }
+
+    private fun setTitleOfCurrentPage(
+        contentStream: PDPageContentStream,
+        title: String
+    ): Pair<Float, PDFont> {
+        val fontNameHeading = Standard14Fonts.getMappedFontName("Helvetica-Bold")
+        val pdfFontHeading: PDFont = PDType1Font(fontNameHeading)
+        contentStream.setFont(pdfFontHeading, 24f)
+
+        contentStream.beginText()
+        contentStream.newLineAtOffset(80f, PDF_PAGE_HEIGHT - 100F)
+        contentStream.showText(title)
+        contentStream.endText()
+
+        var yPosition = PDF_PAGE_HEIGHT - 150F // Adjust yPosition for the next line
+        val fontName = Standard14Fonts.getMappedFontName("Helvetica")
+        val pdfFont: PDFont = PDType1Font(fontName)
+        contentStream.setFont(pdfFont, 12f)
+        return Pair(yPosition, pdfFont)
+    }
+
+    private fun createMaterialList(
+        document: PDDocument,
+        materialList: Map<String, Int>,
+    ) {
+        var page = PDPage()
+        document.addPage(page)
+        var contentStream =
+            PDPageContentStream(document, page) // Create a new content stream
+        val pair = setTitleOfCurrentPage(contentStream, "Materialliste")
+        var yPosition = pair.first // Adjust yPosition for the next line
+        val pdfFont: PDFont = pair.second
+        contentStream.setFont(pdfFont, 12f)
+
+        materialList.forEach { (material, count) ->
+            contentStream.beginText()
+            contentStream.newLineAtOffset(80f, yPosition)
+            contentStream.showText("[  ] ${count}x $material") // Print each ingredient
+            contentStream.endText()
+            yPosition -= 20f // Move to the next line
+
+            // Check for page overflow
+            if (yPosition < 40f) { // Create a new page if there's no space left
+                page = PDPage()
+                document.addPage(page)
+                contentStream.close()
+                contentStream =
+                    PDPageContentStream(document, page) // Create a new content stream
+                contentStream.setFont(pdfFont, 12f) // Reset font on new page
+                yPosition = PDF_PAGE_HEIGHT - 100F // Reset yPosition for new page
+            }
+        }
+        contentStream.close()
     }
 
     actual fun sharePdf() {

@@ -22,7 +22,10 @@ actual class PdfServiceImpl(
 ) {
     private var currentDocument: PdfDocument? = null;
 
-    actual fun createPdf(shoppingList: Map<String, List<ShoppingIngredient>>) {
+    actual fun createPdf(
+        shoppingList: Map<String, List<ShoppingIngredient>>,
+        materialList: Map<String, Int>
+    ) {
         val document = PdfDocument()
         var pageNumber = 1
         var pageInfo =

@@ -26,7 +26,7 @@ class Recipe {
 
     var season: List<Season> = listOf()
 
-    private val foodIntolerance: List<FoodIntolerance> = listOf()
+    private val foodIntolerances: List<FoodIntolerance> = listOf()
 
     var source: String = ""
 
@@ -49,7 +49,7 @@ class Recipe {
         // Apply Filters
         if (filterForEatingHabit != null && !dietaryHabit.matches(filterForEatingHabit))
             return false
-        if (!foodIntolerance.containsAll(filterForFoodIntolerance)) {
+        if (!foodIntolerances.containsAll(filterForFoodIntolerance)) {
             return false
         }
         if (filterForPrice != null && price != filterForPrice)

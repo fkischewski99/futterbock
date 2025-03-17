@@ -1,10 +1,14 @@
 package services.pdfService
 
 import org.koin.core.component.KoinComponent
+import services.materiallist.CalculateMaterialList
 import services.shoppingList.CalculateShoppingList
 import services.shoppingList.groupIngredientByCategory
 
-class PdfServiceModule(private val calculateShoppingList: CalculateShoppingList) : KoinComponent {
+class PdfServiceModule(
+    private val calculateShoppingList: CalculateShoppingList,
+    private val calculateMaterialList: CalculateMaterialList
+) : KoinComponent {
     private var pdfService: PdfServiceImpl? = null;
 
     fun setPdfService(pdfService: PdfServiceImpl) {
@@ -16,7 +20,8 @@ class PdfServiceModule(private val calculateShoppingList: CalculateShoppingList)
             return
         }
         val shoppingIngredients = calculateShoppingList.calculate(eventId)
-        pdfService!!.createPdf(groupIngredientByCategory(shoppingIngredients));
+        val materialList = calculateMaterialList.calculate(eventId)
+        pdfService!!.createPdf(groupIngredientByCategory(shoppingIngredients), materialList);
         pdfService!!.sharePdf()
     }
 }

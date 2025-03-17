@@ -35,6 +35,10 @@ class CategorizedShoppingListViewModel(
             is EditShoppingListActions.ToggleShoppingDone -> toggleShoppingDone(
                 editShoppingListActions.shoppingIngredient
             )
+
+            is EditShoppingListActions.Initialize -> initializeShoppingList(
+                editShoppingListActions.eventId
+            )
         }
     }
 

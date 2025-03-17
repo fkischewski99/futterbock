@@ -73,7 +73,7 @@ fun ParticipantPage(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Teilnehmerliste") },
+                title = { Text("Teilnehmendeliste") },
                 navigationIcon = {
                     NavigationIconButton(
                         onLeave = {
@@ -99,7 +99,7 @@ fun ParticipantPage(
                         modifier = Modifier.padding(8.dp).verticalScroll(rememberScrollState())
                     ) {
                         CardWithList(
-                            title = "Teilnehmer",
+                            title = "Teilnehmende",
                             listItems = state.data.participantList,
                             onListItemClick = { item ->
                                 showDatePicker = true

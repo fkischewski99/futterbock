@@ -22,6 +22,9 @@ interface Routes {
     data class ShoppingList(val eventId: String) : Routes
 
     @Serializable
+    object MaterialList : Routes
+
+    @Serializable
     class RecipeOverview(val recipeRef: String) : Routes
 
     @Serializable

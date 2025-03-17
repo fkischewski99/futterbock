@@ -27,7 +27,7 @@ object RangeSerializer : KSerializer<Range> {
         PrimitiveSerialDescriptor("IngredientUnit", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: Range) {
-        encoder.encodeString(value.name)
+        encoder.encodeString(value.displayName)
     }
 
     override fun deserialize(decoder: Decoder): Range {

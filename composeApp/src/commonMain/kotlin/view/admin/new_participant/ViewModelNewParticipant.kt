@@ -56,7 +56,7 @@ class ViewModelNewParticipant(
                 eventRepository.createNewParticipant(participant)
             } catch (e: Exception) {
                 Logger.e("" + e.message)
-                ResultState.Error("Fehler beim anlegen des Teilnehmers")
+                ResultState.Error("Fehler beim anlegen des Teilnehmenden")
             }
             initializeScreenWithNewParticipant()
         }

@@ -1,7 +1,6 @@
 package view.event.new_event
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -17,7 +16,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,9 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import view.shared.date.DateRangePickerDialog
 import view.shared.HelperFunctions
+import view.shared.date.DateRangePickerDialog
+import view.shared.date.dateinputfield.DateInputField
 
 @Composable
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
@@ -48,31 +48,27 @@ fun SimpleDateRangePickerInDatePickerDialog(
         horizontalArrangement = Arrangement.Start,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        OutlinedTextField(
-            value = "" + from?.let { date ->
-                HelperFunctions.formatDate(date)
+        DateInputField(
+            date = from,
+            onDateChange = { dateAsInstant ->
+                onSelect(
+                    dateAsInstant.toEpochMilliseconds(),
+                    to?.toEpochMilliseconds() ?: Clock.System.now()
+                        .toEpochMilliseconds()
+                )
             },
-            label = { Text("Start:") },
-            onValueChange = { },
-            readOnly = true,
-            enabled = true,
-            modifier = Modifier
-                .padding(8.dp).height(IntrinsicSize.Min).clickable {
-                    if (isEditable) {
-                        showDatePicker = true
-                    }
-                }
+            label = "Start:",
         )
-        OutlinedTextField(
-            value = "" + to?.let { date ->
-                HelperFunctions.formatDate(date)
+        DateInputField(
+            date = to,
+            onDateChange = { dateAsInstant ->
+                onSelect(
+                    from?.toEpochMilliseconds() ?: Clock.System.now()
+                        .toEpochMilliseconds(),
+                    dateAsInstant.toEpochMilliseconds()
+                )
             },
-            label = { Text("Ende:") },
-            onValueChange = { },
-            readOnly = true,
-            enabled = true,
-            modifier = Modifier
-                .padding(8.dp).height(IntrinsicSize.Min)
+            label = "Ende:",
         )
         Button(
             // Calendar icon to open DatePicker

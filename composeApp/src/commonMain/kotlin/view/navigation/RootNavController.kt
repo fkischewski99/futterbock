@@ -12,6 +12,7 @@ import data.EventRepository
 import org.koin.compose.koinInject
 import services.login.LoginAndRegister
 import view.admin.new_participant.NewParticipantScreen
+import view.event.categorized_shopping_list.MaterialListScreen
 import view.event.categorized_shopping_list.ShoppingList
 import view.event.categorized_shopping_list.ShoppingListScreen
 import view.event.homescreen.EventOverviewScreen
@@ -81,6 +82,9 @@ fun RootNavController(
             }
             composable<Routes.ShoppingList> {
                 ShoppingListScreen(navController)
+            }
+            composable<Routes.MaterialList> {
+                MaterialListScreen(navController)
             }
         }
     }

@@ -38,6 +38,7 @@ import futterbock_app.composeapp.generated.resources.zeitangabe2
 import futterbock_app.composeapp.generated.resources.zeitangabe3
 import model.Range
 import model.RecipeSelection
+import model.RecipeType
 import model.Season
 import model.ShoppingIngredient
 import model.TimeRange
@@ -126,14 +127,14 @@ fun RecipeDetails(recipeSelection: RecipeSelection) {
             if (recipeSelection.recipe!!.season.isNotEmpty()) {
                 println(recipeSelection.recipe!!.season)
                 CaptionedText(
-                    label = "Rezeptart:",
+                    label = "Essgewohnheit:",
                     text = recipeSelection.recipe!!.dietaryHabit.toString()
                 )
             }
             if (recipeSelection.recipe!!.type.isNotEmpty()) {
                 CaptionedText(
                     label = "Rezeptart:",
-                    text = recipeSelection.recipe!!.type.joinToString { "," })
+                    text = recipeSelection.recipe!!.type.joinToString { type: RecipeType -> type.displayName })
             }
             CaptionedText(
                 label = "Futterbock Seite:",

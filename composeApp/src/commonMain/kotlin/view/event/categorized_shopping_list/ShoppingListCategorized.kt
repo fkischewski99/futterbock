@@ -49,7 +49,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import model.Ingredient
 import model.ShoppingIngredient
+import model.Source
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
 import view.event.actions.BaseAction
@@ -93,58 +95,35 @@ fun ShoppingListCategorized(
     )
     // Inject view Model
     if (state is ResultState.Success) {
-        BottomSheetScaffold(
-            sheetPeekHeight = 128.dp,
-            sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-            sheetContent = {
+        BottomSheetWithSearchBar(
+            items = state.data.currentList,
+            onItemAdded = {},
+            content = {
                 Column(
-                    Modifier.onGloballyPositioned {
-                        bottomSheetHeight = with(density) {
-                            it.size.height.toDp()
-                        }
-                    }
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                        .padding(
+                            start = 8.dp,
+                            bottom = 24.dp,
+                            end = 8.dp
+                        )
                 ) {
-                    SearchBarComponent(
-                        items = state.data.currentList,
-                        onItemAdded = {}
-                    )
+
+                    state.data.ingredientsByCategory.forEach { (category, ingredients) ->
+                        ShoppingList(ingredients, category,
+                            onCheckboxClicked = {
+                                onAction(EditShoppingListActions.ToggleShoppingDone(it))
+                            })
+                    }
                 }
             },
-            scaffoldState = scaffoldState,
-            topBar = {
-                TopAppBar(title = {
-                    Text(text = "Einkaufsliste")
-                }, navigationIcon = {
-                    NavigationIconButton(
-                        onLeave = {
-                            onAction(EditShoppingListActions.SaveToEvent)
-                            onAction(NavigationActions.GoBack)
-                        }
+            listItemFromString = { text ->
 
-                    )
-                })
-            }) {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState())
-                    .padding(
-                        top = it.calculateTopPadding(),
-                        start = 8.dp,
-                        bottom = 24.dp,
-                        end = 8.dp
-                    )
-            ) {
-
-                state.data.ingredientsByCategory.forEach { (category, ingredients) ->
-                    ShoppingList(ingredients, category,
-                        onCheckboxClicked = {
-                            onAction(EditShoppingListActions.ToggleShoppingDone(it))
-                        })
-                }
-
-
+                val ingredient = ShoppingIngredient()
+                ingredient.nameWithoutIngredient = text
+                ingredient.source = Source.ENTERED_BY_USER
+                return@BottomSheetWithSearchBar ingredient
             }
-
-        }
+        )
     } else if (state is ResultState.Loading) {
         MGCircularProgressIndicator()
     } else {

@@ -4,6 +4,7 @@ import CategorizedShoppingListViewModel
 import ShoppingListState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,8 +17,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,8 +30,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,14 +44,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import model.ShoppingIngredient
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
 import view.event.actions.BaseAction
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
+import view.event.new_meal_screen.SearchBarComponent
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
@@ -70,39 +83,72 @@ fun ShoppingListCategorized(
     onAction: (BaseAction) -> Unit,
     state: ResultState<ShoppingListState>,
 ) {
-    // Inject view Model
+    var bottomSheetHeight by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
 
-    Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
-        TopAppBar(title = {
-            Text(text = "Einkaufsliste")
-        }, navigationIcon = {
-            NavigationIconButton(
-                onLeave = {
-                    onAction(EditShoppingListActions.SaveToEvent)
-                    onAction(NavigationActions.GoBack)
+    val scaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberStandardBottomSheetState(
+            initialValue = SheetValue.PartiallyExpanded
+        )
+    )
+    // Inject view Model
+    if (state is ResultState.Success) {
+        BottomSheetScaffold(
+            sheetPeekHeight = 128.dp,
+            sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+            sheetContent = {
+                Column(
+                    Modifier.onGloballyPositioned {
+                        bottomSheetHeight = with(density) {
+                            it.size.height.toDp()
+                        }
+                    }
+                ) {
+                    SearchBarComponent(
+                        items = state.data.currentList,
+                        onItemAdded = {}
+                    )
+                }
+            },
+            scaffoldState = scaffoldState,
+            topBar = {
+                TopAppBar(title = {
+                    Text(text = "Einkaufsliste")
+                }, navigationIcon = {
+                    NavigationIconButton(
+                        onLeave = {
+                            onAction(EditShoppingListActions.SaveToEvent)
+                            onAction(NavigationActions.GoBack)
+                        }
+
+                    )
+                })
+            }) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState())
+                    .padding(
+                        top = it.calculateTopPadding(),
+                        start = 8.dp,
+                        bottom = 24.dp,
+                        end = 8.dp
+                    )
+            ) {
+
+                state.data.ingredientsByCategory.forEach { (category, ingredients) ->
+                    ShoppingList(ingredients, category,
+                        onCheckboxClicked = {
+                            onAction(EditShoppingListActions.ToggleShoppingDone(it))
+                        })
                 }
 
-            )
-        })
-    }) {
-        Column(
-            modifier = Modifier.verticalScroll(rememberScrollState())
-                .padding(top = it.calculateTopPadding(), start = 8.dp, bottom = 24.dp, end = 8.dp)
-        ) {
-            when (state) {
 
-                is ResultState.Success ->
-                    state.data.ingredientsByCategory.forEach { (category, ingredients) ->
-                        ShoppingList(ingredients, category,
-                            onCheckboxClicked = {
-                                onAction(EditShoppingListActions.ToggleShoppingDone(it))
-                            })
-                    }
-
-                is ResultState.Error -> Text("Fehler beim abrufen der Einkaufsliste")
-                ResultState.Loading -> MGCircularProgressIndicator()
             }
+
         }
+    } else if (state is ResultState.Loading) {
+        MGCircularProgressIndicator()
+    } else {
+        Text("Fehler beim abrufen der Einkaufsliste")
     }
 }
 

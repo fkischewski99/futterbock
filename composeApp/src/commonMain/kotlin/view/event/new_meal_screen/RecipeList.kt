@@ -95,7 +95,7 @@ fun RecipeWithMembers(
     LaunchedEffect(recipeSelection) {
         checkedState.clear() // Clear existing states
         participants.forEach { participant ->
-            checkedState[participant.getTitle()] =
+            checkedState[participant.getListItemTitle()] =
                 recipeSelection.eaterIds.contains(participant.participant!!.uid)
         }
     }
@@ -111,7 +111,7 @@ fun RecipeWithMembers(
         ) {
             Checkbox(checked = checkedState.values.all { it }, onCheckedChange = { isChecked ->
                 participants.forEach { member ->
-                    checkedState[member.getTitle()] = isChecked
+                    checkedState[member.getListItemTitle()] = isChecked
                     if (isChecked) {
                         onAction(EditMealActions.AddEaterToRecipe(recipeSelection, member))
                     } else {
@@ -137,9 +137,9 @@ fun RecipeWithMembers(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Checkbox(checked = checkedState[member.getTitle()] ?: false,
+                    Checkbox(checked = checkedState[member.getListItemTitle()] ?: false,
                         onCheckedChange = { isChecked ->
-                            checkedState[member.getTitle()] = isChecked
+                            checkedState[member.getListItemTitle()] = isChecked
                             if (isChecked) {
                                 onAction(EditMealActions.AddEaterToRecipe(recipeSelection, member))
                             } else {
@@ -152,7 +152,7 @@ fun RecipeWithMembers(
                             }
                         })
                     Text(
-                        text = member.getTitle(),
+                        text = member.getListItemTitle(),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f)
                     )

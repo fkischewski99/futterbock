@@ -44,7 +44,6 @@ import view.admin.new_participant.ViewModelNewParticipant
 import view.event.EventState
 import view.event.SharedEventViewModel
 import view.event.actions.BaseAction
-import view.event.actions.EditEventActions
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
 import view.event.new_meal_screen.AllParticipantsViewModel
@@ -138,7 +137,7 @@ fun ParticipantSearchBar(
                                 InputChip(
                                     label = {
                                         Box(contentAlignment = Alignment.CenterStart) {
-                                            Text(text = it.getTitle())
+                                            Text(text = it.getListItemTitle())
                                         }
                                     },
                                     onClick = {

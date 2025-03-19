@@ -2,12 +2,13 @@ package model
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import view.shared.list.ListItem
 import kotlin.math.pow
 import kotlin.math.round
 import kotlin.math.roundToInt
 
 @Serializable
-class ShoppingIngredient() {
+class ShoppingIngredient() : ListItem<ShoppingIngredient> {
     var ingredientRef: String = ""
 
     @Transient
@@ -17,6 +18,22 @@ class ShoppingIngredient() {
     var title: String? = null
     var shoppingDone: Boolean = false;
     var note: String = "";
+
+    override fun getListItemTitle(): String {
+        return ingredient?.name ?: ""
+    }
+
+    override fun getSubtitle(): String {
+        return ""
+    }
+
+    override fun getItem(): ShoppingIngredient {
+        return this
+    }
+
+    override fun getId(): String {
+        return ""
+    }
 
     override fun toString(): String {
         val noteString = if (note != "") ("($note)") else ""

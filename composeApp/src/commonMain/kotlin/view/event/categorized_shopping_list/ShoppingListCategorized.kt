@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import model.Ingredient
 import model.ShoppingIngredient
 import model.Source
 import org.koin.compose.koinInject
@@ -53,6 +54,7 @@ import view.shared.ResultState
 @Composable
 fun ShoppingListScreen(navController: NavHostController) {
     val viewModelShoppingList: CategorizedShoppingListViewModel = koinInject()
+    val viewModelIngredient: IngredientViewModel = koinInject()
     val state = viewModelShoppingList.state.collectAsStateWithLifecycle()
 
     ShoppingListCategorized(
@@ -62,7 +64,8 @@ fun ShoppingListScreen(navController: NavHostController) {
                 is EditShoppingListActions -> viewModelShoppingList.onAction(action)
             }
         },
-        state = state.value
+        state = state.value,
+        ingredientList = viewModelIngredient.state.value
     )
 
 }
@@ -72,58 +75,55 @@ fun ShoppingListScreen(navController: NavHostController) {
 fun ShoppingListCategorized(
     onAction: (BaseAction) -> Unit,
     state: ResultState<ShoppingListState>,
+    ingredientList: List<Ingredient>
 ) {
-    var bottomSheetHeight by remember { mutableStateOf(0.dp) }
-    val density = LocalDensity.current
+    when (state) {
+        is ResultState.Success ->
+            BottomSheetWithSearchBar(
+                items = ingredientList,
+                onItemAdded = { text -> onAction(EditShoppingListActions.AddNewIngredient(text)) },
+                topBar = {
+                    TopAppBar(title = {
+                        Text(text = "Einkaufsliste")
+                    }, navigationIcon = {
+                        NavigationIconButton(
+                            onLeave = {
+                                onAction(EditShoppingListActions.SaveToEvent)
+                                onAction(NavigationActions.GoBack)
+                            }
 
-    val scaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = rememberStandardBottomSheetState(
-            initialValue = SheetValue.PartiallyExpanded
-        )
-    )
-    // Inject view Model
-    if (state is ResultState.Success) {
-        BottomSheetWithSearchBar(
-            items = state.data.currentList,
-            onItemAdded = { text -> onAction(EditShoppingListActions.AddNewIngredient(text)) },
-            topBar = {
-                TopAppBar(title = {
-                    Text(text = "Einkaufsliste")
-                }, navigationIcon = {
-                    NavigationIconButton(
-                        onLeave = {
-                            onAction(EditShoppingListActions.SaveToEvent)
-                            onAction(NavigationActions.GoBack)
-                        }
-
-                    )
-                })
-            },
-            content = {
-                Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState())
-                        .padding(
-                            start = 8.dp,
-                            bottom = 24.dp,
-                            end = 8.dp
                         )
-                ) {
+                    })
+                },
+                content = {
+                    Column(
+                        modifier = Modifier.verticalScroll(rememberScrollState())
+                            .padding(
+                                start = 8.dp,
+                                bottom = 24.dp,
+                                end = 8.dp
+                            )
+                    ) {
 
-                    state.data.ingredientsByCategory.forEach { (category, ingredients) ->
-                        ShoppingList(ingredients, category,
-                            onCheckboxClicked = {
-                                onAction(EditShoppingListActions.ToggleShoppingDone(it))
-                            })
+                        state.data.ingredientsByCategory.forEach { (category, ingredients) ->
+                            ShoppingList(ingredients, category,
+                                onCheckboxClicked = {
+                                    onAction(EditShoppingListActions.ToggleShoppingDone(it))
+                                })
+                        }
                     }
-                }
-            },
-        )
-    } else if (state is ResultState.Loading) {
-        MGCircularProgressIndicator()
-    } else {
-        Text("Fehler beim abrufen der Einkaufsliste")
+                },
+            )
+
+        is ResultState.Loading ->
+            MGCircularProgressIndicator()
+
+        is ResultState.Error -> {
+            Text("Fehler beim abrufen der Einkaufsliste")
+        }
     }
 }
+
 
 @Composable
 fun ShoppingList(

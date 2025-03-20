@@ -50,4 +50,6 @@ interface EventRepository {
     suspend fun getIngredientById(ingredientId: String): Ingredient
     suspend fun saveShoppingList(eventId: String, shoppingList: List<ShoppingIngredient>)
     suspend fun getMealsWithRecipeAndIngredients(eventId: String): List<Meal>
+
+    suspend fun getAllIngredients(): List<Ingredient>
 }

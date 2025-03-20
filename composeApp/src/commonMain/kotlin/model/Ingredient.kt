@@ -1,9 +1,10 @@
 package model
 
 import kotlinx.serialization.Serializable
+import view.shared.list.ListItem
 
 @Serializable
-class Ingredient {
+class Ingredient : ListItem<Ingredient> {
     var uid: String = ""
     var name: String = ""
     var amountHaferl: Double? = null
@@ -15,4 +16,20 @@ class Ingredient {
     var amountWeight: Double? = null
     var unitWeight: IngredientUnit? = null
     var category: String = ""
+
+    override fun getListItemTitle(): String {
+        return name
+    }
+
+    override fun getSubtitle(): String {
+        return category
+    }
+
+    override fun getItem(): Ingredient {
+        return this
+    }
+
+    override fun getId(): String {
+        return ""
+    }
 }

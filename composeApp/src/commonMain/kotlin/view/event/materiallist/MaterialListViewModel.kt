@@ -35,22 +35,28 @@ class MaterialListViewModel(
     val state = _state.asStateFlow()
 
     fun onAction(materialListActions: EditMaterialListActions) {
-        when (materialListActions) {
-            is EditMaterialListActions.Initialize -> {
-                initializeShoppingList(materialListActions.eventId)
-            }
+        try {
 
-            is EditMaterialListActions.Add -> {
-                addMaterialList(materialListActions.materialName)
-            }
 
-            is EditMaterialListActions.SaveMaterialList -> {
-                saveMaterialList()
-            }
+            when (materialListActions) {
+                is EditMaterialListActions.Initialize -> {
+                    initializeShoppingList(materialListActions.eventId)
+                }
 
-            is EditMaterialListActions.Delete -> {
-                deleteMaterial(materialListActions.materialId)
+                is EditMaterialListActions.Add -> {
+                    addMaterialList(materialListActions.materialName)
+                }
+
+                is EditMaterialListActions.SaveMaterialList -> {
+                    saveMaterialList()
+                }
+
+                is EditMaterialListActions.Delete -> {
+                    deleteMaterial(materialListActions.materialId)
+                }
             }
+        } catch (e: Exception) {
+            _state.value = ResultState.Error("Fehler beim Laden der Materialliste")
         }
     }
 

@@ -20,44 +20,49 @@ class HandleEditMealActions(
         currentState: EventState,
         editEventActions: EditMealActions
     ): ResultState<EventState> {
-        return when (editEventActions) {
-            is EditMealActions.ChangeMealType -> changeMealTypeOfEvent(
-                currentState = currentState,
-                mealType = editEventActions.mealType
-            )
+        try {
 
-            is EditMealActions.SelectRecipe -> selectRecipe(
-                currentState = currentState,
-                recipeToAdd = editEventActions.recipie
-            )
+            return when (editEventActions) {
+                is EditMealActions.ChangeMealType -> changeMealTypeOfEvent(
+                    currentState = currentState,
+                    mealType = editEventActions.mealType
+                )
 
-            is EditMealActions.ChangeDateOfMeal -> changeDateOfMeal(
-                currentState = currentState,
-                newDay = editEventActions.newDayOfMeal
-            )
+                is EditMealActions.SelectRecipe -> selectRecipe(
+                    currentState = currentState,
+                    recipeToAdd = editEventActions.recipie
+                )
 
-            is EditMealActions.SaveMeal -> saveMeal(currentState = currentState)
-            is EditMealActions.RemoveEaterFromRecipe -> removeEaterFromRecipe(
-                currentState = currentState,
-                recipeWhereEaterIsToRemoveFrom = editEventActions.recipeSelection,
-                participantToRemove = editEventActions.participantTime
-            )
+                is EditMealActions.ChangeDateOfMeal -> changeDateOfMeal(
+                    currentState = currentState,
+                    newDay = editEventActions.newDayOfMeal
+                )
 
-            is EditMealActions.AddEaterToRecipe -> addEaterToRecipe(
-                currentState = currentState,
-                recipeSelection = editEventActions.recipeSelection,
-                participantTime = editEventActions.participantTime
-            )
+                is EditMealActions.SaveMeal -> saveMeal(currentState = currentState)
+                is EditMealActions.RemoveEaterFromRecipe -> removeEaterFromRecipe(
+                    currentState = currentState,
+                    recipeWhereEaterIsToRemoveFrom = editEventActions.recipeSelection,
+                    participantToRemove = editEventActions.participantTime
+                )
 
-            is EditMealActions.DeleteRecipe -> deleteRecipe(
-                currentState = currentState,
-                recipeSelection = editEventActions.recipeSelection
-            )
+                is EditMealActions.AddEaterToRecipe -> addEaterToRecipe(
+                    currentState = currentState,
+                    recipeSelection = editEventActions.recipeSelection,
+                    participantTime = editEventActions.participantTime
+                )
 
-            else -> {
-                Logger.i(editEventActions.toString())
-                return ResultState.Error("wrong action")
+                is EditMealActions.DeleteRecipe -> deleteRecipe(
+                    currentState = currentState,
+                    recipeSelection = editEventActions.recipeSelection
+                )
+
+                else -> {
+                    Logger.i(editEventActions.toString())
+                    return ResultState.Error("wrong action")
+                }
             }
+        } catch (e: Exception) {
+            return ResultState.Error("Fehler beim bearbeiten der Mahlzeiten")
         }
     }
 

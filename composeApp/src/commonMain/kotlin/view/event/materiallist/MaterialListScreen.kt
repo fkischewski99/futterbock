@@ -41,9 +41,11 @@ import view.event.actions.BaseAction
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
 import view.event.materiallist.EditMaterialListActions
+import view.login.ErrorField
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
+import view.shared.page.ColumnWithPadding
 
 @Composable
 fun MaterialListScreen(navController: NavHostController) {
@@ -97,8 +99,8 @@ fun MaterialList(
 
         }
 
-        is ResultState.Error -> Text("Fehler beim abrufen der Einkaufsliste")
-        ResultState.Loading -> MGCircularProgressIndicator()
+        is ResultState.Error -> ColumnWithPadding { ErrorField(state.message) }
+        ResultState.Loading -> ColumnWithPadding { MGCircularProgressIndicator() }
     }
 }
 

@@ -49,9 +49,11 @@ import org.koin.compose.koinInject
 import view.event.actions.BaseAction
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
+import view.login.ErrorField
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
+import view.shared.page.ColumnWithPadding
 
 @Composable
 fun ShoppingListScreen(navController: NavHostController) {
@@ -125,10 +127,10 @@ fun ShoppingListCategorized(
             )
 
         is ResultState.Loading ->
-            MGCircularProgressIndicator()
+            ColumnWithPadding { MGCircularProgressIndicator() }
 
         is ResultState.Error -> {
-            Text("Fehler beim abrufen der Einkaufsliste")
+            ColumnWithPadding { ErrorField(state.message) }
         }
     }
 }

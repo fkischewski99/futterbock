@@ -61,10 +61,12 @@ import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
 import view.event.categorized_shopping_list.EditShoppingListActions
 import view.event.materiallist.EditMaterialListActions
+import view.login.ErrorField
 import view.navigation.Routes
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
+import view.shared.page.ColumnWithPadding
 
 @Composable
 fun NewEventScreen(
@@ -205,8 +207,12 @@ fun NewEventPage(
                     }
                 }
 
-                else -> {
-                    MGCircularProgressIndicator()
+                is ResultState.Loading -> {
+                    ColumnWithPadding { MGCircularProgressIndicator() }
+                }
+
+                is ResultState.Error -> {
+                    ColumnWithPadding { ErrorField(sharedState.message) }
                 }
             }
         }

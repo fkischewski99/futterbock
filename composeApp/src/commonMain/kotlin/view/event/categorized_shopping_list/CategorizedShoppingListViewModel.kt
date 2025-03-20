@@ -33,23 +33,29 @@ class CategorizedShoppingListViewModel(
     val state = _state.asStateFlow()
 
     fun onAction(editShoppingListActions: EditShoppingListActions) {
-        when (editShoppingListActions) {
-            is EditShoppingListActions.SaveToEvent -> saveListToEvent()
-            is EditShoppingListActions.ToggleShoppingDone -> toggleShoppingDone(
-                editShoppingListActions.shoppingIngredient
-            )
+        try {
 
-            is EditShoppingListActions.Initialize -> initializeShoppingList(
-                editShoppingListActions.eventId
-            )
 
-            is EditShoppingListActions.AddNewIngredient -> addIngredientToList(
-                editShoppingListActions.ingredient
-            )
+            when (editShoppingListActions) {
+                is EditShoppingListActions.SaveToEvent -> saveListToEvent()
+                is EditShoppingListActions.ToggleShoppingDone -> toggleShoppingDone(
+                    editShoppingListActions.shoppingIngredient
+                )
 
-            is EditShoppingListActions.DeleteShoppingItem -> deleteIngredient(
-                editShoppingListActions.shoppingIngredient
-            )
+                is EditShoppingListActions.Initialize -> initializeShoppingList(
+                    editShoppingListActions.eventId
+                )
+
+                is EditShoppingListActions.AddNewIngredient -> addIngredientToList(
+                    editShoppingListActions.ingredient
+                )
+
+                is EditShoppingListActions.DeleteShoppingItem -> deleteIngredient(
+                    editShoppingListActions.shoppingIngredient
+                )
+            }
+        } catch (e: Exception) {
+            _state.value = ResultState.Error("Fehler beim laden der Einkaufsliste")
         }
     }
 

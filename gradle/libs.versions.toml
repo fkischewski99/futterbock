@@ -3,9 +3,9 @@ agp = "8.3.2"
 android-compileSdk = "34"
 android-minSdk = "24"
 android-targetSdk = "34"
-androidx-activityCompose = "1.9.3"
+androidx-activityCompose = "1.10.1"
 androidx-appcompat = "1.7.0"
-androidx-constraintlayout = "2.2.0"
+androidx-constraintlayout = "2.2.1"
 androidx-core-ktx = "1.15.0"
 androidx-espresso-core = "3.6.1"
 androidx-material = "1.12.0"
@@ -27,7 +27,7 @@ kotlinx-serialization-plugin = "2.0.20"
 kotlinx-serialization = "1.7.2"
 pdfbox = "3.0.2"
 google-services = "4.4.2"
-firebase-bom = "33.9.0"
+firebase-bom = "33.10.0"
 gitlive = "2.1.0"
 junitJupiter = "5.8.1"
 buildkonfig = "0.16.0"
@@ -61,6 +61,7 @@ compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview"
 android-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 gitlive-firebase-firestore = { group = "dev.gitlive", name = "firebase-firestore", version.ref = "gitlive" }
 gitlive-firebase-auth = { group = "dev.gitlive", name = "firebase-auth", version.ref = "gitlive" }
+gitlive-firebase-crashlytics = { group = "dev.gitlive", name = "firebase-crashlytics", version.ref = "gitlive" }
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junitJupiter" }
 
 [plugins]

@@ -28,8 +28,4 @@ class Ingredient : ListItem<Ingredient> {
     override fun getItem(): Ingredient {
         return this
     }
-
-    override fun getId(): String {
-        return ""
-    }
 }

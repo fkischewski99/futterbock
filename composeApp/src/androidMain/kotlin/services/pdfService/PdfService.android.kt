@@ -10,6 +10,7 @@ import android.graphics.pdf.PdfDocument.Page
 import android.os.Environment
 import android.provider.MediaStore
 import kotlinx.datetime.Clock
+import model.Material
 import model.ShoppingIngredient
 import java.io.IOException
 
@@ -24,7 +25,7 @@ actual class PdfServiceImpl(
 
     actual fun createPdf(
         shoppingList: Map<String, List<ShoppingIngredient>>,
-        materialList: Map<String, Int>
+        materialList: List<Material>
     ) {
         val document = PdfDocument()
         var pageNumber = 1

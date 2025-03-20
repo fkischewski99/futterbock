@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Instant
 import model.Event
 import model.Ingredient
+import model.Material
 import model.Meal
 import model.Participant
 import model.ParticipantTime
@@ -52,4 +53,8 @@ interface EventRepository {
     suspend fun getMealsWithRecipeAndIngredients(eventId: String): List<Meal>
 
     suspend fun getAllIngredients(): List<Ingredient>
+    suspend fun saveMaterialList(eventId: String, materialList: List<Material>)
+    suspend fun getMaterialListOfEvent(eventId: String): List<Material>
+    suspend fun deleteMaterialById(eventId: String, materialId: String)
+    suspend fun deleteShoppingListItemById(eventId: String, listItemId: String)
 }

@@ -228,7 +228,7 @@ private fun ShoppingAndMaterialList(
                 onAction(EditShoppingListActions.Initialize(sharedState.data.event.uid))
                 onAction(
                     NavigationActions.GoToRoute(
-                        Routes.ShoppingList(sharedState.data.event.getId())
+                        Routes.ShoppingList(sharedState.data.event.uid)
                     )
                 )
             },
@@ -315,7 +315,7 @@ fun topBarEventPage(
                         onAction(EditShoppingListActions.Initialize(sharedState.data.event.uid))
                         onAction(
                             NavigationActions.GoToRoute(
-                                Routes.ShoppingList(sharedState.data.event.getId())
+                                Routes.ShoppingList(sharedState.data.event.uid)
                             )
                         )
                     }

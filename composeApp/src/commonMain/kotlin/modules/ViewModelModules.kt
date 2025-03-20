@@ -20,5 +20,5 @@ val viewModelModules = module {
     single { IngredientViewModel(get()) }
     single { AllParticipantsViewModel(get()) }
     single { RecipeOverviewViewModel(get(), get()) }
-    single { MaterialListViewModel(get()) }
+    single { MaterialListViewModel(get(), get()) }
 }

@@ -1,15 +1,18 @@
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import data.EventRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import model.ShoppingIngredient
+import model.Source
 import services.shoppingList.CalculateShoppingList
 import services.shoppingList.getCategory
 import services.shoppingList.groupIngredientByCategory
 import services.shoppingList.shoppingDone
 import view.event.categorized_shopping_list.EditShoppingListActions
+import view.shared.HelperFunctions
 import view.shared.ResultState
 
 
@@ -43,7 +46,31 @@ class CategorizedShoppingListViewModel(
             is EditShoppingListActions.AddNewIngredient -> addIngredientToList(
                 editShoppingListActions.ingredient
             )
+
+            is EditShoppingListActions.DeleteShoppingItem -> deleteIngredient(
+                editShoppingListActions.shoppingIngredient
+            )
         }
+    }
+
+    private fun deleteIngredient(shoppingIngredient: ShoppingIngredient) {
+        val successData = state.value.getSuccessData() ?: return
+
+        viewModelScope.launch {
+            eventRepository.deleteShoppingListItemById(
+                successData.eventId,
+                shoppingIngredient.uid
+            )
+            val list = successData.currentList.toMutableList()
+            list.remove(shoppingIngredient)
+            _state.value = ResultState.Success(
+                successData.copy(
+                    currentList = list,
+                    ingredientsByCategory = groupIngredientByCategory(list)
+                )
+            )
+        }
+
     }
 
     fun initializeShoppingList(eventId: String) {
@@ -71,6 +98,8 @@ class CategorizedShoppingListViewModel(
         val list = successData.currentList.toMutableList()
         val shoppingIngredient = ShoppingIngredient()
         shoppingIngredient.nameEnteredByUser = ingredient
+        shoppingIngredient.uid = HelperFunctions.generateRandomStringId(20)
+        shoppingIngredient.source = Source.ENTERED_BY_USER
 
         list.add(shoppingIngredient)
         _state.value = ResultState.Success(

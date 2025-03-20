@@ -4,5 +4,4 @@ interface ListItem<T> {
     fun getListItemTitle(): String;
     fun getSubtitle(): String;
     fun getItem(): T
-    fun getId(): String
 }

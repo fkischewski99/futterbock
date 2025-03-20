@@ -34,10 +34,6 @@ class Event(val group: String) : ListItem<Event> {
         return this
     }
 
-    override fun getId(): String {
-        return this.uid
-    }
-
 
 }
 

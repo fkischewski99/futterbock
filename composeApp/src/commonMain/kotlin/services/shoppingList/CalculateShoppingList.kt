@@ -140,6 +140,7 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
             val ingredientKey =
                 if (shopIngredient.nameEnteredByUser != "") shopIngredient.nameEnteredByUser else shopIngredient.ingredientRef
             val newShoppingIngredient = ShoppingIngredient().apply {
+                uid = shopIngredient.uid
                 ingredient = shopIngredient.ingredient
                 ingredientRef = shopIngredient.ingredientRef
                 unit = shopIngredient.unit

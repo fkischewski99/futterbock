@@ -24,8 +24,4 @@ data class Meal(
     override fun getItem(): Meal {
         return this
     }
-
-    override fun getId(): String {
-        return uid
-    }
 }

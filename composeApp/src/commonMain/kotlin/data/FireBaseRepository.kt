@@ -7,20 +7,19 @@ import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import model.Event
 import model.Ingredient
+import model.Material
 import model.Meal
 import model.Participant
 import model.ParticipantTime
 import model.Recipe
 import model.ShoppingIngredient
+import model.Source
 import services.login.LoginAndRegister
-import view.navigation.Routes
-import view.shared.HelperFunctions
 import view.shared.HelperFunctions.Companion.generateRandomStringId
 import kotlin.time.Duration.Companion.days
 
@@ -31,6 +30,7 @@ private const val INGREDIENT = "INGREDIENTS"
 private const val RECIPES = "RECIPE"
 private const val PARTICIPANTS = "PARTICIPANTS"
 private const val SHOPPING_LIST = "SHOPPING_LIST"
+private const val MATERIAL_LIST = "MATERIAL_LIST"
 
 class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : EventRepository {
     private val firestore = Firebase.firestore
@@ -119,6 +119,41 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         }.toCollection(ArrayList())
     }
 
+    override suspend fun saveMaterialList(eventId: String, materialList: List<Material>) {
+        coroutineScope {
+            materialList.map { material ->
+                async {
+                    firestore.collection(EVENTS).document(eventId).collection(MATERIAL_LIST)
+                        .document(material.uid).set(material)
+                }
+            }
+        }
+    }
+
+    override suspend fun getMaterialListOfEvent(eventId: String): List<Material> {
+        return firestore.collection(EVENTS).document(eventId)
+            .collection(MATERIAL_LIST)
+            .get().documents.map { querySnapshot ->
+                querySnapshot.data { }
+            }
+    }
+
+    override suspend fun deleteMaterialById(eventId: String, materialId: String) {
+        firestore.collection(EVENTS)
+            .document(eventId)
+            .collection(MATERIAL_LIST)
+            .document(materialId)
+            .delete()
+    }
+
+    override suspend fun deleteShoppingListItemById(eventId: String, listItemId: String) {
+        firestore.collection(EVENTS)
+            .document(eventId)
+            .collection(SHOPPING_LIST)
+            .document(listItemId)
+            .delete()
+    }
+
     override suspend fun getAllMealsOfEvent(eventId: String): List<Meal> {
         val mealList: List<Meal> = firestore.collection(EVENTS).document(eventId)
             .collection(MEALS).get().documents
@@ -155,13 +190,13 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         coroutineScope {
             shoppingList.map { shoppingIngredient ->
                 async {
-                    if (shoppingIngredient.note != "") {
+                    if (shoppingIngredient.note != "" && shoppingIngredient.source == Source.COMPUTED) {
                         firestore.collection(EVENTS).document(eventId).collection(SHOPPING_LIST)
                             .document(shoppingIngredient.ingredientRef).set(shoppingIngredient)
                     }
-                    if (shoppingIngredient.nameEnteredByUser != "") {
+                    if (shoppingIngredient.source == Source.ENTERED_BY_USER) {
                         firestore.collection(EVENTS).document(eventId).collection(SHOPPING_LIST)
-                            .document(generateRandomStringId(20)).set(shoppingIngredient)
+                            .document(shoppingIngredient.uid).set(shoppingIngredient)
                     }
                 }
             }

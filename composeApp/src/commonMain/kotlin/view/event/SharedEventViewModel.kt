@@ -104,7 +104,7 @@ class SharedEventViewModel(
                 _eventState.value = ResultState.Error("Fehler beim Abrufen des Lagers")
                 return@launch
             }
-            val eventId = eventFromRepo.getId()
+            val eventId = eventFromRepo.uid
             val participantList =
                 eventRepository.getParticipantsOfEvent(eventId = eventId, withParticipant = true)
             val allMealsOfEvent: List<Meal> = eventRepository.getAllMealsOfEvent(eventId)

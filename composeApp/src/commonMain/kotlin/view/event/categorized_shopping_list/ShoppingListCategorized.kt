@@ -1,6 +1,7 @@
 package view.event.categorized_shopping_list
 
 import CategorizedShoppingListViewModel
+import ConfirmDialog
 import ShoppingListState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Checkbox
@@ -109,6 +111,13 @@ fun ShoppingListCategorized(
                             ShoppingList(ingredients, category,
                                 onCheckboxClicked = {
                                     onAction(EditShoppingListActions.ToggleShoppingDone(it))
+                                },
+                                onDeleteShoppingItem = {
+                                    onAction(
+                                        EditShoppingListActions.DeleteShoppingItem(
+                                            it
+                                        )
+                                    )
                                 })
                         }
                     }
@@ -129,7 +138,8 @@ fun ShoppingListCategorized(
 fun ShoppingList(
     ingredientsList: List<ShoppingIngredient>,
     category: String,
-    onCheckboxClicked: (ShoppingIngredient) -> Unit = {}
+    onCheckboxClicked: (ShoppingIngredient) -> Unit = {},
+    onDeleteShoppingItem: (ShoppingIngredient) -> Unit = {},
 ) {
     var categoryExpanded by remember { mutableStateOf(true) }
     Spacer(modifier = Modifier.height(16.dp))
@@ -150,7 +160,11 @@ fun ShoppingList(
     }
     if (categoryExpanded) {
         ingredientsList.forEach { ingredient ->
-            ShoppingItem2(ingredient, onCheckboxClicked = { onCheckboxClicked(it) })
+            ShoppingItem2(
+                ingredient,
+                onCheckboxClicked = { onCheckboxClicked(it) },
+                onDeleteShoppingItem = onDeleteShoppingItem
+            )
         }
     }
 }
@@ -160,8 +174,10 @@ fun ShoppingList(
 fun ShoppingItem2(
     ingredient: ShoppingIngredient,
     onCheckboxClicked: (ShoppingIngredient) -> Unit = {},
+    onDeleteShoppingItem: (ShoppingIngredient) -> Unit = {},
 ) {
     var showDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -183,14 +199,28 @@ fun ShoppingItem2(
             text = ingredient.toString(), color = MaterialTheme.colorScheme.onPrimary
         )
         IconButton(
-            onClick = { showDialog = true },
+            onClick = {
+                if (ingredient.nameEnteredByUser != "") {
+                    showDeleteDialog = true
+                } else {
+                    showDialog = true
+                }
+            },
             modifier = Modifier.padding(end = 8.dp).weight(1f),
         ) {
-            Icon(
-                imageVector = Icons.Default.Edit,
-                contentDescription = "Add note",
-                tint = MaterialTheme.colorScheme.onBackground
-            )
+            if (ingredient.nameEnteredByUser != "") {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Löschen",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Add note",
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            }
         }
 
         if (showDialog) {
@@ -200,6 +230,11 @@ fun ShoppingItem2(
                     ingredient.note = it
                     showDialog = false
                 }, onDismiss = { showDialog = false })
+        }
+        if (showDeleteDialog) {
+            ConfirmDialog(
+                onConfirm = { onDeleteShoppingItem(ingredient) },
+                onDismiss = { showDeleteDialog = false })
         }
     }
 }

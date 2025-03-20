@@ -35,8 +35,5 @@ class ParticipantTime(
         return this
     }
 
-    override fun getId(): String {
-        return "";
-    }
 
 }

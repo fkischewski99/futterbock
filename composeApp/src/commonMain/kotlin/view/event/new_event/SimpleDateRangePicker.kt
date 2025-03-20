@@ -39,6 +39,7 @@ fun SimpleDateRangePickerInDatePickerDialog(
     from: Instant?,
     to: Instant?,
     isEditable: Boolean = true,
+    isInputFiledEditable: Boolean = true,
     buttonText: String? = null
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
@@ -57,7 +58,8 @@ fun SimpleDateRangePickerInDatePickerDialog(
                         .toEpochMilliseconds()
                 )
             },
-            label = "Start:",
+            label = "Start" + (if (isEditable && !isInputFiledEditable) " (Änderung über Datum ändern)" else "" + ":"),
+            isInputFieldEditable = isInputFiledEditable && isEditable,
         )
         DateInputField(
             date = to,
@@ -68,7 +70,8 @@ fun SimpleDateRangePickerInDatePickerDialog(
                     dateAsInstant.toEpochMilliseconds()
                 )
             },
-            label = "Ende:",
+            label = "Ende" + (if (isEditable && !isInputFiledEditable) " (Änderung über Datum ändern)" else "" + ":"),
+            isInputFieldEditable = isInputFiledEditable && isEditable,
         )
         Button(
             // Calendar icon to open DatePicker

@@ -42,7 +42,7 @@ class ChangeDateOfEvent(private val eventRepository: EventRepository) {
             newStartDate.epochSeconds - oldStartDate.epochSeconds;
         listOfMeals.forEach { meal ->
             val newMealEpochSeconds = meal.day.epochSeconds + offSet;
-            if (newEndDate.epochSeconds > newMealEpochSeconds) {
+            if (newEndDate.epochSeconds >= newMealEpochSeconds && newStartDate.epochSeconds <= newMealEpochSeconds) {
                 val newMeal = meal.copy(day = Instant.fromEpochSeconds(newMealEpochSeconds))
                 eventRepository.updateMeal(eventId, newMeal)
                 listOfNewMeals.add(newMeal)

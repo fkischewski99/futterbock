@@ -181,6 +181,7 @@ fun NewEventPage(
                                 }
                             },
                             isEditable = true,
+                            isInputFiledEditable = sharedState.data.mealsGroupedByDate.isEmpty(),
                             buttonText = getButtonText(sharedState.data.event)
                         )
                         Spacer(modifier = Modifier.height(16.dp))

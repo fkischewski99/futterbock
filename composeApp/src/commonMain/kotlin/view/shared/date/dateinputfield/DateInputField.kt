@@ -1,7 +1,6 @@
 package view.shared.date.dateinputfield
 
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,7 +28,8 @@ fun DateInputField(
     label: String,
     selectableDates: SelectableDates = FutureOrPresentSelectableDates,
     selecteableDateError: String = "Datum liegt nicht in der Zukunft",
-    trailingIcon: @Composable () -> Unit = {}
+    trailingIcon: @Composable () -> Unit = {},
+    isInputFieldEditable: Boolean = true,
 ) {
     var text by remember {
         mutableStateOf(
@@ -51,6 +51,7 @@ fun DateInputField(
         isError = error.isNotEmpty(),
         supportingText = { Text(error, color = MaterialTheme.colorScheme.error) },
         singleLine = true,
+        readOnly = !isInputFieldEditable,
         value = text,
         trailingIcon = trailingIcon,
         onValueChange = { newDate ->

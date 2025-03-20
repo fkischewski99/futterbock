@@ -52,6 +52,8 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
                 )
                 val shoppingIngredient: ShoppingIngredient =
                     map[recipeIngredient.ingredientRef] ?: recipeIngredient.apply { amount = 0.0 }
+                if (shoppingIngredient.ingredient == null) shoppingIngredient.ingredient =
+                    recipeIngredient.ingredient
                 ingredient.note = shoppingIngredient.note
                 if (ingredient.unit == shoppingIngredient.unit) {
                     val amountToAdd = ingredient.amount * getEaterMultiplier(
@@ -135,13 +137,16 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
         map: MutableMap<String, ShoppingIngredient>
     ) {
         for (shopIngredient in listOfShoppingIngredients) {
+            val ingredientKey =
+                if (shopIngredient.nameEnteredByUser != "") shopIngredient.nameEnteredByUser else shopIngredient.ingredientRef
             val newShoppingIngredient = ShoppingIngredient().apply {
                 ingredient = shopIngredient.ingredient
                 ingredientRef = shopIngredient.ingredientRef
                 unit = shopIngredient.unit
+                nameEnteredByUser = shopIngredient.nameEnteredByUser
             }
             shopIngredient.amount = 0.0
-            map[shopIngredient.ingredientRef] = newShoppingIngredient
+            map[ingredientKey] = newShoppingIngredient
         }
     }
 }

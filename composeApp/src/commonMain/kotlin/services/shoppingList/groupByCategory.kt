@@ -12,6 +12,8 @@ fun groupIngredientByCategory(ingredientsList: List<ShoppingIngredient>) =
 fun getCategory(it: ShoppingIngredient): String {
     if (it.shoppingDone) {
         return shoppingDone
+    } else if (it.nameEnteredByUser != "") {
+        return "Manuell hinzugefügt"
     } else {
         return it.ingredient?.category ?: "Andere"
     }

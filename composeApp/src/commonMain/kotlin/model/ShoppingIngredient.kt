@@ -10,7 +10,7 @@ import kotlin.math.roundToInt
 @Serializable
 class ShoppingIngredient() : ListItem<ShoppingIngredient> {
     var ingredientRef: String = ""
-    var nameWithoutIngredient: String = ""
+    var nameEnteredByUser: String = ""
 
     @Transient
     var ingredient: Ingredient? = null
@@ -19,10 +19,9 @@ class ShoppingIngredient() : ListItem<ShoppingIngredient> {
     var title: String? = null
     var shoppingDone: Boolean = false;
     var note: String = "";
-    var source: Source = Source.COMPUTED
 
     override fun getListItemTitle(): String {
-        return ingredient?.name ?: nameWithoutIngredient
+        return ingredient?.name ?: nameEnteredByUser
     }
 
     override fun getSubtitle(): String {
@@ -38,6 +37,9 @@ class ShoppingIngredient() : ListItem<ShoppingIngredient> {
     }
 
     override fun toString(): String {
+        if (nameEnteredByUser != "") {
+            return nameEnteredByUser
+        }
         val noteString = if (note != "") ("($note)") else ""
         return getFormatedAmount() + " " + (ingredient?.name ?: "") + " " + noteString
     }

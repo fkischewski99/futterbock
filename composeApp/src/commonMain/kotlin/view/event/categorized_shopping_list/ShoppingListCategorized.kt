@@ -4,11 +4,9 @@ import CategorizedShoppingListViewModel
 import ShoppingListState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,20 +15,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -44,20 +36,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import model.Ingredient
 import model.ShoppingIngredient
 import model.Source
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
 import view.event.actions.BaseAction
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
-import view.event.new_meal_screen.SearchBarComponent
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
@@ -97,7 +85,20 @@ fun ShoppingListCategorized(
     if (state is ResultState.Success) {
         BottomSheetWithSearchBar(
             items = state.data.currentList,
-            onItemAdded = {},
+            onItemAdded = { text -> onAction(EditShoppingListActions.AddNewIngredient(text)) },
+            topBar = {
+                TopAppBar(title = {
+                    Text(text = "Einkaufsliste")
+                }, navigationIcon = {
+                    NavigationIconButton(
+                        onLeave = {
+                            onAction(EditShoppingListActions.SaveToEvent)
+                            onAction(NavigationActions.GoBack)
+                        }
+
+                    )
+                })
+            },
             content = {
                 Column(
                     modifier = Modifier.verticalScroll(rememberScrollState())
@@ -116,13 +117,6 @@ fun ShoppingListCategorized(
                     }
                 }
             },
-            listItemFromString = { text ->
-
-                val ingredient = ShoppingIngredient()
-                ingredient.nameWithoutIngredient = text
-                ingredient.source = Source.ENTERED_BY_USER
-                return@BottomSheetWithSearchBar ingredient
-            }
         )
     } else if (state is ResultState.Loading) {
         MGCircularProgressIndicator()

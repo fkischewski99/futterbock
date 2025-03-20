@@ -39,6 +39,10 @@ class CategorizedShoppingListViewModel(
             is EditShoppingListActions.Initialize -> initializeShoppingList(
                 editShoppingListActions.eventId
             )
+
+            is EditShoppingListActions.AddNewIngredient -> addIngredientToList(
+                editShoppingListActions.ingredient
+            )
         }
     }
 
@@ -60,6 +64,21 @@ class CategorizedShoppingListViewModel(
                 )
             )
         }
+    }
+
+    private fun addIngredientToList(ingredient: String) {
+        val successData = state.value.getSuccessData() ?: return
+        val list = successData.currentList.toMutableList()
+        val shoppingIngredient = ShoppingIngredient()
+        shoppingIngredient.nameEnteredByUser = ingredient
+
+        list.add(shoppingIngredient)
+        _state.value = ResultState.Success(
+            successData.copy(
+                currentList = list,
+                ingredientsByCategory = groupIngredientByCategory(list)
+            )
+        )
     }
 
     private fun saveListToEvent() {

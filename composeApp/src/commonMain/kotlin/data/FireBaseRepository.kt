@@ -153,6 +153,10 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
                         firestore.collection(EVENTS).document(eventId).collection(SHOPPING_LIST)
                             .document(shoppingIngredient.ingredientRef).set(shoppingIngredient)
                     }
+                    if (shoppingIngredient.nameEnteredByUser != "") {
+                        firestore.collection(EVENTS).document(eventId).collection(SHOPPING_LIST)
+                            .document(generateRandomStringId(20)).set(shoppingIngredient)
+                    }
                 }
             }
         }

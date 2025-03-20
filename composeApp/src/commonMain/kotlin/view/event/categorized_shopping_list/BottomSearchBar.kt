@@ -7,41 +7,39 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.DockedSearchBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.DockedSearchBar
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import kotlinx.coroutines.launch
 import view.shared.list.ListItem
@@ -51,8 +49,8 @@ import view.shared.list.ListItem
 fun <T> BottomSheetWithSearchBar(
     content: @Composable () -> Unit,
     items: List<ListItem<T>>,
-    onItemAdded: (ListItem<T>) -> Unit,
-    listItemFromString: (String) -> ListItem<T>
+    onItemAdded: (String) -> Unit,
+    topBar: @Composable () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -61,52 +59,55 @@ fun <T> BottomSheetWithSearchBar(
             initialValue = SheetValue.PartiallyExpanded
         )
     )
-    Scaffold { paddingValues ->
-        BoxWithConstraints(Modifier.fillMaxSize(), propagateMinConstraints = true) {
-            val maxHeight = this.maxHeight
-            val maxWidth = this.maxWidth
+    BoxWithConstraints(Modifier.fillMaxSize(), propagateMinConstraints = true) {
+        val maxHeight = this.maxHeight
+        val maxWidth = this.maxWidth
 
-            BottomSheetScaffold(
-                modifier = Modifier.fillMaxWidth(),
-                sheetPeekHeight = 128.dp,
-                sheetShape = RoundedCornerShape(topEnd = 20.dp, topStart = 20.dp),
-                sheetShadowElevation = 20.dp,
-                sheetMaxWidth = maxWidth,
-                snackbarHost = {
-                    SnackbarHost(hostState = scaffoldState.snackbarHostState)
-                },
-                sheetContent = {
-                    SearchBarComponent(
-                        items = items,
-                        maxHeight = maxHeight,
-                        onItemAdded = { name ->
-                            coroutineScope.launch {
-                                scaffoldState.snackbarHostState.showSnackbar(
-                                    message = "${name.getListItemTitle()} wurde hinzugefügt",
-                                    duration = SnackbarDuration.Short
-                                )
+        BottomSheetScaffold(
+            topBar = topBar,
+            modifier = Modifier.fillMaxWidth(),
+            sheetPeekHeight = 128.dp,
+            sheetShape = RoundedCornerShape(topEnd = 20.dp, topStart = 20.dp),
+            sheetShadowElevation = 20.dp,
+            sheetMaxWidth = maxWidth,
+            snackbarHost = {
+                SnackbarHost(hostState = scaffoldState.snackbarHostState)
+            },
+            sheetContent = {
+                SearchBarComponent(
+                    items = items,
+                    maxHeight = maxHeight,
+                    onItemAdded = { name ->
+                        coroutineScope.launch {
+                            scaffoldState.snackbarHostState.showSnackbar(
+                                message = "$name wurde hinzugefügt",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                        onItemAdded(name)
+                    },
+                    onActiveChanged = {
+                        coroutineScope.launch {
+                            if (it) {
+                                scaffoldState.bottomSheetState.expand()
+                            } else {
+                                scaffoldState.bottomSheetState.partialExpand()
                             }
-                            onItemAdded(name)
-                        },
-                        onActiveChanged = {
-                            coroutineScope.launch {
-                                if (it) {
-                                    scaffoldState.bottomSheetState.expand()
-                                } else {
-                                    scaffoldState.bottomSheetState.partialExpand()
-                                }
-                            }
-                        },
-                        listItemFromString = listItemFromString
+                        }
+                    },
+                )
+            },
+            scaffoldState = scaffoldState,
+            content = {
+                Column(
+                    modifier = Modifier.padding(
+                        top = it.calculateTopPadding(),
+                        bottom = 144.dp
                     )
-                },
-                scaffoldState = scaffoldState,
-                content = {
-                    Column(modifier = Modifier.padding(top = paddingValues.calculateTopPadding())) { content() }
+                ) { content() }
 
-                }
-            )
-        }
+            }
+        )
     }
 }
 
@@ -114,8 +115,7 @@ fun <T> BottomSheetWithSearchBar(
 @Composable
 fun <T> SearchBarComponent(
     items: List<ListItem<T>>,
-    onItemAdded: (ListItem<T>) -> Unit,
-    listItemFromString: (String) -> ListItem<T>,
+    onItemAdded: (String) -> Unit,
     onActiveChanged: (Boolean) -> Unit,
     maxHeight: Dp
 ) {
@@ -124,7 +124,6 @@ fun <T> SearchBarComponent(
         items.filter { it.getListItemTitle().contains(searchText, ignoreCase = true) }
     }
     var bottomSheetExpanded by remember { mutableStateOf(false) }
-    var currentListItem by remember { mutableStateOf<ListItem<T>?>(null) }
 
 
     Column(
@@ -169,13 +168,7 @@ fun <T> SearchBarComponent(
                                     Icons.Default.Check,
                                     contentDescription = "Hinzufügen",
                                     modifier = Modifier.clickable {
-                                        if (currentListItem != null && currentListItem!!.getListItemTitle() == searchText) {
-                                            onItemAdded(currentListItem!!)
-                                            currentListItem = null
-                                            searchText = ""
-                                            return@clickable
-                                        }
-                                        onItemAdded(listItemFromString(searchText))
+                                        onItemAdded(searchText)
                                         searchText = ""
                                     }
                                 )
@@ -200,7 +193,6 @@ fun <T> SearchBarComponent(
                             AssistChip(
                                 onClick = {
                                     searchText = item.getListItemTitle()
-                                    currentListItem = item
                                 },
                                 label = { Text(item.getListItemTitle()) },
                                 modifier = Modifier.padding(end = 8.dp, bottom = 4.dp)

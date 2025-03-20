@@ -110,7 +110,7 @@ kotlin {
             // firebase
             implementation(libs.gitlive.firebase.firestore)
             implementation(libs.gitlive.firebase.auth)
-            // implementation(libs.gitlive.firebase.crashlytics)
+            //implementation(libs.gitlive.firebase.crashlytics)
 
             implementation(libs.kermit)
 

@@ -210,6 +210,7 @@ class HandleEditEvent(
         return ResultState.Success(
             oldState.copy(
                 event = event,
+                mealList = listOfMeals,
                 mealsGroupedByDate = updatedMeals,
                 participantList = oldState.participantList
             )

@@ -144,6 +144,7 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
                 ingredient = shopIngredient.ingredient
                 ingredientRef = shopIngredient.ingredientRef
                 unit = shopIngredient.unit
+                shoppingDone = shopIngredient.shoppingDone
                 nameEnteredByUser = shopIngredient.nameEnteredByUser
             }
             shopIngredient.amount = 0.0

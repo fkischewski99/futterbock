@@ -190,7 +190,7 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         coroutineScope {
             shoppingList.map { shoppingIngredient ->
                 async {
-                    if (shoppingIngredient.note != "" && shoppingIngredient.source == Source.COMPUTED) {
+                    if (shoppingIngredient.source == Source.COMPUTED) {
                         firestore.collection(EVENTS).document(eventId).collection(SHOPPING_LIST)
                             .document(shoppingIngredient.ingredientRef).set(shoppingIngredient)
                     }

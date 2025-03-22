@@ -53,7 +53,7 @@ class MaterialListViewModel(
                 }
 
                 is EditMaterialListActions.Delete -> {
-                    deleteMaterial(materialListActions.materialId)
+                    deleteMaterial(materialListActions.material)
                 }
             }
         } catch (e: Exception) {
@@ -61,23 +61,19 @@ class MaterialListViewModel(
         }
     }
 
-    private fun deleteMaterial(materialIdToDelete: String) {
+    private fun deleteMaterial(materialToDelete: Material) {
         var state = _state.value.getSuccessData() ?: return
         val materialList = state.materialList.toMutableList()
-
-        val materialToDelete = materialList.firstOrNull { it.uid == materialIdToDelete }
-        if (materialToDelete == null) {
-            return
-        }
         materialList.remove(materialToDelete)
         viewModelScope.launch {
             _state.value = ResultState.Success(
                 MaterialListState(
                     eventId = state.eventId,
-                    materialList = materialList
+                    materialList = materialList,
+                    allMaterialList = state.allMaterialList
                 )
             )
-            eventRepository.deleteMaterialById(state.eventId, materialIdToDelete)
+            eventRepository.deleteMaterialById(state.eventId, materialToDelete.uid)
         }
 
     }
@@ -122,7 +118,8 @@ class MaterialListViewModel(
             _state.value = ResultState.Success(
                 MaterialListState(
                     eventId = state.eventId,
-                    materialList = materialList
+                    materialList = materialList,
+                    allMaterialList = state.allMaterialList
                 )
             )
         }

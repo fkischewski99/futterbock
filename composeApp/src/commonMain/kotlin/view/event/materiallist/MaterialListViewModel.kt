@@ -21,6 +21,7 @@ import view.shared.ResultState
 
 data class MaterialListState(
     val materialList: List<Material> = emptyList(),
+    val allMaterialList: List<Material> = emptyList(),
     val eventId: String
 )
 
@@ -91,14 +92,19 @@ class MaterialListViewModel(
     }
 
     private fun initializeShoppingList(eventId: String) {
-        _state.value = ResultState.Loading
         viewModelScope.launch {
+            val allMaterials =
+                if (state.value is ResultState.Success) state.value.getSuccessData()!!.allMaterialList else eventRepository.getAllMaterials()
+
+            _state.value = ResultState.Loading
+
             val materialList = calculateMaterialList.calculate(eventId)
 
             _state.value = ResultState.Success(
                 MaterialListState(
                     eventId = eventId,
-                    materialList = materialList
+                    materialList = materialList,
+                    allMaterialList = allMaterials
                 )
             )
         }

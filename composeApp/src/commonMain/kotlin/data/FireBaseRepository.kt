@@ -31,6 +31,7 @@ private const val RECIPES = "RECIPE"
 private const val PARTICIPANTS = "PARTICIPANTS"
 private const val SHOPPING_LIST = "SHOPPING_LIST"
 private const val MATERIAL_LIST = "MATERIAL_LIST"
+private const val MATERIALS = "MATERIALS"
 
 class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : EventRepository {
     private val firestore = Firebase.firestore
@@ -152,6 +153,11 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             .collection(SHOPPING_LIST)
             .document(listItemId)
             .delete()
+    }
+
+    override suspend fun getAllMaterials(): List<Material> {
+        return firestore.collection(MATERIALS).get().documents
+            .map { material -> material.data { } }
     }
 
     override suspend fun getAllMealsOfEvent(eventId: String): List<Meal> {

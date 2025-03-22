@@ -57,4 +57,5 @@ interface EventRepository {
     suspend fun getMaterialListOfEvent(eventId: String): List<Material>
     suspend fun deleteMaterialById(eventId: String, materialId: String)
     suspend fun deleteShoppingListItemById(eventId: String, listItemId: String)
+    abstract suspend fun getAllMaterials(): List<Material>
 }

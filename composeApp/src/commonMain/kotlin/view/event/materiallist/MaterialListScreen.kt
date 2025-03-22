@@ -76,7 +76,7 @@ fun MaterialList(
 
         is ResultState.Success -> {
             BottomSheetWithSearchBar(
-                items = listOf(Material().apply { name = "abc" }),
+                items = state.data.allMaterialList,
                 content = {
                     MaterialList(
                         materialList = state.data.materialList,

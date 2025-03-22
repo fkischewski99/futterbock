@@ -1,12 +1,14 @@
 package services.materiallist
 
 import data.EventRepository
+import model.Material
+import model.Source
 import kotlin.math.max
 
 class CalculateMaterialList(private val eventRepository: EventRepository) {
 
-    suspend fun calculate(eventId: String): Map<String, Int> {
-        val materialMap = mutableMapOf<String, Int>();
+    suspend fun calculate(eventId: String): List<Material> {
+        val materialSet = mutableSetOf<Material>()
 
         val meals = eventRepository.getMealsWithRecipeAndIngredients(eventId);
         meals.forEach { meal ->
@@ -14,14 +16,20 @@ class CalculateMaterialList(private val eventRepository: EventRepository) {
                 val materials = recipeSelection.recipe!!.materials
                 val materialCounts = materials.groupingBy { it }.eachCount()
                 materialCounts.forEach { (material, count) ->
-                    val currentCount = materialMap.getOrPut(
-                        key = material,
-                        defaultValue = { 0 }
-                    )
-                    materialMap[material] = max(currentCount, count)
+                    val existingMaterial = materialSet.find { it.name == material }
+                    if (existingMaterial != null) {
+                        existingMaterial.amount = max(existingMaterial.amount, count)
+                    } else {
+                        materialSet.add(Material().apply {
+                            name = material; amount = count; source = Source.COMPUTED
+                        })
+                    }
                 }
             }
         }
-        return materialMap
+        val mutableMaterials = materialSet.toMutableList()
+        val existingMaterials = eventRepository.getMaterialListOfEvent(eventId)
+        mutableMaterials.addAll(existingMaterials)
+        return mutableMaterials.toList()
     }
 }

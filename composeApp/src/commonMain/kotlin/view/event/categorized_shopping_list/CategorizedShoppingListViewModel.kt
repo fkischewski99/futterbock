@@ -1,15 +1,18 @@
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import data.EventRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import model.ShoppingIngredient
+import model.Source
 import services.shoppingList.CalculateShoppingList
 import services.shoppingList.getCategory
 import services.shoppingList.groupIngredientByCategory
 import services.shoppingList.shoppingDone
 import view.event.categorized_shopping_list.EditShoppingListActions
+import view.shared.HelperFunctions
 import view.shared.ResultState
 
 
@@ -30,16 +33,50 @@ class CategorizedShoppingListViewModel(
     val state = _state.asStateFlow()
 
     fun onAction(editShoppingListActions: EditShoppingListActions) {
-        when (editShoppingListActions) {
-            is EditShoppingListActions.SaveToEvent -> saveListToEvent()
-            is EditShoppingListActions.ToggleShoppingDone -> toggleShoppingDone(
-                editShoppingListActions.shoppingIngredient
-            )
+        try {
 
-            is EditShoppingListActions.Initialize -> initializeShoppingList(
-                editShoppingListActions.eventId
+
+            when (editShoppingListActions) {
+                is EditShoppingListActions.SaveToEvent -> saveListToEvent()
+                is EditShoppingListActions.ToggleShoppingDone -> toggleShoppingDone(
+                    editShoppingListActions.shoppingIngredient
+                )
+
+                is EditShoppingListActions.Initialize -> initializeShoppingList(
+                    editShoppingListActions.eventId
+                )
+
+                is EditShoppingListActions.AddNewIngredient -> addIngredientToList(
+                    editShoppingListActions.ingredient
+                )
+
+                is EditShoppingListActions.DeleteShoppingItem -> deleteIngredient(
+                    editShoppingListActions.shoppingIngredient
+                )
+            }
+        } catch (e: Exception) {
+            _state.value = ResultState.Error("Fehler beim laden der Einkaufsliste")
+        }
+    }
+
+    private fun deleteIngredient(shoppingIngredient: ShoppingIngredient) {
+        val successData = state.value.getSuccessData() ?: return
+
+        viewModelScope.launch {
+            eventRepository.deleteShoppingListItemById(
+                successData.eventId,
+                shoppingIngredient.uid
+            )
+            val list = successData.currentList.toMutableList()
+            list.remove(shoppingIngredient)
+            _state.value = ResultState.Success(
+                successData.copy(
+                    currentList = list,
+                    ingredientsByCategory = groupIngredientByCategory(list)
+                )
             )
         }
+
     }
 
     fun initializeShoppingList(eventId: String) {
@@ -60,6 +97,23 @@ class CategorizedShoppingListViewModel(
                 )
             )
         }
+    }
+
+    private fun addIngredientToList(ingredient: String) {
+        val successData = state.value.getSuccessData() ?: return
+        val list = successData.currentList.toMutableList()
+        val shoppingIngredient = ShoppingIngredient()
+        shoppingIngredient.nameEnteredByUser = ingredient
+        shoppingIngredient.uid = HelperFunctions.generateRandomStringId(20)
+        shoppingIngredient.source = Source.ENTERED_BY_USER
+
+        list.add(shoppingIngredient)
+        _state.value = ResultState.Success(
+            successData.copy(
+                currentList = list,
+                ingredientsByCategory = groupIngredientByCategory(list)
+            )
+        )
     }
 
     private fun saveListToEvent() {

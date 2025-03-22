@@ -24,29 +24,34 @@ class HandleParticipantsActions(
         currentState: EventState,
         editEventActions: EditParticipantActions
     ): ResultState<EventState> {
-        return when (editEventActions) {
-            is EditParticipantActions.AddParticipant -> addParticipantToEvent(
-                currentState = currentState,
-                participantToAdd = editEventActions.participant
-            )
+        try {
 
-            is EditParticipantActions.DeleteParticipant -> removeParticipantOfEvent(
-                currentState = currentState,
-                participantToDelete = editEventActions.participant
-            )
+            return when (editEventActions) {
+                is EditParticipantActions.AddParticipant -> addParticipantToEvent(
+                    currentState = currentState,
+                    participantToAdd = editEventActions.participant
+                )
 
-            is EditParticipantActions.SelectDateOfParticipant -> changeDateOfParticipant(
-                currentState = currentState,
-                participantToChangeDates = editEventActions.selectedParticipant,
-                startDate = editEventActions.startMillis,
-                endDate = editEventActions.endMillis
-            )
+                is EditParticipantActions.DeleteParticipant -> removeParticipantOfEvent(
+                    currentState = currentState,
+                    participantToDelete = editEventActions.participant
+                )
 
-            is EditParticipantActions.UpdateAllMeals -> updateAllMeals(currentState = currentState)
-            else -> {
-                Logger.i(editEventActions.toString())
-                return ResultState.Error("wrong action")
+                is EditParticipantActions.SelectDateOfParticipant -> changeDateOfParticipant(
+                    currentState = currentState,
+                    participantToChangeDates = editEventActions.selectedParticipant,
+                    startDate = editEventActions.startMillis,
+                    endDate = editEventActions.endMillis
+                )
+
+                is EditParticipantActions.UpdateAllMeals -> updateAllMeals(currentState = currentState)
+                else -> {
+                    Logger.i(editEventActions.toString())
+                    return ResultState.Error("wrong action")
+                }
             }
+        } catch (e: Exception) {
+            return ResultState.Error("Fehler beim bearbeiten der Teilnehmerdaten")
         }
     }
 

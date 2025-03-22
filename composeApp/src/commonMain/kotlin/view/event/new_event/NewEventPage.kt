@@ -61,10 +61,12 @@ import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
 import view.event.categorized_shopping_list.EditShoppingListActions
 import view.event.materiallist.EditMaterialListActions
+import view.login.ErrorField
 import view.navigation.Routes
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
+import view.shared.page.ColumnWithPadding
 
 @Composable
 fun NewEventScreen(
@@ -181,6 +183,7 @@ fun NewEventPage(
                                 }
                             },
                             isEditable = true,
+                            isInputFiledEditable = sharedState.data.mealsGroupedByDate.isEmpty(),
                             buttonText = getButtonText(sharedState.data.event)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -204,8 +207,12 @@ fun NewEventPage(
                     }
                 }
 
-                else -> {
-                    MGCircularProgressIndicator()
+                is ResultState.Loading -> {
+                    ColumnWithPadding { MGCircularProgressIndicator() }
+                }
+
+                is ResultState.Error -> {
+                    ColumnWithPadding { ErrorField(sharedState.message) }
                 }
             }
         }
@@ -227,7 +234,7 @@ private fun ShoppingAndMaterialList(
                 onAction(EditShoppingListActions.Initialize(sharedState.data.event.uid))
                 onAction(
                     NavigationActions.GoToRoute(
-                        Routes.ShoppingList(sharedState.data.event.getId())
+                        Routes.ShoppingList(sharedState.data.event.uid)
                     )
                 )
             },
@@ -314,7 +321,7 @@ fun topBarEventPage(
                         onAction(EditShoppingListActions.Initialize(sharedState.data.event.uid))
                         onAction(
                             NavigationActions.GoToRoute(
-                                Routes.ShoppingList(sharedState.data.event.getId())
+                                Routes.ShoppingList(sharedState.data.event.uid)
                             )
                         )
                     }

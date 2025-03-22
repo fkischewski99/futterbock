@@ -12,7 +12,7 @@ data class Meal(
     var recipeSelections: List<RecipeSelection> = emptyList() // Immutable list
 ) : ListItem<Meal> {
 
-    override fun getTitle(): String {
+    override fun getListItemTitle(): String {
         return mealType.name // Custom title using 'meal_type' and 'day'
     }
 
@@ -23,9 +23,5 @@ data class Meal(
 
     override fun getItem(): Meal {
         return this
-    }
-
-    override fun getId(): String {
-        return uid
     }
 }

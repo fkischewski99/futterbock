@@ -1,6 +1,8 @@
 package services.pdfService
 
+import model.Material
 import model.ShoppingIngredient
+import model.Source
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -34,7 +36,7 @@ actual class PdfServiceImpl {
 
     actual fun createPdf(
         shoppingList: Map<String, List<ShoppingIngredient>>,
-        materialList: Map<String, Int>
+        materialList: List<Material>
     ) {
         document = PDDocument()
         var page = PDPage()
@@ -109,7 +111,7 @@ actual class PdfServiceImpl {
     }
 
     private fun createMaterialList(
-        materialList: Map<String, Int>,
+        materialList: List<Material>,
     ) {
         var page = PDPage()
         document!!.addPage(page)
@@ -119,10 +121,14 @@ actual class PdfServiceImpl {
         setTitleOfCurrentPage("Materialliste")
         contentStream!!.setFont(pdfFont, 12f)
 
-        materialList.forEach { (material, count) ->
+        materialList.forEach { material ->
             contentStream!!.beginText()
             contentStream!!.newLineAtOffset(80f, yPosition)
-            contentStream!!.showText("[  ] ${count}x $material") // Print each ingredient
+            if (material.source == Source.ENTERED_BY_USER) {
+                contentStream!!.showText("[  ] ${material.name}")
+            } else {
+                contentStream!!.showText("[  ] ${material.amount}x ${material.name}")
+            }
             contentStream!!.endText()
             yPosition -= 20f // Move to the next line
 

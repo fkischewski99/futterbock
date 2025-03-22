@@ -20,7 +20,7 @@ class Event(val group: String) : ListItem<Event> {
         return this.to == null || this.to!! > Clock.System.now();
     }
 
-    override fun getTitle(): String {
+    override fun getListItemTitle(): String {
         return this.name // Example: Mapping 'name' property to getTitle()
     }
 
@@ -32,10 +32,6 @@ class Event(val group: String) : ListItem<Event> {
 
     override fun getItem(): Event {
         return this
-    }
-
-    override fun getId(): String {
-        return this.uid
     }
 
 

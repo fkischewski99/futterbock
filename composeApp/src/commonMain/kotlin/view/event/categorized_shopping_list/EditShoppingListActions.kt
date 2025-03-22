@@ -8,5 +8,9 @@ interface EditShoppingListActions : BaseAction {
         EditShoppingListActions
 
     data object SaveToEvent : EditShoppingListActions
+    data class AddNewIngredient(val ingredient: String) : EditShoppingListActions
     data class Initialize(val eventId: String) : EditShoppingListActions
+    class DeleteShoppingItem(val shoppingIngredient: ShoppingIngredient) : EditShoppingListActions {
+
+    }
 }

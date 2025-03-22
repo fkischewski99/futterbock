@@ -54,7 +54,8 @@ object IngredientUnitSerializer : KSerializer<IngredientUnit> {
             return IngredientUnit.ZEHE
         if (value.uppercase() == "KNOLLEN")
             return IngredientUnit.KNOLLE
-        Logger.e("IngredientUnit with the name: $value has no matching enum")
+        if (value != "null")
+            Logger.e("IngredientUnit with the name: $value has no matching enum")
         return IngredientUnit.OTHER // Return default value if not found
     }
 }

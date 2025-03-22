@@ -5,6 +5,7 @@ import MaterialListState
 import MaterialListViewModel
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -113,7 +114,7 @@ fun MaterialList(
 
     Spacer(modifier = Modifier.height(16.dp))
     Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp).verticalScroll(scrollState),
+        modifier = Modifier.fillMaxSize().padding(8.dp).verticalScroll(scrollState),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         materialList.forEach { material ->

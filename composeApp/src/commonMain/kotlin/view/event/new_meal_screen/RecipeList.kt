@@ -119,8 +119,9 @@ fun RecipeWithMembers(
                     }
                 }
             })
+            val text = if (checkedState.values.all { it }) "Alle entfernen" else "Alle hinzufügen"
             Text(
-                text = "Alle auswählen",
+                text = text,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.weight(1f)
             )

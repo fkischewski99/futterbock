@@ -14,23 +14,25 @@ androidx-lifecycle = "2.8.7"
 compose-plugin = "1.7.1"
 junit = "4.13.2"
 kermit = "2.0.4"
-kotlin = "2.0.20"
+kotlin = "2.1.20-Beta2"
 compose-dnd = "0.2.0"
 voyager = "1.1.0-beta01"
 koin = "3.6.0-alpha3"
 koin-compose = "1.2.0-Beta5"
 compose = "1.7.8"
-kotlin-x-datetime = "0.6.0"
-kotlin-x-coroutines = "1.9.0-RC.2"
+kotlin-x-datetime = "0.6.2"
+kotlin-x-coroutines = "1.10.1"
 androidx-navigation = "2.8.0-alpha10"
 kotlinx-serialization-plugin = "2.0.20"
 kotlinx-serialization = "1.7.2"
 pdfbox = "3.0.2"
 google-services = "4.4.2"
-firebase-bom = "33.10.0"
+firebase-bom = "33.11.0"
 gitlive = "2.1.0"
 junitJupiter = "5.8.1"
 buildkonfig = "0.16.0"
+compose-hot-reload = "1.0.0-alpha03"
+resolver = "0.9.0"
 
 [libraries]
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
@@ -74,3 +76,5 @@ kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotlin" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
+hotreload = { id = "org.jetbrains.compose.hot-reload", version.ref = "compose-hot-reload" }
+resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "resolver" }

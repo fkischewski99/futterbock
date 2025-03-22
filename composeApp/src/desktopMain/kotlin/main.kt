@@ -14,6 +14,7 @@ import dev.gitlive.firebase.firestore.firestore
 import dev.gitlive.firebase.firestore.firestoreSettings
 import dev.gitlive.firebase.firestore.persistentCacheSettings
 import dev.gitlive.firebase.initialize
+import org.jetbrains.compose.reload.DevelopmentEntryPoint
 import org.json.JSONObject
 import services.pdfService.PdfServiceImpl
 
@@ -54,6 +55,8 @@ fun main() = application {
         title = "Futterbock_App",
         state = WindowState(width = 1000.dp, height = 700.dp)
     ) {
-        App(PdfServiceImpl())
+        DevelopmentEntryPoint {
+            App(PdfServiceImpl())
+        }
     }
 }

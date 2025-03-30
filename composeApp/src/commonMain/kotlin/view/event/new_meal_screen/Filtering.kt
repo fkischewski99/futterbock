@@ -189,7 +189,7 @@ fun <T : Enum<T>> MultiSelectFilterDialog(
 @Composable
 fun EatingHabitFilter(
     onFilterSelect: (EatingHabit?) -> Unit,
-    selectedEatingHabitFilter: EatingHabit?,
+    selectedEatingHabitFilter: EatingHabit? = null,
 ) {
     SingleFilterForEnum(
         filterName = "Essgewohnheit",

@@ -47,6 +47,7 @@
 -keep class io.ktor.serialization.** { *; }
 
 -keep class com.google.firebase.** { *; }
+-keep class com.google.firestore.** { *; }
 -keep class com.google.android.gms.** { *; }
 -keep class org.koin.** { *; }
 -keep class org.koin.core.** { *; }
@@ -73,6 +74,7 @@
 -keep class android.view.** { *; }
 -keep class io.github.alexzhirkevich.compottie.CompottieInitializer.*
 -keep class org.apache.commons.logging.** { *; }
+-keep class org.sqlite.** { *; }
 
 # JVM
 -keep class java.awt.*
@@ -81,6 +83,12 @@
 
 -keepclasseswithmembers public class MainKt {
     public static void main(java.lang.String[]);
+}
+
+-keepclassmembers class * extends java.lang.Enum {
+    <fields>;
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
 }
 
 -assumenosideeffects public class androidx.compose.runtime.ComposerKt {
@@ -123,7 +131,7 @@
 
 # @Serializable and @Polymorphic are used at runtime for polymorphic serialization.
 -keepattributes RuntimeVisibleAnnotations,AnnotationDefault
-
+-keep @kotlinx.serialization.Serializable class * {*;}
 # Don't print notes about potential mistakes or omissions in the configuration for kotlinx-serialization classes
 # See also https://github.com/Kotlin/kotlinx.serialization/issues/1900
 -dontnote kotlinx.serialization.**

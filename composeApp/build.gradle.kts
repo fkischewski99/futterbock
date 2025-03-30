@@ -64,8 +64,10 @@ buildkonfig {
 
 kotlin {
 
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
@@ -120,7 +122,7 @@ kotlin {
         }
         desktopMain.dependencies {
             // TODO delete when this pr is merged: https://github.com/GitLiveApp/firebase-java-sdk/pull/33
-            implementation("dev.gitlive:firebase-java-sdk:0.5.0")
+            // implementation("dev.gitlive:firebase-java-sdk:0.5.0")
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.pdfbox)
@@ -148,11 +150,6 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-        }
-    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -168,9 +165,10 @@ android {
 compose.desktop {
     application {
         buildTypes.release.proguard {
-            isEnabled.set(false)
+
             obfuscate.set(false)
-            version.set("7.6.0")
+            version.set("7.7.0")
+            configurationFiles.from(project.file("compose-desktop.pro"))
         }
         mainClass = "MainKt"
 

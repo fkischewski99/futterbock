@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.google.services)
     alias(libs.plugins.buildkonfig)
-    //alias(libs.plugins.hotreload)
+    alias(libs.plugins.hotreload)
 }
 
 composeCompiler {

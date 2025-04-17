@@ -73,6 +73,8 @@ val versionMajorProperty = versionProperties.getProperty("versionMajor").toInt()
 val versionMinorProperty = versionProperties.getProperty("versionMinor").toInt()
 val versionPatchProperty = versionProperties.getProperty("versionPatch").toInt()
 
+val versionNameProperty = "$versionMajorProperty.$versionMinorProperty.$versionPatchProperty"
+
 kotlin {
 
     compilerOptions {

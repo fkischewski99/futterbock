@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - v*
+  push:
+    branches:
+      - feat/github-actions-compose-build
   workflow_dispatch:
 
 jobs:

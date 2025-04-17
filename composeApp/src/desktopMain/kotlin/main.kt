@@ -1,11 +1,9 @@
 import android.app.Application
-import android.content.Context
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import com.andreasgift.kmpweatherapp.BuildKonfig
-import com.google.api.ResourceProto.resource
 import com.google.firebase.FirebasePlatform
 import com.google.firebase.database.FirebaseDatabase
 import dev.gitlive.firebase.Firebase
@@ -14,7 +12,7 @@ import dev.gitlive.firebase.firestore.firestore
 import dev.gitlive.firebase.firestore.firestoreSettings
 import dev.gitlive.firebase.firestore.persistentCacheSettings
 import dev.gitlive.firebase.initialize
-import org.json.JSONObject
+import org.jetbrains.compose.reload.DevelopmentEntryPoint
 import services.pdfService.PdfServiceImpl
 
 
@@ -54,6 +52,8 @@ fun main() = application {
         title = "Futterbock_App",
         state = WindowState(width = 1000.dp, height = 700.dp)
     ) {
-        App(PdfServiceImpl())
+        DevelopmentEntryPoint {
+            App(PdfServiceImpl())
+        }
     }
 }

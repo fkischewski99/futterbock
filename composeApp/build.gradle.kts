@@ -1,9 +1,7 @@
-import com.squareup.javapoet.FieldSpec
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.psi.stubs.impl.KotlinConstantValueKind
-import org.jetbrains.kotlin.types.checker.captureFromExpression
 import java.util.Properties
 
 plugins {
@@ -14,6 +12,11 @@ plugins {
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.google.services)
     alias(libs.plugins.buildkonfig)
+    alias(libs.plugins.hotreload)
+}
+
+composeCompiler {
+    featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
 }
 
 buildkonfig {
@@ -61,8 +64,10 @@ buildkonfig {
 
 kotlin {
 
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
@@ -145,11 +150,6 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-        }
-    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -165,9 +165,10 @@ android {
 compose.desktop {
     application {
         buildTypes.release.proguard {
-            isEnabled.set(false)
+
             obfuscate.set(false)
-            version.set("7.6.0")
+            version.set("7.7.0")
+            configurationFiles.from(project.file("compose-desktop.pro"))
         }
         mainClass = "MainKt"
 

@@ -30,11 +30,19 @@ class ViewModelEventOverview(
     var data = mutableStateOf(emptyList<Event>())
 
     fun onAction(actionsEventOverview: ActionsEventOverview) {
-        when (actionsEventOverview) {
-            is ActionsEventOverview.DeleteEvent -> onDeleteClick(actionsEventOverview.eventId)
-            ActionsEventOverview.Init -> initializeScreen()
-            else -> {
-                //only navigagion
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+
+                when (actionsEventOverview) {
+                    is ActionsEventOverview.DeleteEvent -> onDeleteClick(actionsEventOverview.eventId)
+                    ActionsEventOverview.Init -> initializeScreen()
+                    else -> {
+                        //only navigagion
+                    }
+                }
+            } catch (e: Exception) {
+                Logger.e("Error when loading events: " + e.stackTraceToString())
+                _state.value = ResultState.Error("Fehler beim Abrufen der Lager")
             }
         }
     }
@@ -71,19 +79,14 @@ class ViewModelEventOverview(
         viewModelScope.launch(Dispatchers.IO) { eventRepository.deleteEvent(eventId); }
     }
 
-    private fun initializeScreen() {
+    private suspend fun initializeScreen() {
         Logger.i("Init viewmodel EventOverview")
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val list = eventRepository.getEventList(loginAndRegister.getCustomUserGroup())
-                Logger.i("Get Events was sucessfull")
-                list.collect { listOfEvents ->
-                    sortEventsByDate(listOfEvents)
-                }
-            } catch (e: Exception) {
-                Logger.e("Error when loading events: " + e.stackTraceToString())
-                _state.value = ResultState.Error("Fehler beim Abrufen der Lager")
-            }
+
+
+        val list = eventRepository.getEventList(loginAndRegister.getCustomUserGroup())
+        Logger.i("Get Events was sucessfull")
+        list.collect { listOfEvents ->
+            sortEventsByDate(listOfEvents)
         }
     }
 }

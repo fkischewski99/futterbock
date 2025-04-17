@@ -1,0 +1,40 @@
+name: Build Windows
+
+on:
+  workflow_call:
+
+jobs:
+  build-windows:
+    permissions: write-all
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.repository.full_name }}
+          ref: ${{ github.event.head_ref }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
+
+      - name: Build .msi
+        run: ./gradlew composeApp:packageReleaseMsi
+
+      - name: Get Version Name
+        id: get_version_name
+        shell: bash
+        run: echo "version_name=$(./.github/scripts/get_version_name.sh versions.properties)" >> $GITHUB_OUTPUT
+
+      - name: Upload Release MSI Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.output1 }}
+          asset_path: composeApp/build/compose/binaries/main-release/msi/MinesweeperK-${{ steps.get_version_name.outputs.version_name }}.msi
+          asset_name: minesweeperk-${{ github.ref_name }}.msi
+          asset_content_type: application/octet-stream

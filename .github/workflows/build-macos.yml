@@ -1,0 +1,42 @@
+name: Build macOS
+
+on:
+  workflow_call:
+
+jobs:
+  build-macos:
+    permissions: write-all
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.repository.full_name }}
+          ref: ${{ github.event.head_ref }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
+
+      - name: Build .dmg
+        run: ./gradlew composeApp:packageReleaseDmg
+
+      - name: Get Version Name
+        id: get_version_name
+        shell: bash
+        run: |
+          chmod +x ./.github/scripts/get_version_name.sh
+          echo "version_name=$(./.github/scripts/get_version_name.sh versions.properties)" >> $GITHUB_OUTPUT
+
+      - name: Upload Release DMG Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.output1 }}
+          asset_path: composeApp/build/compose/binaries/main-release/dmg/MinesweeperK-${{ steps.get_version_name.outputs.version_name }}.dmg
+          asset_name: minesweeperk-${{ github.ref_name }}.dmg
+          asset_content_type: application/octet-stream

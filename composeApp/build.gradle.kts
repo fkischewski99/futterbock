@@ -62,6 +62,15 @@ buildkonfig {
 
 }
 
+val versionPropertiesInputStream = FileInputStream("$rootDir/versions.properties")
+val versionProperties = Properties().apply {
+    load(versionPropertiesInputStream)
+}
+val versionCodeProperty = versionProperties.getProperty("versionCode").toInt()
+val versionMajorProperty = versionProperties.getProperty("versionMajor").toInt()
+val versionMinorProperty = versionProperties.getProperty("versionMinor").toInt()
+val versionPatchProperty = versionProperties.getProperty("versionPatch").toInt()
+
 kotlin {
 
     compilerOptions {
@@ -142,8 +151,8 @@ android {
         applicationId = "org.futterbock.app"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = versionCodeProperty
+        versionName = versionNameProperty
     }
     packaging {
         resources {
@@ -176,7 +185,7 @@ compose.desktop {
             modules("java.management", "java.sql", "jdk.unsupported")
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Futterbock"
-            packageVersion = "1.0.0"
+            packageVersion = versionNameProperty
 
             //includeAllModules = true
 

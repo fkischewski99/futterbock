@@ -1,0 +1,55 @@
+name: Build Android
+
+on:
+  workflow_call:
+
+jobs:
+  build-android:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.repository.full_name }}
+          ref: ${{ github.event.head_ref }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
+
+      - name: Decode Keystore
+        id: decode_keystore
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: "keystore"
+          encodedString: ${{ secrets.ANDROID_KEYSTORE_BASE_64 }}
+
+      - name: Build Android AAB
+        run: ./gradlew composeApp:assembleRelease -Pandroid.injected.signing.store.file=${{ steps.decode_keystore.outputs.filePath }} -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_STORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+
+      - name: Build Android APK
+        run: ./gradlew composeApp:bundleRelease -Pandroid.injected.signing.store.file=${{ steps.decode_keystore.outputs.filePath }} -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_STORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEYSTORE_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+
+      - name: Upload Release AAB Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.output1 }}
+          asset_path: composeApp/build/outputs/bundle/release/composeApp-release.aab
+          asset_name: minesweeperk-${{ github.ref_name }}.aab
+          asset_content_type: application/x-authorware-bin
+
+      - name: Upload Release APK Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.output1 }}
+          asset_path: composeApp/build/outputs/apk/release/composeApp-release.apk
+          asset_name: minesweeperk-${{ github.ref_name }}.apk
+          asset_content_type: application/vnd.android.package-archive

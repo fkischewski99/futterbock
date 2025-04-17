@@ -1,0 +1,23 @@
+name: Main Build Workflow
+
+on:
+  push:
+    tags:
+      - v*
+  workflow_dispatch:
+
+jobs:
+  create-release:
+    uses: ./.github/workflows/create-release.yml
+
+  build-android:
+    needs: create-release
+    uses: ./.github/workflows/build-android.yml
+
+  build-windows:
+    needs: create-release
+    uses: ./.github/workflows/build-windows.yml
+
+  build-macos:
+    needs: create-release
+    uses: ./.github/workflows/build-macos.yml

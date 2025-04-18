@@ -23,45 +23,24 @@ composeCompiler {
 
 buildkonfig {
     packageName = "com.andreasgift.kmpweatherapp"
-    val localPropertiesFile = file("../local.properties")
-    val localProperties = Properties().apply { load(localPropertiesFile.inputStream()) }
 
     defaultConfigs {
         buildConfigField(
             com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
             "FIREBASE_PROJECT_ID",
-            localProperties.getProperty("FIREBASE_PROJECT_ID")
+            System.getenv("FIREBASE_PROJECT_ID")
         )
         buildConfigField(
             com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
             "FIREBASE_APPLICATION_ID",
-            localProperties.getProperty("FIREBASE_APPLICATION_ID")
+            System.getenv("FIREBASE_APPLICATION_ID")
         )
         buildConfigField(
             com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
             "FIREBASE_API_KEY",
-            localProperties.getProperty("FIREBASE_API_KEY")
-        )
-        //buildConfigField("String", "API_KEY", "apiKey")
-    }
-    defaultConfigs("release") {
-        buildConfigField(
-            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
-            "FIREBASE_PROJECT_ID",
-            localProperties.getProperty("FIREBASE_PROJECT_ID_PROD")
-        )
-        buildConfigField(
-            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
-            "FIREBASE_APPLICATION_ID",
-            localProperties.getProperty("FIREBASE_APPLICATION_ID_PROD")
-        )
-        buildConfigField(
-            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
-            "FIREBASE_API_KEY",
-            localProperties.getProperty("FIREBASE_API_KEY_PROD")
+            System.getenv("FIREBASE_API_KEY")
         )
     }
-
 }
 
 val versionPropertiesInputStream = FileInputStream("$rootDir/versions.properties")

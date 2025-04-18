@@ -19,11 +19,6 @@ jobs:
     permissions: write-all
     runs-on: windows-latest
     steps:
-      - name: Echo Asset Url
-        run: |
-          echo "Asset URL in mainjob2: ${{ needs.create-release.outputs.upload_asset_url }}"
-          echo "Asset URL in mainjob2: ${{ inputs.asset_url }}"
-
       - uses: actions/checkout@v4
         with:
           repository: ${{ github.event.repository.full_name }}

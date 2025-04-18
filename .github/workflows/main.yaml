@@ -34,6 +34,8 @@ jobs:
     with:
       asset_url: ${{ needs.create-release.outputs.upload_asset_url }}
 
-  #build-macos:
-  #  needs: create-release
-  #  uses: ./.github/workflows/build-macos.yml
+  build-macos:
+    needs: create-release
+    uses: ./.github/workflows/build-macos.yml
+    with:
+      asset_url: ${{ needs.create-release.outputs.upload_asset_url }}

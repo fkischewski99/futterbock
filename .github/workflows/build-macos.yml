@@ -14,6 +14,11 @@ jobs:
     permissions: write-all
     runs-on: macos-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.repository.full_name }}
+          ref: ${{ github.event.head_ref }}
       - name: Set up Java and Checkout
         uses: ./.github/actions/setup-java-and-gradlew
 

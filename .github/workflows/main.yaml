@@ -31,6 +31,8 @@ jobs:
   build-windows:
     needs: create-release
     uses: ./.github/workflows/build-windows.yml
+    with:
+      asset_url: ${{ needs.create-release.outputs.upload_asset_url }}
 
   #build-macos:
   #  needs: create-release

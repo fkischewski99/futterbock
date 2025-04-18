@@ -2,6 +2,11 @@ name: Build Windows
 
 on:
   workflow_call:
+    inputs:
+      asset_url:
+        description: "Asset upload URL from the release workflow"
+        required: true
+        type: string
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -17,6 +22,8 @@ jobs:
       - name: Echo Asset Url
         run: |
           echo "Asset URL in mainjob2: ${{ needs.create-release.outputs.upload_asset_url }}"
+          echo "Asset URL in mainjob2: ${{ inputs.asset_url }}"
+
       - uses: actions/checkout@v4
         with:
           repository: ${{ github.event.repository.full_name }}
@@ -43,7 +50,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_asset_url }}
+          upload_url: ${{ inputs.asset_url }}
           asset_path: composeApp/build/compose/binaries/main-release/msi/Futterbock-${{ steps.get_version_name.outputs.version_name }}.msi
           asset_name: futterbock.msi
           asset_content_type: application/octet-stream

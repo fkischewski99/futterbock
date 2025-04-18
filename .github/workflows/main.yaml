@@ -13,6 +13,8 @@ permissions: write-all
 jobs:
   create-release:
     uses: ./.github/workflows/create-release.yml
+    outputs:
+      upload_asset_url: ${{ steps.create_release.outputs.upload_asset_url }}
 
   #build-android:
   #  needs: create-release
@@ -22,7 +24,7 @@ jobs:
     needs: create-release
     uses: ./.github/workflows/build-windows.yml
     with:
-      upload_asset_url: ${{ needs.create-release.outputs.upload_asset_url }}
+      upload_asset_url: ${{ jobs.create-release.outputs.upload_asset_url }}
 
   #build-macos:
   #  needs: create-release

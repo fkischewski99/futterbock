@@ -37,7 +37,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          upload_url: ${{ needs.create-release.outputs.output1 }}
           asset_path: composeApp/build/compose/binaries/main-release/dmg/MinesweeperK-${{ steps.get_version_name.outputs.version_name }}.dmg
           asset_name: minesweeperk-${{ github.ref_name }}.dmg
           asset_content_type: application/octet-stream

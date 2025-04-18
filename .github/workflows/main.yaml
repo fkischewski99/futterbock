@@ -13,6 +13,17 @@ permissions: write-all
 jobs:
   create-release:
     uses: ./.github/workflows/create-release.yml
+    outputs:
+      upload_asset_url: ${{ steps.create_release.outputs.upload_asset_url }}
+  
+  log-asset-url:
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log Asset Upload URL
+        run: |
+          echo "Asset Upload URL from create-release: ${{ needs.create-release.outputs.upload_asset_url }}"
+
 
   #build-android:
   #  needs: create-release

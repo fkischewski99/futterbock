@@ -3,6 +3,12 @@ name: Build macOS
 on:
   workflow_call:
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+  FIREBASE_APPLICATION_ID: ${{ secrets.FIREBASE_APPLICATION_ID }}
+  FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+
 jobs:
   build-macos:
     permissions: write-all

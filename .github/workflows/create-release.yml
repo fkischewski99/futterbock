@@ -2,6 +2,10 @@ name: Create Release
 
 on:
   workflow_call:
+    outputs:
+      upload_asset_url:
+        description: "Url to upload release assets"
+        value: ${{ jobs.create-release.outputs.output1 }}
 
 jobs:
   create-release:

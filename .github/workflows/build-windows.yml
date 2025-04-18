@@ -40,7 +40,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.create-release.outputs.output1 }}
+          upload_url: ${{ needs.create-release.outputs.upload_asset_url }}
           asset_path: composeApp/build/compose/binaries/main-release/msi/MinesweeperK-${{ steps.get_version_name.outputs.version_name }}.msi
           asset_name: minesweeperk-${{ github.ref_name }}.msi
           asset_content_type: application/octet-stream

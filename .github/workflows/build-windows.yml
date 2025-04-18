@@ -14,6 +14,9 @@ jobs:
     permissions: write-all
     runs-on: windows-latest
     steps:
+      - name: Echo Asset Url
+        run: |
+          echo "App name in mainjob2: ${{ needs.create-release.outputs.upload_asset_url }}"
       - uses: actions/checkout@v4
         with:
           repository: ${{ github.event.repository.full_name }}
@@ -41,6 +44,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_asset_url }}
-          asset_path: composeApp/build/compose/binaries/main-release/msi/MinesweeperK-${{ steps.get_version_name.outputs.version_name }}.msi
-          asset_name: minesweeperk-${{ github.ref_name }}.msi
+          asset_path: composeApp/build/compose/binaries/main-release/msi/Futterbock-${{ steps.get_version_name.outputs.version_name }}.msi
+          asset_name: futterbock.msi
           asset_content_type: application/octet-stream

@@ -114,7 +114,7 @@ kotlin {
         }
         desktopMain.dependencies {
             // TODO delete when this pr is merged: https://github.com/GitLiveApp/firebase-java-sdk/pull/33
-            implementation("dev.gitlive:firebase-java-sdk:0.5.0")
+            // implementation("dev.gitlive:firebase-java-sdk:0.5.0")
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.pdfbox)

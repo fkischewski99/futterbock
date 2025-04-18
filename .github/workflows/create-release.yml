@@ -4,15 +4,13 @@ on:
   workflow_call:
     outputs:
       upload_asset_url:
-        description: "Url to upload release assets"
-        value: ${{ jobs.create-release.outputs.output1 }}
+        description: "URL to upload release assets"
+        value: ${{ steps.create_release.outputs.upload_url }}  # Reference the step output directly
 
 jobs:
   create-release:
     permissions: write-all
     runs-on: ubuntu-latest
-    outputs:
-      output1: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Create Release
         id: create_release
@@ -24,5 +22,6 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: true
           prerelease: false
+      
       - name: Debug Outputs
         run: echo "Upload URL: ${{ steps.create_release.outputs.upload_url }}"

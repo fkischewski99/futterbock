@@ -17,11 +17,17 @@ jobs:
   build-android:
     needs: create-release
     uses: ./.github/workflows/build-android.yml
+    with:
+      upload_url: ${{ needs.create-release.outputs.upload_url }} 
 
   build-windows:
     needs: create-release
     uses: ./.github/workflows/build-windows.yml
+    with:
+      upload_url: ${{ needs.create-release.outputs.upload_url }}
 
   build-macos:
     needs: create-release
     uses: ./.github/workflows/build-macos.yml
+    with:
+      upload_url: ${{ needs.create-release.outputs.upload_url }}

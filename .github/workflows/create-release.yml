@@ -24,6 +24,14 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: true
           prerelease: false
+          body: |
+            ## Download the correct version for your device:
+
+            - [Windows (MSI)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/futterbock.msi)
+            - [macOS ARM (DMG)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/futterbock-arm.dmg)
+            - [macOS Intel (DMG)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/futterbock-x86.dmg)
+
+            ---
 
       - name: Debug Outputs
         id: debug_outputs

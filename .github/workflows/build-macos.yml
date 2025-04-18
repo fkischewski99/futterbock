@@ -14,18 +14,8 @@ jobs:
     permissions: write-all
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ github.event.repository.full_name }}
-          ref: ${{ github.event.head_ref }}
-
-      - name: Set up JDK
-        uses: actions/setup-java@v1
-        with:
-          java-version: 17
-
-      - name: Change wrapper permissions
-        run: chmod +x ./gradlew
+      - name: Set up Java and Checkout
+        uses: ./.github/actions/setup-java-and-gradlew.yml
 
       - name: Build .dmg
         run: ./gradlew composeApp:packageReleaseDmg

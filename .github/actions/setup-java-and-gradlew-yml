@@ -1,0 +1,18 @@
+name: 'Setup Java and Checkout'
+description: 'A custom action to checkout code and set up Java'
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.event.repository.full_name }}
+        ref: ${{ github.event.head_ref }}
+
+    - name: Set up JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: '17'
+
+    - name: Change wrapper permissions
+      run: chmod +x ./gradlew

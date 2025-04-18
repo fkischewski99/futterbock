@@ -5,7 +5,7 @@ on:
     outputs:
       upload_asset_url:
         description: "URL to upload release assets"
-        value: ${{ jobs.create_release.outputs.output1 }}  # Reference the step output directly
+        value: ${{ jobs.create-release.outputs.output1 }}  # Reference the step output directly
 
 jobs:
   create-release:

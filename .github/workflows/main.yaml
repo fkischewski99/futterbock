@@ -21,15 +21,16 @@ jobs:
       - name: Log Asset Upload URL
         run: |
           echo "Asset Upload URL from create-release: ${{ needs.create-release.outputs.upload_asset_url }}"
+          echo "Asset Upload URL from create-release-job: ${{ jobs.create-release.outputs.upload_asset_url }}"
 
 
   #build-android:
   #  needs: create-release
   #  uses: ./.github/workflows/build-android.yml
 
-  build-windows:
-    needs: create-release
-    uses: ./.github/workflows/build-windows.yml
+  #build-windows:
+  #  needs: create-release
+  #  uses: ./.github/workflows/build-windows.yml
 
   #build-macos:
   #  needs: create-release

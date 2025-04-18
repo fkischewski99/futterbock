@@ -21,7 +21,7 @@ jobs:
       - name: Log Asset Upload URL
         run: |
           echo "Asset Upload URL from create-release: ${{ needs.create-release.outputs.upload_asset_url }}"
-          echo "Asset Upload URL from create-release-job: ${{ jobs.create-release.outputs.upload_asset_url }}"
+
 
 
   #build-android:

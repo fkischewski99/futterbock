@@ -17,7 +17,14 @@ env:
 jobs:
   build-macos:
     permissions: write-all
-    runs-on: macos-latest
+        runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            architecture: arm
+          - os: macos-11
+            architecture: x86
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -44,5 +51,5 @@ jobs:
         with:
           upload_url: ${{ inputs.asset_url }}
           asset_path: composeApp/build/compose/binaries/main-release/dmg/Futterbock-${{ steps.get_version_name.outputs.version_name }}.dmg
-          asset_name: futterbock.dmg
+          asset_name: futterbock-${{ matrix.architecture }}.dmg
           asset_content_type: application/octet-stream

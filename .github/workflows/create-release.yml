@@ -22,7 +22,8 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: true
           prerelease: false
-      
+          
       - name: Debug Outputs
+        id: debug_outputs
         run: |
           echo "Upload URL: ${{ steps.create_release.outputs.upload_url }}"

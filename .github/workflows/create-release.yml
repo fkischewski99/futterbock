@@ -5,7 +5,7 @@ on:
     outputs:
       upload_asset_url:
         description: "URL to upload release assets"
-        value: ${{ steps.create_release.outputs.upload_url }}  # Reference the step output directly
+        value: ${{ jobs.create_release.outputs.upload_url }}  # Reference the step output directly
 
 jobs:
   create-release:
@@ -22,7 +22,7 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: true
           prerelease: false
-          
+
       - name: Debug Outputs
         id: debug_outputs
         run: |

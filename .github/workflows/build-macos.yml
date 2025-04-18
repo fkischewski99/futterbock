@@ -23,7 +23,7 @@ jobs:
         include:
           - os: macos-latest
             architecture: arm
-          - os: macos-11
+          - os: macos-13
             architecture: x86
     steps:
       - name: Checkout repository

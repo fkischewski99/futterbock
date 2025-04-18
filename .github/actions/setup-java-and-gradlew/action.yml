@@ -9,4 +9,5 @@ runs:
         java-version: '17'
 
     - name: Change wrapper permissions
+      shell: bash
       run: chmod +x ./gradlew

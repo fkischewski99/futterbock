@@ -33,14 +33,14 @@ jobs:
       - name: Get Version Name
         id: get_version_name
         shell: bash
-        run: echo "version_name=$(./.github/scripts/get_version_name.sh versions.properties)" >> $GITHUB_ENV
+        run: echo "version_name=$(./.github/scripts/get_version_name.sh versions.properties)" >> $GITHUB_OUTPUT
 
       - name: Upload Release MSI Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.create-release.outputs.output1 }}
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: composeApp/build/compose/binaries/main-release/msi/MinesweeperK-${{ steps.get_version_name.outputs.version_name }}.msi
           asset_name: minesweeperk-${{ github.ref_name }}.msi
           asset_content_type: application/octet-stream

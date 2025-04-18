@@ -19,7 +19,6 @@ jobs:
   #  uses: ./.github/workflows/build-android.yml
 
   build-windows:
-    needs: create-release
     uses: ./.github/workflows/build-windows.yml
 
   #build-macos:

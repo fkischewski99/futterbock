@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - v*
+    branches:
+      - feat/github-actions-compose-build
   workflow_dispatch:
 
 permissions: write-all

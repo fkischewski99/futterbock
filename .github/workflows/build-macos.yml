@@ -35,6 +35,9 @@ jobs:
       - name: Set up Java and Checkout
         uses: ./.github/actions/setup-java-and-gradlew
 
+      - name: Debug dependencies
+        run: ./gradlew dependencies --stacktrace
+
       - name: Build .dmg
         run: ./gradlew composeApp:packageReleaseDmg
 

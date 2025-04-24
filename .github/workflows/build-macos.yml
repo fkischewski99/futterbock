@@ -36,7 +36,7 @@ jobs:
         uses: ./.github/actions/setup-java-and-gradlew
 
       - name: Debug dependencies
-        run: ./gradlew dependencies --stacktrace
+        run: ./gradlew composeApp:dependencies
 
       - name: Build .dmg
         run: ./gradlew composeApp:packageReleaseDmg

@@ -34,7 +34,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build .msi
-        run: ./gradlew composeApp:packageReleaseMsi
+        run: .\gradlew composeApp:packageReleaseMsi
 
       - name: Get Version Name
         id: get_version_name

@@ -18,48 +18,42 @@ import java.awt.*
 
 
 fun main() = application {
-    FirebasePlatform.initializeFirebasePlatform(object : FirebasePlatform() {
+    try {
+        FirebasePlatform.initializeFirebasePlatform(object : FirebasePlatform() {
 
-        val storage = mutableMapOf<String, String>()
-        override fun clear(key: String) {
-            storage.remove(key)
+            val storage = mutableMapOf<String, String>()
+            override fun clear(key: String) {
+                storage.remove(key)
+            }
+
+            override fun log(msg: String) = println(msg)
+
+            override fun retrieve(key: String) = storage[key]
+
+            override fun store(key: String, value: String) = storage.set(key, value)
+
+        })
+
+        val options = FirebaseOptions(
+            projectId = BuildKonfig.FIREBASE_PROJECT_ID,
+            applicationId = BuildKonfig.FIREBASE_APPLICATION_ID,
+            apiKey = BuildKonfig.FIREBASE_API_KEY
+        )
+
+        val app = Firebase.initialize(Application(), options)
+        val db = Firebase.firestore(app)
+        val settings = firestoreSettings {
+            // Use memory cache
+            cacheSettings = persistentCacheSettings { }
         }
-
-        override fun log(msg: String) = println(msg)
-
-        override fun retrieve(key: String) = storage[key]
-
-        override fun store(key: String, value: String) = storage.set(key, value)
-
-    })
-
-    val options = FirebaseOptions(
-        projectId = BuildKonfig.FIREBASE_PROJECT_ID,
-        applicationId = BuildKonfig.FIREBASE_APPLICATION_ID,
-        apiKey = BuildKonfig.FIREBASE_API_KEY
-    )
-
-    val app = Firebase.initialize(Application(), options)
-    val db = Firebase.firestore(app)
-    val settings = firestoreSettings {
-        // Use memory cache
-        cacheSettings = persistentCacheSettings { }
+        db.settings = settings
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true)
+    } catch (e: Exception) {
+        errorDialog(e)
     }
-    db.settings = settings
-    FirebaseDatabase.getInstance().setPersistenceEnabled(true)
 
     Thread.setDefaultUncaughtExceptionHandler { _, e ->
-        Dialog(Frame(), e.message ?: "Error").apply {
-            layout = FlowLayout()
-            val label = Label(e.message)
-            add(label)
-            val button = Button("OK").apply {
-                addActionListener { dispose() }
-            }
-            add(button)
-            setSize(300, 300)
-            isVisible = true
-        }
+        errorDialog(e)
     }
 
     Window(
@@ -70,5 +64,19 @@ fun main() = application {
         DevelopmentEntryPoint {
             App(PdfServiceImpl())
         }
+    }
+}
+
+private fun errorDialog(e: Throwable) {
+    Dialog(Frame(), e.message ?: "Error").apply {
+        layout = FlowLayout()
+        val label = Label(e.message)
+        add(label)
+        val button = Button("OK").apply {
+            addActionListener { dispose() }
+        }
+        add(button)
+        setSize(300, 300)
+        isVisible = true
     }
 }

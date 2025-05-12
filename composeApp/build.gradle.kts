@@ -21,6 +21,20 @@ composeCompiler {
     featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
 }
 
+val localPropertiesFile = file("../local.properties")
+
+val localProperties = Properties();
+val localPropsFile = rootProject.file("local.properties")
+if (localPropsFile.exists()) {
+    localProperties.apply { load(localPropertiesFile.inputStream()) }
+}
+
+// Helper to get from env or local.properties or use default
+fun getEnvOrLocal(key: String, default: String = "default"): String {
+    return System.getenv(key) ?: localProperties.getProperty(key) ?: default
+}
+
+
 buildkonfig {
     packageName = "com.andreasgift.kmpweatherapp"
 
@@ -28,17 +42,19 @@ buildkonfig {
         buildConfigField(
             com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
             "FIREBASE_PROJECT_ID",
-            System.getenv("FIREBASE_PROJECT_ID")
+            getEnvOrLocal("FIREBASE_PROJECT_ID")
         )
+
         buildConfigField(
             com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
             "FIREBASE_APPLICATION_ID",
-            System.getenv("FIREBASE_APPLICATION_ID")
+            getEnvOrLocal("FIREBASE_APPLICATION_ID")
         )
+
         buildConfigField(
             com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
             "FIREBASE_API_KEY",
-            System.getenv("FIREBASE_API_KEY")
+            getEnvOrLocal("FIREBASE_API_KEY")
         )
     }
 }
@@ -165,7 +181,14 @@ compose.desktop {
         mainClass = "MainKt"
 
         nativeDistributions {
-            modules("java.management", "java.sql", "jdk.unsupported")
+            modules(
+                "java.compiler",
+                "java.instrument",
+                "java.management",
+                "java.naming",
+                "java.sql",
+                "jdk.unsupported"
+            )
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Futterbock"
             packageVersion = versionNameProperty

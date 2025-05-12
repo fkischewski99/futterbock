@@ -14,6 +14,7 @@ import dev.gitlive.firebase.firestore.persistentCacheSettings
 import dev.gitlive.firebase.initialize
 import org.jetbrains.compose.reload.DevelopmentEntryPoint
 import services.pdfService.PdfServiceImpl
+import java.awt.*
 
 
 fun main() = application {
@@ -46,6 +47,20 @@ fun main() = application {
     }
     db.settings = settings
     FirebaseDatabase.getInstance().setPersistenceEnabled(true)
+
+    Thread.setDefaultUncaughtExceptionHandler { _, e ->
+        Dialog(Frame(), e.message ?: "Error").apply {
+            layout = FlowLayout()
+            val label = Label(e.message)
+            add(label)
+            val button = Button("OK").apply {
+                addActionListener { dispose() }
+            }
+            add(button)
+            setSize(300, 300)
+            isVisible = true
+        }
+    }
 
     Window(
         onCloseRequest = ::exitApplication,

@@ -25,22 +25,19 @@ jobs:
           repository: ${{ github.event.repository.full_name }}
           ref: ${{ github.event.head_ref }}
 
-      - name: Set environment variables manually
-        shell: powershell
-        run: |
-          $env:FIREBASE_PROJECT_ID = "${{ secrets.FIREBASE_PROJECT_ID }}"
-          $env:FIREBASE_APPLICATION_ID = "${{ secrets.FIREBASE_APPLICATION_ID }}"
-          $env:FIREBASE_API_KEY = "${{ secrets.FIREBASE_API_KEY }}"
-
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build .msi
-        shell: bash
-        run: ./gradlew composeApp:packageReleaseMsi
+      - name: Set environment variables manually
+        shell: powershell
+        run: |
+          $env:FIREBASE_PROJECT_ID = "${{ secrets.FIREBASE_PROJECT_ID }}"
+          $env:FIREBASE_APPLICATION_ID = "${{ secrets.FIREBASE_APPLICATION_ID }}"
+          $env:FIREBASE_API_KEY = "${{ secrets.FIREBASE_API_KEY }}"
+          ./gradlew composeApp:packageReleaseMsi
 
       - name: Get Version Name
         id: get_version_name

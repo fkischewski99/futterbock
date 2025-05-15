@@ -15,6 +15,8 @@ import dev.gitlive.firebase.initialize
 import org.jetbrains.compose.reload.DevelopmentEntryPoint
 import services.pdfService.PdfServiceImpl
 import java.awt.*
+import java.io.PrintWriter
+import java.io.StringWriter
 
 
 fun main() = application {
@@ -68,16 +70,36 @@ fun main() = application {
 }
 
 private fun errorDialog(e: Throwable) {
-    Dialog(Frame(), e.message ?: "Error").apply {
-        layout = FlowLayout()
-        val label = Label(e.message)
-        add(label)
-        e.printStackTrace()
-        val button = Button("OK").apply {
-            addActionListener { dispose() }
+    Dialog(Frame(), "Error", true).apply {
+        layout = BorderLayout()
+
+        // Exception summary panel
+        val topPanel = Panel(FlowLayout()).apply {
+            add(Label("Exception: ${e::class.qualifiedName}"))
+            add(Label("Message: ${e.message ?: "No message"}"))
         }
-        add(button)
-        setSize(800, 800)
+        add(topPanel, BorderLayout.NORTH)
+
+        // Stack trace in a scrollable text area
+        val stackTraceText = StringWriter().also { sw ->
+            e.printStackTrace(PrintWriter(sw))
+        }.toString()
+
+        val textArea = TextArea(stackTraceText, 30, 100, TextArea.SCROLLBARS_BOTH).apply {
+            isEditable = false
+        }
+        add(textArea, BorderLayout.CENTER)
+
+        // OK button to close
+        val bottomPanel = Panel(FlowLayout()).apply {
+            add(Button("OK").apply {
+                addActionListener { dispose() }
+            })
+        }
+        add(bottomPanel, BorderLayout.SOUTH)
+
+        setSize(800, 600)
+        setLocationRelativeTo(null)
         isVisible = true
     }
 }

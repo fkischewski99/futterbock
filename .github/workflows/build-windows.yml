@@ -32,9 +32,13 @@ jobs:
           java-version: '17'
 
       - name: Set environment variables manually
-        shell: powershell
-        run: |
-          ./gradlew composeApp:packageReleaseMsi
+        run: ./gradlew composeApp:packageReleaseMsi
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_APPLICATION_ID: ${{ secrets.FIREBASE_APPLICATION_ID }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
 
       - name: Get Version Name
         id: get_version_name

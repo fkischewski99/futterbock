@@ -72,8 +72,6 @@ private fun errorDialog(e: Throwable) {
         layout = FlowLayout()
         val label = Label(e.message)
         add(label)
-        val label2 = Label(e.stackTrace.contentToString());
-        add(label2)
         e.printStackTrace()
         val button = Button("OK").apply {
             addActionListener { dispose() }

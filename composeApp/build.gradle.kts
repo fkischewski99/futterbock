@@ -30,8 +30,8 @@ if (localPropsFile.exists()) {
 }
 
 // Helper to get from env or local.properties or use default
-fun getEnvOrLocal(key: String, default: String = "default"): String {
-    return System.getenv(key) ?: localProperties.getProperty(key) ?: default
+fun getEnvOrLocal(key: String): String {
+    return System.getenv(key) ?: localProperties.getProperty(key) ?: error("Missing property: $key")
 }
 
 

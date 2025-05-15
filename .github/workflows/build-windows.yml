@@ -34,9 +34,9 @@ jobs:
       - name: Set Firebase env vars for future steps
         shell: pwsh
         run: |
-          "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "FIREBASE_APPLICATION_ID=${{ secrets.FIREBASE_APPLICATION_ID }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          "FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> $env:GITHUB_ENV
+          "FIREBASE_APPLICATION_ID=${{ secrets.FIREBASE_APPLICATION_ID }}" >> $env:GITHUB_ENV
+          "FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}" >> $env:GITHUB_ENV
 
       - name: Use Firebase env vars
         shell: pwsh

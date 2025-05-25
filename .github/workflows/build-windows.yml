@@ -31,6 +31,13 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Export Firebase secrets to env
+        shell: pwsh
+        run: |
+          "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> $env:GITHUB_ENV
+          "FIREBASE_APPLICATION_ID=${{ secrets.FIREBASE_APPLICATION_ID }}" >> $env:GITHUB_ENV
+          "FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}" >> $env:GITHUB_ENV
+
       - name: Check Firebase vars are set (PowerShell)
         shell: pwsh
         run: |

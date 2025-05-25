@@ -31,6 +31,16 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Check Firebase vars are set (PowerShell)
+        shell: pwsh
+        run: |
+          if (-not $env:FIREBASE_PROJECT_ID) {
+            Write-Host "::warning::FIREBASE_PROJECT_ID is not set"
+          } else {
+            Write-Host "FIREBASE_PROJECT_ID is set"
+          }
+
+
       - name: Set environment variables manually
         #run: ./gradlew composeApp:packageReleaseMsi
         run: |

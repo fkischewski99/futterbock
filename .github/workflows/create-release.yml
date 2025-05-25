@@ -1,0 +1,39 @@
+name: Create Release
+
+on:
+  workflow_call:
+    outputs:
+      upload_asset_url:
+        description: "URL to upload release assets"
+        value: ${{ jobs.create-release.outputs.output1 }}  # Reference the step output directly
+
+jobs:
+  create-release:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: false
+          body: |
+            ## Download the correct version for your device:
+
+            - [Windows (MSI)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/futterbock.msi)
+            - [macOS ARM (DMG)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/futterbock-arm.dmg)
+            - [macOS Intel (DMG)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/futterbock-x86.dmg)
+
+            ---
+
+      - name: Debug Outputs
+        id: debug_outputs
+        run: |
+          echo "Upload URL: ${{ steps.create_release.outputs.upload_url }}"

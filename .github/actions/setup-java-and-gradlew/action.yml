@@ -1,0 +1,13 @@
+name: 'Setup Java and Checkout'
+description: 'A custom action to checkout code and set up Java'
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: '17'
+
+    - name: Change wrapper permissions
+      shell: bash
+      run: chmod +x ./gradlew

@@ -17,8 +17,10 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 
-scripts
+/scripts
 *.env
+env.bat
+env.sh
 
 composeApp/google-services.json
 composeApp/release

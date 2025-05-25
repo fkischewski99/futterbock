@@ -1,0 +1,56 @@
+name: Build macOS
+
+on:
+  workflow_call:
+    inputs:
+      asset_url:
+        description: "Asset upload URL from the release workflow"
+        required: true
+        type: string
+
+env:
+  GITHUB_ACTOR: ${{ github.actor }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+  FIREBASE_APPLICATION_ID: ${{ secrets.FIREBASE_APPLICATION_ID }}
+  FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+
+jobs:
+  build-macos:
+    permissions: write-all
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            architecture: arm
+          - os: macos-13
+            architecture: x86
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.repository.full_name }}
+          ref: ${{ github.event.head_ref }}
+      - name: Set up Java and Checkout
+        uses: ./.github/actions/setup-java-and-gradlew
+
+      - name: Build .dmg
+        run: ./gradlew composeApp:packageReleaseDmg
+
+      - name: Get Version Name
+        id: get_version_name
+        shell: bash
+        run: |
+          chmod +x ./.github/scripts/get_version_name.sh
+          echo "version_name=$(./.github/scripts/get_version_name.sh versions.properties)" >> $GITHUB_OUTPUT
+
+      - name: Upload Release DMG Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ inputs.asset_url }}
+          asset_path: composeApp/build/compose/binaries/main-release/dmg/Futterbock-${{ steps.get_version_name.outputs.version_name }}.dmg
+          asset_name: futterbock-${{ matrix.architecture }}.dmg
+          asset_content_type: application/octet-stream

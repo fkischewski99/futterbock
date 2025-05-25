@@ -3,6 +3,8 @@ import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
+import java.io.FileInputStream
+
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -19,48 +21,54 @@ composeCompiler {
     featureFlags.add(ComposeFeatureFlag.OptimizeNonSkippingGroups)
 }
 
+val localPropertiesFile = file("../local.properties")
+
+val localProperties = Properties();
+val localPropsFile = rootProject.file("local.properties")
+if (localPropsFile.exists()) {
+    localProperties.apply { load(localPropertiesFile.inputStream()) }
+}
+
+// Helper to get from env or local.properties or use default
+fun getEnvOrLocal(key: String): String {
+    return System.getenv(key) ?: localProperties.getProperty(key) ?: error("Missing property: $key")
+}
+
+
 buildkonfig {
     packageName = "com.andreasgift.kmpweatherapp"
-    val localPropertiesFile = file("../local.properties")
-    val localProperties = Properties().apply { load(localPropertiesFile.inputStream()) }
 
     defaultConfigs {
         buildConfigField(
             com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
             "FIREBASE_PROJECT_ID",
-            localProperties.getProperty("FIREBASE_PROJECT_ID")
+            getEnvOrLocal("FIREBASE_PROJECT_ID")
         )
-        buildConfigField(
-            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
-            "FIREBASE_APPLICATION_ID",
-            localProperties.getProperty("FIREBASE_APPLICATION_ID")
-        )
-        buildConfigField(
-            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
-            "FIREBASE_API_KEY",
-            localProperties.getProperty("FIREBASE_API_KEY")
-        )
-        //buildConfigField("String", "API_KEY", "apiKey")
-    }
-    defaultConfigs("release") {
-        buildConfigField(
-            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
-            "FIREBASE_PROJECT_ID",
-            localProperties.getProperty("FIREBASE_PROJECT_ID_PROD")
-        )
-        buildConfigField(
-            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
-            "FIREBASE_APPLICATION_ID",
-            localProperties.getProperty("FIREBASE_APPLICATION_ID_PROD")
-        )
-        buildConfigField(
-            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
-            "FIREBASE_API_KEY",
-            localProperties.getProperty("FIREBASE_API_KEY_PROD")
-        )
-    }
 
+        buildConfigField(
+            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
+            "FIREBASE_APPLICATION_ID",
+            getEnvOrLocal("FIREBASE_APPLICATION_ID")
+        )
+
+        buildConfigField(
+            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
+            "FIREBASE_API_KEY",
+            getEnvOrLocal("FIREBASE_API_KEY")
+        )
+    }
 }
+
+val versionPropertiesInputStream = FileInputStream("$rootDir/versions.properties")
+val versionProperties = Properties().apply {
+    load(versionPropertiesInputStream)
+}
+val versionCodeProperty = versionProperties.getProperty("versionCode").toInt()
+val versionMajorProperty = versionProperties.getProperty("versionMajor").toInt()
+val versionMinorProperty = versionProperties.getProperty("versionMinor").toInt()
+val versionPatchProperty = versionProperties.getProperty("versionPatch").toInt()
+
+val versionNameProperty = "$versionMajorProperty.$versionMinorProperty.$versionPatchProperty"
 
 kotlin {
 
@@ -122,7 +130,7 @@ kotlin {
         }
         desktopMain.dependencies {
             // TODO delete when this pr is merged: https://github.com/GitLiveApp/firebase-java-sdk/pull/33
-            implementation("dev.gitlive:firebase-java-sdk:0.5.0")
+            implementation("dev.gitlive:firebase-java-sdk:1.2.3")
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.pdfbox)
@@ -142,8 +150,8 @@ android {
         applicationId = "org.futterbock.app"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = versionCodeProperty
+        versionName = versionNameProperty
     }
     packaging {
         resources {
@@ -173,10 +181,17 @@ compose.desktop {
         mainClass = "MainKt"
 
         nativeDistributions {
-            modules("java.management", "java.sql", "jdk.unsupported")
+            modules(
+                "java.compiler",
+                "java.instrument",
+                "java.management",
+                "java.naming",
+                "java.sql",
+                "jdk.unsupported"
+            )
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Futterbock"
-            packageVersion = "1.0.0"
+            packageVersion = versionNameProperty
 
             //includeAllModules = true
 

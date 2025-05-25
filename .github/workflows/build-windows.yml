@@ -34,6 +34,7 @@ jobs:
       - name: Export Firebase secrets to env
         shell: pwsh
         run: |
+          echo ${{ secrets.FIREBASE_PROJECT_ID }}
           "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> $env:GITHUB_ENV
           "FIREBASE_APPLICATION_ID=${{ secrets.FIREBASE_APPLICATION_ID }}" >> $env:GITHUB_ENV
           "FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}" >> $env:GITHUB_ENV

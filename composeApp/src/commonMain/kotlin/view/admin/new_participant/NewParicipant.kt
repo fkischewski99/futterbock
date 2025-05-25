@@ -2,6 +2,8 @@ package view.admin.new_participant
 
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -127,28 +129,7 @@ fun NewParicipant(
                             )
                         }
                         Row {
-                            DateInputField(
-                                date = state.data.birthDate,
-                                onDateChange = { dateAsInstant ->
-                                    ActionsNewParticipant.SelectBirthDate(dateAsInstant.toEpochMilliseconds())
-                                },
-                                label = "Geburtsdatum:",
-                                selectableDates = PastOrPresentSelectableDates,
-                                selecteableDateError = "Geburtsdatum darf nicht in der Zukunft liegen",
-                                trailingIcon = {
-                                    IconButton(
-                                        onClick = {
-                                            onAction(ActionsNewParticipant.ShowDatePicker)
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Edit,
-                                            contentDescription = "Bearbeiten",
-                                            modifier = Modifier.size(32.dp)
-                                        )
-                                    }
-                                },
-                            )
+                            BirthdaySelectionField(state, onAction)
 
                         }
                         Column(
@@ -184,6 +165,37 @@ fun NewParicipant(
             }
         }
     }
+}
+
+@Composable
+private fun BirthdaySelectionField(
+    state: ResultState.Success<NewParticipantState>,
+    onAction: (ActionsNewParticipant) -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+
+    if (interactionSource.collectIsPressedAsState().value) {
+        onAction(ActionsNewParticipant.ShowDatePicker)
+    }
+
+    DateInputField(
+        date = state.data.birthDate,
+        label = "Geburtsdatum:",
+        trailingIcon = {
+            IconButton(
+                onClick = {
+                    onAction(ActionsNewParticipant.ShowDatePicker)
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Bearbeiten",
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        },
+        interactionSource = TODO(),
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

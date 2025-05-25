@@ -1,6 +1,8 @@
 package view.event.new_event
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -39,39 +41,31 @@ fun SimpleDateRangePickerInDatePickerDialog(
     from: Instant?,
     to: Instant?,
     isEditable: Boolean = true,
-    isInputFiledEditable: Boolean = true,
     buttonText: String? = null
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
 
-    //onSelect(dateRangePickerState.selectedStartDateMillis!!, dateRangePickerState.selectedEndDateMillis!!);
+    var interactionSource = remember { MutableInteractionSource() }
+
+    if (interactionSource.collectIsPressedAsState().value && isEditable) {
+        showDatePicker = true
+    }
+
     FlowRow(
         horizontalArrangement = Arrangement.Start,
         modifier = Modifier.fillMaxWidth(),
     ) {
         DateInputField(
             date = from,
-            onDateChange = { dateAsInstant ->
-                onSelect(
-                    dateAsInstant.toEpochMilliseconds(),
-                    to?.toEpochMilliseconds() ?: Clock.System.now()
-                        .toEpochMilliseconds()
-                )
-            },
-            label = "Start" + (if (isEditable && !isInputFiledEditable) " (Änderung über Datum ändern)" else "" + ":"),
-            isInputFieldEditable = isInputFiledEditable && isEditable,
+            label = "Start:",
+            isInputFieldEditable = isEditable,
+            interactionSource = interactionSource
         )
         DateInputField(
             date = to,
-            onDateChange = { dateAsInstant ->
-                onSelect(
-                    from?.toEpochMilliseconds() ?: Clock.System.now()
-                        .toEpochMilliseconds(),
-                    dateAsInstant.toEpochMilliseconds()
-                )
-            },
-            label = "Ende" + (if (isEditable && !isInputFiledEditable) " (Änderung über Datum ändern)" else "" + ":"),
-            isInputFieldEditable = isInputFiledEditable && isEditable,
+            label = "Ende:",
+            isInputFieldEditable = isEditable,
+            interactionSource = interactionSource
         )
         Button(
             // Calendar icon to open DatePicker

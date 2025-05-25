@@ -1,5 +1,7 @@
 package view.shared.date.dateinputfield
 
+import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,14 +22,11 @@ import kotlinx.datetime.Instant
 import view.shared.HelperFunctions
 import view.shared.date.FutureOrPresentSelectableDates
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateInputField(
     date: Instant?,
-    onDateChange: (Instant) -> Unit,
+    interactionSource: MutableInteractionSource,
     label: String,
-    selectableDates: SelectableDates = FutureOrPresentSelectableDates,
-    selecteableDateError: String = "Datum liegt nicht in der Zukunft",
     trailingIcon: @Composable () -> Unit = {},
     isInputFieldEditable: Boolean = true,
 ) {
@@ -54,24 +53,8 @@ fun DateInputField(
         readOnly = !isInputFieldEditable,
         value = text,
         trailingIcon = trailingIcon,
-        onValueChange = { newDate ->
-            if (newDate.length <= 8 && newDate.all { it.isDigit() }) {
-                text = newDate
-                if (newDate.length == 8) {
-                    try {
-                        val parseDate = HelperFunctions.parseDate(newDate)
-                        if (selectableDates.isSelectableDate(parseDate.toEpochMilliseconds())) {
-                            onDateChange(parseDate)
-                            error = ""
-                        } else {
-                            error = selecteableDateError
-                        }
-                    } catch (e: Exception) {
-                        error = "Invalides Datum"
-                    }
-                }
-            }
-        },
+        onValueChange = {},
+        interactionSource = interactionSource,
         modifier = Modifier
             .padding(8.dp).height(IntrinsicSize.Min),
         visualTransformation = DateTransformation()

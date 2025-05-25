@@ -5,6 +5,8 @@ import CategorizedShoppingListViewModel
 import MaterialListViewModel
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -135,42 +137,7 @@ fun NewEventPage(
                         Row(
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            OutlinedTextField(
-                                value = "" + sharedState.data.participantList.size,
-                                readOnly = true,
-                                onValueChange = { },
-                                supportingText = { Text("Änderung über Teilnehmenden-Icon") },
-                                label = { Text("Teilnehmendenanzahl:") },
-                                modifier = Modifier.padding(8.dp),
-                                trailingIcon = {
-                                    TextButton(
-                                        // Calendar icon to open DatePicker
-                                        onClick = {
-                                            onAction(
-                                                NavigationActions.GoToRoute(
-                                                    Routes.ParticipantsOfEvent
-                                                )
-                                            )
-                                        },
-                                        modifier = Modifier
-                                            .padding(8.dp).height(IntrinsicSize.Min)
-                                            .align(Alignment.CenterVertically)
-                                            .clip(shape = RoundedCornerShape(75))
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Person,
-                                            contentDescription = "Person",
-                                            tint = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    }
-
-                                    Icon(
-                                        imageVector = Icons.Default.Person,
-                                        contentDescription = "Person",
-                                        tint = MaterialTheme.colorScheme.onBackground,
-                                    )
-                                }
-                            )
+                            ParticipantNumberTextField(sharedState, onAction)
                         }
                         SimpleDateRangePickerInDatePickerDialog(
                             from = sharedState.data.event.from,
@@ -183,7 +150,6 @@ fun NewEventPage(
                                 }
                             },
                             isEditable = true,
-                            isInputFiledEditable = sharedState.data.mealsGroupedByDate.isEmpty(),
                             buttonText = getButtonText(sharedState.data.event)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -217,6 +183,62 @@ fun NewEventPage(
             }
         }
     }
+}
+
+@Composable
+private fun ParticipantNumberTextField(
+    sharedState: ResultState.Success<EventState>,
+    onAction: (BaseAction) -> Unit
+) {
+    val source = remember {
+        MutableInteractionSource(
+
+        )
+    }
+
+    if (source.collectIsPressedAsState().value) {
+        onAction(
+            NavigationActions.GoToRoute(
+                Routes.ParticipantsOfEvent
+            )
+        )
+    }
+
+    OutlinedTextField(
+        value = "" + sharedState.data.participantList.size,
+        readOnly = true,
+        onValueChange = { },
+        interactionSource = source,
+        label = { Text("Teilnehmendenanzahl:") },
+        modifier = Modifier.padding(8.dp),
+        trailingIcon = {
+            TextButton(
+                // Calendar icon to open DatePicker
+                onClick = {
+                    onAction(
+                        NavigationActions.GoToRoute(
+                            Routes.ParticipantsOfEvent
+                        )
+                    )
+                },
+                modifier = Modifier
+                    .padding(8.dp).height(IntrinsicSize.Min)
+                    .clip(shape = RoundedCornerShape(75))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Person",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "Person",
+                tint = MaterialTheme.colorScheme.onBackground,
+            )
+        }
+    )
 }
 
 @Composable

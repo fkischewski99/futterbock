@@ -11,8 +11,8 @@ on:
 permissions: write-all
 
 jobs:
-  create-release:
-    uses: ./.github/workflows/create-release.yml
+  #  create-release:
+  #    uses: ./.github/workflows/create-release.yml
 
 
   #build-android:
@@ -24,6 +24,7 @@ jobs:
     uses: ./.github/workflows/build-windows.yml
     with:
       asset_url: ${{ needs.create-release.outputs.upload_asset_url }}
+    secrets: inherit
 
 #  build-macos:
 #    needs: create-release

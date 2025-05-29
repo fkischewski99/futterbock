@@ -2,6 +2,9 @@ package services
 
 import data.EventRepository
 import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toLocalDateTime
 import model.Meal
 import model.ParticipantTime
 
@@ -39,7 +42,7 @@ class ChangeDateOfEvent(private val eventRepository: EventRepository) {
     ): List<Meal> {
         val listOfNewMeals: MutableList<Meal> = mutableListOf()
         val offSet =
-            newStartDate.epochSeconds - oldStartDate.epochSeconds;
+            caluclateOffsetBetweenDates(newStartDate, oldStartDate);
         listOfMeals.forEach { meal ->
             val newMealEpochSeconds = meal.day.epochSeconds + offSet;
             if (newEndDate.epochSeconds >= newMealEpochSeconds && newStartDate.epochSeconds <= newMealEpochSeconds) {
@@ -51,5 +54,18 @@ class ChangeDateOfEvent(private val eventRepository: EventRepository) {
             }
         }
         return listOfNewMeals;
+    }
+
+    private fun caluclateOffsetBetweenDates(
+        newStartDate: Instant,
+        oldStartDate: Instant
+    ): Long {
+
+        val timeZone = TimeZone.currentSystemDefault()
+
+        val newStartOfDay = newStartDate.toLocalDateTime(timeZone).date.atStartOfDayIn(timeZone)
+        val oldStartOfDay = oldStartDate.toLocalDateTime(timeZone).date.atStartOfDayIn(timeZone)
+
+        return newStartOfDay.epochSeconds - oldStartOfDay.epochSeconds
     }
 }

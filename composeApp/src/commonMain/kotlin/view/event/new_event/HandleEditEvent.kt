@@ -190,7 +190,7 @@ class HandleEditEvent(
     ): ResultState.Success<EventState> {
         val startDateSelect = HelperFunctions.getInstant(startMillis)
         val endDateSelect = HelperFunctions.getInstant(endMillis)
-        val oldStartDate = event.from
+        val oldStartDate = oldState.event.from
         event.from = startDateSelect
         event.to = endDateSelect
 

@@ -11,7 +11,7 @@ interface EditEventActions : BaseAction {
     data class ChangeEventDates(val eventStartMillis: Long, val eventEndMillis: Long) :
         EditEventActions
 
-    data class CopyEventToFuture(val start: Long, val end: Long) : EditEventActions
+    data class CopyEventToFuture(val start: Long, val end: Long) : EditEventActions, LoadingAction
     data class DeleteMeal(val item: Meal) : EditEventActions
     data class AddNewMeal(val day: LocalDate) : EditEventActions
     data class EditExistingMeal(val item: Meal) : EditEventActions

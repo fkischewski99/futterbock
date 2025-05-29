@@ -17,6 +17,18 @@ Die App basiert dabei auf dem hier erhältlichem Futterbock: https://bockbuecher
 
 Fragen oder Feedback gerne an: <a href="mailto:kontakt@bockbuecher.de">kontakt@bockbuecher.de</a>
 
+## Geplante Features
+
+### Auf jeden Fall
+
+- Verwaltung von Teilnehmenden (Stammesmitglieder)
+- Hinzufügen von Unverträglichkeiten (Gluten, Laktose etc)
+- Hinzufügen von Unverträglichkeiten gegen einzelne Lebensmittel
+
+### Möglicherweise
+
+- Erstellung von Küchendienstplänen?
+
 ## Technical
 
 ```shell

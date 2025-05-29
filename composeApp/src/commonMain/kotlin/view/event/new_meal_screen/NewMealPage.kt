@@ -61,6 +61,7 @@ import view.event.actions.BaseAction
 import view.event.actions.EditEventActions
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
+import view.event.recepie_overview_screen.RecipeOverviewActions
 import view.event.recepie_overview_screen.RecipeOverviewViewModel
 import view.navigation.Routes
 import view.shared.HelperFunctions
@@ -83,7 +84,10 @@ fun EditMealScreen(
         allRecipes = allRecipesState.value,
         onAction = { action ->
             when (action) {
-                is EditMealActions.ViewRecipe -> recipeOverviewViewModel.initializeViewModel(action.recipeSelection)
+                is EditMealActions.ViewRecipe -> recipeOverviewViewModel.handleAction(
+                    RecipeOverviewActions.InitializeScreen(action.recipeSelection)
+                )
+
                 is NavigationActions -> handleNavigation(navController, action)
                 else -> sharedEventViewModel.onAction(action)
             }
@@ -140,7 +144,8 @@ fun NewMealPage(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
-                                Icon(imageVector = Icons.Default.Info,
+                                Icon(
+                                    imageVector = Icons.Default.Info,
                                     contentDescription = "Rezept ansehen",
                                     modifier = Modifier.padding(start = 16.dp).clickable {
                                         navigateToRecipe(onAction, it)

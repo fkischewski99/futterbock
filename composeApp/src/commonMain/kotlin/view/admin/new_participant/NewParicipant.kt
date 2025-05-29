@@ -194,7 +194,7 @@ private fun BirthdaySelectionField(
                 )
             }
         },
-        interactionSource = TODO(),
+        interactionSource = interactionSource,
     )
 }
 

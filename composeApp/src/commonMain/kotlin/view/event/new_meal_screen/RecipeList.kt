@@ -1,40 +1,18 @@
 package view.event.new_meal_screen
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import model.EatingHabit
-import model.FoodIntolerance
-import model.ParticipantTime
-import model.Range
-import model.Recipe
-import model.RecipeSelection
-import model.RecipeType
-import model.Season
-import model.TimeRange
+import model.*
 
 @Composable
 fun RecipeList(
@@ -49,20 +27,18 @@ fun RecipeList(
     filterForSeason: Season?,
     filterForRecipeType: RecipeType?
 ) {
-    Column(
-        modifier = Modifier.verticalScroll(rememberScrollState())
-    ) {
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
         allRecipes
             .filter {
                 it.matchesSearchQuery(
-                    searchText = searchText,
-                    filterForEatingHabit = filterForEatingHabit,
-                    filterForFoodIntolerance = filterForFoodIntolerance,
-                    filterForPrice = filterForPrice,
-                    filterForTime = filterForTime,
-                    filterForRecipeType = filterForRecipeType,
-                    filterForSkillLevel = filterForSkillLevel,
-                    filterForSeason = filterForSeason
+                    searchText,
+                    filterForEatingHabit,
+                    filterForFoodIntolerance,
+                    filterForPrice,
+                    filterForTime,
+                    filterForRecipeType,
+                    filterForSkillLevel,
+                    filterForSeason
                 )
             }
             .forEach { recipe ->
@@ -73,14 +49,25 @@ fun RecipeList(
 
 @Composable
 fun RecipeItem(recipe: Recipe, onClicked: (Recipe) -> Unit) {
-    Row(
-        modifier = Modifier
-            .padding(16.dp)
-            .clickable { onClicked(recipe) }
-    ) {
-        Text(text = recipe.name + " - (Seite " + recipe.pageInCookbook + ")")
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onClicked(recipe) }
+                .padding(16.dp)
+        ) {
+            Text("${recipe.name} - (Seite ${recipe.pageInCookbook})")
+        }
+        HorizontalDivider()
     }
-    HorizontalDivider()
+}
+
+fun canParticipantEatRecipe(member: ParticipantTime, recipeSelection: RecipeSelection): Boolean {
+    return member.participant?.let { participant ->
+        recipeSelection.recipe?.let { recipe ->
+            participant.eatingHabit >= recipe.dietaryHabit
+        }
+    } ?: false
 }
 
 @Composable
@@ -89,76 +76,141 @@ fun RecipeWithMembers(
     recipeSelection: RecipeSelection,
     onAction: (EditMealActions) -> Unit
 ) {
-
     val checkedState = remember { mutableStateMapOf<String, Boolean>() }
+    var expanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(recipeSelection) {
-        checkedState.clear() // Clear existing states
+        checkedState.clear()
         participants.forEach { participant ->
-            checkedState[participant.getListItemTitle()] =
-                recipeSelection.eaterIds.contains(participant.participant!!.uid)
+            checkedState[participant.participantRef] =
+                recipeSelection.eaterIds.contains(participant.participantRef)
         }
     }
 
-
-    var expanded by remember { mutableStateOf(false) }
+    val selectedParticipants = participants.filter { checkedState[it.participantRef] == true }
+    val allSelectedCanEat =
+        selectedParticipants.all { canParticipantEatRecipe(it, recipeSelection) }
 
     Column {
-        Row(
-            modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Checkbox(checked = checkedState.values.all { it }, onCheckedChange = { isChecked ->
-                participants.forEach { member ->
-                    checkedState[member.getListItemTitle()] = isChecked
-                    if (isChecked) {
-                        onAction(EditMealActions.AddEaterToRecipe(recipeSelection, member))
+        SelectAllRow(
+            expanded = expanded,
+            onToggleExpand = { expanded = !expanded },
+            isAllSelected = checkedState.values.all { it },
+            canAllEat = allSelectedCanEat,
+            onToggleAll = { isChecked ->
+                participants.forEach { participant ->
+                    checkedState[participant.participantRef] = isChecked
+                    val action = if (isChecked) {
+                        EditMealActions.AddEaterToRecipe(recipeSelection, participant)
                     } else {
-                        onAction(EditMealActions.RemoveEaterFromRecipe(recipeSelection, member))
+                        EditMealActions.RemoveEaterFromRecipe(recipeSelection, participant)
                     }
+                    onAction(action)
                 }
-            })
-            val text = if (checkedState.values.all { it }) "Alle entfernen" else "Alle hinzufügen"
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.weight(1f)
-            )
-            Icon(
-                imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.ArrowDropDown,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onBackground
-            )
-        }
+            }
+        )
+
         if (expanded) {
-            participants.forEach { member ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(checked = checkedState[member.getListItemTitle()] ?: false,
-                        onCheckedChange = { isChecked ->
-                            checkedState[member.getListItemTitle()] = isChecked
-                            if (isChecked) {
-                                onAction(EditMealActions.AddEaterToRecipe(recipeSelection, member))
-                            } else {
-                                onAction(
-                                    EditMealActions.RemoveEaterFromRecipe(
-                                        recipeSelection,
-                                        member
-                                    )
-                                )
-                            }
-                        })
-                    Text(
-                        text = member.getListItemTitle(),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+            participants.forEach { participant ->
+                val isChecked = checkedState[participant.participantRef] ?: false
+                val canEat = canParticipantEatRecipe(participant, recipeSelection)
+
+                ParticipantCheckboxRow(
+                    participant = participant,
+                    isChecked = isChecked,
+                    canEat = canEat,
+                    onCheckedChange = { checked ->
+                        checkedState[participant.participantRef] = checked
+                        val action = if (checked) {
+                            EditMealActions.AddEaterToRecipe(recipeSelection, participant)
+                        } else {
+                            EditMealActions.RemoveEaterFromRecipe(recipeSelection, participant)
+                        }
+                        onAction(action)
+                    }
+                )
             }
         }
     }
 }
+
+@Composable
+private fun SelectAllRow(
+    expanded: Boolean,
+    onToggleExpand: () -> Unit,
+    isAllSelected: Boolean,
+    canAllEat: Boolean,
+    onToggleAll: (Boolean) -> Unit
+) {
+    val checkboxColor = getCheckboxColorForErrorState(!canAllEat)
+    val textColor = getTextColorForErrorState(!canAllEat)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onToggleExpand() }
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Checkbox(
+            checked = isAllSelected,
+            onCheckedChange = onToggleAll,
+            colors = CheckboxDefaults.colors(
+                checkedColor = checkboxColor,
+                uncheckedColor = checkboxColor
+            )
+        )
+        Text(
+            text = if (isAllSelected) "Alle entfernen" else "Alle hinzufügen",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f),
+            color = textColor
+        )
+        Icon(
+            imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.ArrowDropDown,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onBackground
+        )
+    }
+}
+
+@Composable
+private fun ParticipantCheckboxRow(
+    participant: ParticipantTime,
+    isChecked: Boolean,
+    canEat: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    val hasError = !canEat && isChecked
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Checkbox(
+            checked = isChecked,
+            onCheckedChange = onCheckedChange,
+            colors = CheckboxDefaults.colors(
+                checkedColor = getCheckboxColorForErrorState(!canEat)
+            )
+        )
+        Text(
+            text = participant.getListItemTitle(),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f),
+            color = getTextColorForErrorState(hasError)
+        )
+    }
+}
+
+@Composable
+private fun getCheckboxColorForErrorState(hasError: Boolean) =
+    if (hasError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+
+@Composable
+private fun getTextColorForErrorState(hasError: Boolean) =
+    if (hasError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground

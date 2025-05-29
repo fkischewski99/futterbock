@@ -53,6 +53,13 @@ class HandleEditEvent(
             )
 
             is EditEventActions.SharePdf -> onPdfShare(currentState = currentState)
+            is EditEventActions.CopyEventToFuture -> copyEventToFuture(
+                eventRepository = eventRepository,
+                oldState = currentState,
+                startMillis = editEventActions.start,
+                endMillis = editEventActions.end
+            )
+
             else -> {
                 Logger.i(editEventActions.toString())
                 return ResultState.Error("wrong action")
@@ -183,7 +190,7 @@ class HandleEditEvent(
     ): ResultState.Success<EventState> {
         val startDateSelect = HelperFunctions.getInstant(startMillis)
         val endDateSelect = HelperFunctions.getInstant(endMillis)
-        val oldStartDate = event.from
+        val oldStartDate = oldState.event.from
         event.from = startDateSelect
         event.to = endDateSelect
 

@@ -17,6 +17,7 @@ import services.ChangeDateOfEvent
 import services.pdfService.PdfServiceModule
 import view.event.actions.BaseAction
 import view.event.actions.EditEventActions
+import view.event.actions.LoadingAction
 import view.event.new_event.HandleEditEvent
 import view.event.new_event.groupMealsByDate
 import view.event.new_meal_screen.EditMealActions
@@ -71,6 +72,10 @@ class SharedEventViewModel(
     private fun handleEventActions(editEventActions: EditEventActions) {
         val currentState = eventState.value.getSuccessData() ?: return
         viewModelScope.launch(Dispatchers.IO) {
+            if (editEventActions is LoadingAction)
+                _eventState.value =
+                    ResultState.Loading
+
             _eventState.value =
                 handleEditEvent.handleAction(currentState, editEventActions)
         }

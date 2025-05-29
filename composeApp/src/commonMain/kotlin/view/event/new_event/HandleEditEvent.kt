@@ -53,6 +53,13 @@ class HandleEditEvent(
             )
 
             is EditEventActions.SharePdf -> onPdfShare(currentState = currentState)
+            is EditEventActions.CopyEventToFuture -> copyEventToFuture(
+                eventRepository = eventRepository,
+                oldState = currentState,
+                startMillis = editEventActions.start,
+                endMillis = editEventActions.end
+            )
+
             else -> {
                 Logger.i(editEventActions.toString())
                 return ResultState.Error("wrong action")

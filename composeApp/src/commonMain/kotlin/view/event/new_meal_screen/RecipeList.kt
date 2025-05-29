@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -83,6 +84,11 @@ fun RecipeItem(recipe: Recipe, onClicked: (Recipe) -> Unit) {
     HorizontalDivider()
 }
 
+fun canParticipantEatRecipe(member: ParticipantTime, recipeSelection: RecipeSelection): Boolean {
+    if (member.participant == null || recipeSelection.recipe == null) return false
+    return member.participant!!.eatingHabit >= recipeSelection.recipe!!.dietaryHabit
+}
+
 @Composable
 fun RecipeWithMembers(
     participants: List<ParticipantTime>,
@@ -95,11 +101,22 @@ fun RecipeWithMembers(
     LaunchedEffect(recipeSelection) {
         checkedState.clear() // Clear existing states
         participants.forEach { participant ->
-            checkedState[participant.getListItemTitle()] =
-                recipeSelection.eaterIds.contains(participant.participant!!.uid)
+            checkedState[participant.participantRef] =
+                recipeSelection.eaterIds.contains(participant.participantRef)
         }
     }
 
+    val allSelectedCanEat =
+        participants
+            .filter { participant ->
+                checkedState[participant.participantRef] == true
+            }
+            .all { canParticipantEatRecipe(it, recipeSelection) }
+
+    val checkboxAllColor =
+        getCheckboxColorForErrorState(!allSelectedCanEat)
+    val checkAllTextColor =
+        getTextColorForErrorState(!allSelectedCanEat)
 
     var expanded by remember { mutableStateOf(false) }
 
@@ -109,21 +126,28 @@ fun RecipeWithMembers(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Checkbox(checked = checkedState.values.all { it }, onCheckedChange = { isChecked ->
-                participants.forEach { member ->
-                    checkedState[member.getListItemTitle()] = isChecked
-                    if (isChecked) {
-                        onAction(EditMealActions.AddEaterToRecipe(recipeSelection, member))
-                    } else {
-                        onAction(EditMealActions.RemoveEaterFromRecipe(recipeSelection, member))
+            Checkbox(
+                colors = CheckboxDefaults.colors(
+                    checkedColor = checkboxAllColor,
+                    uncheckedColor = checkboxAllColor
+                ),
+                checked = checkedState.values.all { it },
+                onCheckedChange = { isChecked ->
+                    participants.forEach { member ->
+                        checkedState[member.participantRef] = isChecked
+                        if (isChecked) {
+                            onAction(EditMealActions.AddEaterToRecipe(recipeSelection, member))
+                        } else {
+                            onAction(EditMealActions.RemoveEaterFromRecipe(recipeSelection, member))
+                        }
                     }
-                }
-            })
+                })
             val text = if (checkedState.values.all { it }) "Alle entfernen" else "Alle hinzufügen"
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                color = checkAllTextColor
             )
             Icon(
                 imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.ArrowDropDown,
@@ -138,9 +162,19 @@ fun RecipeWithMembers(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Checkbox(checked = checkedState[member.getListItemTitle()] ?: false,
+                    val participantIsSelected = checkedState[member.participantRef] ?: false
+                    Checkbox(
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = getCheckboxColorForErrorState(
+                                !canParticipantEatRecipe(
+                                    member = member,
+                                    recipeSelection = recipeSelection
+                                )
+                            ),
+                        ),
+                        checked = participantIsSelected,
                         onCheckedChange = { isChecked ->
-                            checkedState[member.getListItemTitle()] = isChecked
+                            checkedState[member.participantRef] = isChecked
                             if (isChecked) {
                                 onAction(EditMealActions.AddEaterToRecipe(recipeSelection, member))
                             } else {
@@ -155,10 +189,24 @@ fun RecipeWithMembers(
                     Text(
                         text = member.getListItemTitle(),
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        color = getTextColorForErrorState(
+                            hasError = !canParticipantEatRecipe(
+                                member = member,
+                                recipeSelection = recipeSelection
+                            ) && participantIsSelected
+                        )
                     )
                 }
             }
         }
     }
 }
+
+@Composable
+private fun getCheckboxColorForErrorState(hasError: Boolean) =
+    if (hasError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+
+@Composable
+private fun getTextColorForErrorState(hasError: Boolean) =
+    if (hasError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground

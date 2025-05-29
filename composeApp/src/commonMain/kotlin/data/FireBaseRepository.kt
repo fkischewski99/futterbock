@@ -164,7 +164,8 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         val mealList: List<Meal> = firestore.collection(EVENTS).document(eventId)
             .collection(MEALS).get().documents
             .map { meal -> meal.data { } }
-        return mealList
+        val mealListWithRecipes = mealList.map { meal -> getMealById(eventId, meal.uid) }
+        return mealListWithRecipes
     }
 
     override suspend fun getMealById(eventId: String, mealId: String): Meal {

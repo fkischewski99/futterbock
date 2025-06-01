@@ -1,13 +1,17 @@
 package view.admin.new_participant
 
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,12 +22,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -42,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import model.EatingHabit
+import model.FoodIntolerance
 import org.koin.compose.koinInject
 import view.shared.HelperFunctions
 import view.shared.MGCircularProgressIndicator
@@ -78,7 +86,7 @@ fun NewParticipantScreen(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun NewParicipant(
     state: ResultState<NewParticipantState>,
@@ -132,6 +140,10 @@ fun NewParicipant(
                             BirthdaySelectionField(state, onAction)
 
                         }
+                        IntoleranceSelection(
+                            state = state.data,
+                            onAction = onAction
+                        )
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.padding(top = 8.dp).fillMaxWidth()
@@ -164,6 +176,45 @@ fun NewParicipant(
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun IntoleranceSelection(
+    state: NewParticipantState,
+    onAction: (ActionsNewParticipant) -> Unit
+) {
+    Row(modifier = Modifier.padding(8.dp)) {
+        Text("Unverträglichkeiten:", style = MaterialTheme.typography.titleMedium)
+    }
+    FlowRow(
+        modifier = Modifier.padding(horizontal = 8.dp).fillMaxWidth()
+    ) {
+        FilterChip(
+            onClick = { onAction(ActionsNewParticipant.AddOrRemoveIntolerance(FoodIntolerance.GLUTEN_INTOLERANCE)) },
+            label = { Text("Glutenfrei") },
+            selected = state.foodIntolerance.contains(FoodIntolerance.GLUTEN_INTOLERANCE),
+            modifier = Modifier.padding(end = 8.dp, bottom = 8.dp)
+        )
+        FilterChip(
+            onClick = { onAction(ActionsNewParticipant.AddOrRemoveIntolerance(FoodIntolerance.LACTOSE_INTOLERANCE)) },
+            label = { Text("Laktosefrei") },
+            selected = state.foodIntolerance.contains(FoodIntolerance.LACTOSE_INTOLERANCE),
+            modifier = Modifier.padding(end = 8.dp, bottom = 8.dp)
+        )
+        FilterChip(
+            onClick = { onAction(ActionsNewParticipant.AddOrRemoveIntolerance(FoodIntolerance.FRUCTOSE_INTOLERANCE)) },
+            label = { Text("Fruktosefrei") },
+            selected = state.foodIntolerance.contains(FoodIntolerance.FRUCTOSE_INTOLERANCE),
+            modifier = Modifier.padding(end = 8.dp, bottom = 8.dp)
+        )
+        FilterChip(
+            onClick = { onAction(ActionsNewParticipant.AddOrRemoveIntolerance(FoodIntolerance.WITHOUT_NUTS)) },
+            label = { Text("Ohne Nüsse") },
+            selected = state.foodIntolerance.contains(FoodIntolerance.WITHOUT_NUTS),
+            modifier = Modifier.padding(end = 8.dp, bottom = 8.dp)
+        )
     }
 }
 
@@ -243,3 +294,4 @@ fun DropDownEatingHabit(
         }
     }
 }
+

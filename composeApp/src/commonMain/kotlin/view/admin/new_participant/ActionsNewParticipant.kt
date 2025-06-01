@@ -1,6 +1,7 @@
 package view.admin.new_participant
 
 import model.EatingHabit
+import model.FoodIntolerance
 import model.Participant
 import view.event.actions.BaseAction
 
@@ -15,5 +16,9 @@ interface ActionsNewParticipant : BaseAction {
     data class ChangeLastName(val lastName: String) : ActionsNewParticipant
     data class SelectBirthDate(val millis: Long) : ActionsNewParticipant
     data class SelectEatingHabit(val item: EatingHabit) : ActionsNewParticipant
+    data class AddOrRemoveIntolerance(val foodIntolerance: FoodIntolerance) :
+        ActionsNewParticipant {
+    }
+
     data object Save : ActionsNewParticipant
 }

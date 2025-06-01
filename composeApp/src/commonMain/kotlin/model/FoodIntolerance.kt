@@ -12,7 +12,7 @@ import kotlinx.serialization.encoding.Encoder
 @Serializable(with = FoodIntoleranceSerializer::class)
 enum class FoodIntolerance(val displayName: String) {
     LACTOSE_INTOLERANCE("laktosefrei"),
-    FRUCTOSE_INTOLERANCE("fruktosearm"),
+    FRUCTOSE_INTOLERANCE("fruktosefrei"),
     WITHOUT_NUTS("ohne Nüsse"),
     GLUTEN_INTOLERANCE("glutenfrei");
 

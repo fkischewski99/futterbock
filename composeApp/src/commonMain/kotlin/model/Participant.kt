@@ -9,6 +9,7 @@ import view.shared.list.ListItem
 class Participant : ListItem<Participant> {
     var uid: String = "";
     var allergies: MutableList<String> = mutableListOf();
+    var intolerances: MutableList<FoodIntolerance> = mutableListOf();
     var group: String = ""
     var birthdate: Instant? = null;
     var eatingHabit: EatingHabit = EatingHabit.OMNIVORE
@@ -23,7 +24,11 @@ class Participant : ListItem<Participant> {
         if (birthdate == null) {
             return ""
         }
-        return HelperFunctions.formatDate(birthdate!!)
+        var subtitle = HelperFunctions.formatDate(birthdate!!)
+        if (intolerances.isNotEmpty()) {
+            subtitle += " - ${intolerances.joinToString { it.displayName }}"
+        }
+        return subtitle
     }
 
     override fun getItem(): Participant {

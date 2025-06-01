@@ -327,6 +327,7 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
     }
 
     override suspend fun updateParticipant(participant: Participant) {
+        participant.group = loginAndRegister.getCustomUserGroup()
         firestore.collection(PARTICIPANTS).document(participant.uid).set(participant)
     }
 

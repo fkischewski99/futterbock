@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import model.EatingHabit
+import model.FoodIntolerance
 import model.Participant
 import modules.viewModelModules
 import view.event.participants.ActionsParticipantsPage
@@ -16,11 +17,13 @@ import view.shared.ResultState
 
 
 data class NewParticipantState(
+    val participantId: String = "",
     val firstName: String = "",
     val lastName: String = "",
     val showDatePicker: Boolean = false,
     val selectedHabit: EatingHabit,
     val birthDate: Instant? = null,
+    val foodIntolerance: List<FoodIntolerance> = emptyList(),
     val isNewParticipant: Boolean = true
 )
 
@@ -44,8 +47,27 @@ class ViewModelNewParticipant(
                 actionsNewParticipant.participant
             )
 
+            is ActionsNewParticipant.AddOrRemoveIntolerance -> addOrRemoveIntolerance(
+                actionsNewParticipant.foodIntolerance
+            )
+
             is ActionsNewParticipant.DeleteParticipant -> deleteParticipant(actionsNewParticipant.participantId)
         }
+    }
+
+    private fun addOrRemoveIntolerance(foodIntolerance: FoodIntolerance) {
+        val data = state.value.getSuccessData() ?: return
+        val foodIntolerances: MutableList<FoodIntolerance> = data.foodIntolerance.toMutableList()
+        if (data.foodIntolerance.contains(foodIntolerance)) {
+            foodIntolerances.remove(foodIntolerance)
+        } else {
+            foodIntolerances.add(foodIntolerance)
+        }
+        _state.value = ResultState.Success(
+            data.copy(
+                foodIntolerance = foodIntolerances
+            )
+        )
     }
 
     private fun deleteParticipant(participantId: String) {
@@ -58,10 +80,12 @@ class ViewModelNewParticipant(
         val data = state.value.getSuccessData() ?: return
         _state.value = ResultState.Loading
         val participant = Participant().apply {
+            uid = data.participantId
             firstName = data.firstName
             lastName = data.lastName
             eatingHabit = data.selectedHabit
             birthdate = data.birthDate
+            intolerances = data.foodIntolerance.toMutableList()
         }
         viewModelScope.launch {
             try {
@@ -83,11 +107,13 @@ class ViewModelNewParticipant(
     private fun initializeWithParticipant(participant: Participant) {
         _state.value = ResultState.Success(
             NewParticipantState(
+                participantId = participant.uid,
                 firstName = participant.firstName,
                 lastName = participant.lastName,
                 selectedHabit = participant.eatingHabit,
                 birthDate = participant.birthdate,
-                isNewParticipant = true
+                foodIntolerance = participant.intolerances,
+                isNewParticipant = false
             )
         )
     }
@@ -100,7 +126,7 @@ class ViewModelNewParticipant(
                 lastName = "",
                 selectedHabit = EatingHabit.OMNIVORE,
                 birthDate = null,
-                isNewParticipant = false
+                isNewParticipant = true
             )
         )
     }

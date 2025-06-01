@@ -9,12 +9,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import model.Participant
+import view.shared.ResultState
+
+data class AllParticipantsState(
+    val allParticipants: List<Participant> = listOf()
+)
 
 class AllParticipantsViewModel(
     private val eventRepository: EventRepository
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<List<Participant>>(emptyList())
+    private val _state: MutableStateFlow<ResultState<AllParticipantsState>> =
+        MutableStateFlow(ResultState.Loading);
     val state = _state.asStateFlow()
 
     init {
@@ -22,7 +28,8 @@ class AllParticipantsViewModel(
             Logger.i("Request all participants for event")
             try {
                 eventRepository.getAllParticipantsOfStamm().collect { participants ->
-                    _state.value = participants
+                    _state.value =
+                        ResultState.Success(AllParticipantsState(allParticipants = participants))
                 }
             } catch (e: Exception) {
                 Logger.e("Error loading participants", e)

@@ -1,4 +1,4 @@
-package view.event.participants
+package view.admin.participants
 
 import CardWithList
 import androidx.compose.foundation.background
@@ -14,43 +14,40 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import model.ParticipantTime
 import org.koin.compose.koinInject
-import view.event.EventState
-import view.event.SharedEventViewModel
+import view.admin.new_participant.ActionsNewParticipant
+import view.admin.new_participant.ViewModelNewParticipant
 import view.event.actions.BaseAction
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
+import view.event.new_meal_screen.AllParticipantsState
+import view.event.new_meal_screen.AllParticipantsViewModel
+import view.login.ErrorField
 import view.navigation.Routes
-import view.shared.date.DateRangePickerDialog
-import view.shared.HelperFunctions
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
-import view.shared.date.SelectedAbleDatesWithFromTo
 
 
 @Composable
-fun ParticipantScreen(
+fun ParticipantAdminScreen(
     navController: NavHostController
 ) {
-    val sharedEventViewModel: SharedEventViewModel = koinInject()
-    val state = sharedEventViewModel.eventState.collectAsStateWithLifecycle()
+    val allParticipantsViewModel: AllParticipantsViewModel = koinInject()
+    val state = allParticipantsViewModel.state.collectAsStateWithLifecycle()
+
+    val viewModelNewParticipant = koinInject<ViewModelNewParticipant>()
 
     ParticipantPage(
         state = state.value,
         onAction = { action ->
             when (action) {
                 is NavigationActions -> handleNavigation(navController, action)
-                else -> sharedEventViewModel.onAction(action)
+                is ActionsNewParticipant -> viewModelNewParticipant.onAction(action)
             }
         }
     )
@@ -60,22 +57,17 @@ fun ParticipantScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ParticipantPage(
-    state: ResultState<EventState>,
+    state: ResultState<AllParticipantsState>,
     onAction: (BaseAction) -> Unit
 ) {
-
-    var showDatePicker by remember { mutableStateOf(false) }
-    var selectedParticipant: ParticipantTime? = null
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Teilnehmendeliste") },
+                title = { Text("Stammesmitglieder") },
                 navigationIcon = {
                     NavigationIconButton(
                         onLeave = {
                             onAction(NavigationActions.GoBack)
-                            onAction(EditParticipantActions.UpdateAllMeals)
                         }
                     )
                 }
@@ -97,48 +89,24 @@ fun ParticipantPage(
                     ) {
                         CardWithList(
                             title = "Teilnehmende",
-                            listItems = state.data.participantList,
+                            listItems = state.data.allParticipants,
                             onListItemClick = { item ->
-                                showDatePicker = true
-                                selectedParticipant = item.getItem()
+                                onAction(ActionsNewParticipant.InitWithParticipant(item.getItem()))
+                                onAction(NavigationActions.GoToRoute(Routes.CreateOrEditParticipant))
                             },
                             addItemToList = {
-                                onAction(NavigationActions.GoToRoute(Routes.AddOrRemoveParticipantsOfEvent))
+                                onAction(ActionsNewParticipant.InitWithoutParticipant)
+                                onAction(NavigationActions.GoToRoute(Routes.CreateOrEditParticipant))
                             },
                             onDeleteClick = { participant ->
-                                onAction(EditParticipantActions.DeleteParticipant(participant.getItem()))
+                                onAction(ActionsNewParticipant.DeleteParticipant(participant.getItem().uid))
                             }
 
                         )
                     }
-
-                    if (showDatePicker) {
-                        DateRangePickerDialog(
-                            onSelect = { startMillis, endMillis ->
-                                showDatePicker = false
-                                onAction(
-                                    EditParticipantActions.SelectDateOfParticipant(
-                                        selectedParticipant,
-                                        startMillis,
-                                        endMillis
-                                    )
-                                )
-                            },
-                            startMillis = HelperFunctions.getMillisInUTC(state.data.event.from),
-                            endMillis = HelperFunctions.getMillisInUTC(state.data.event.to),
-                            onDismiss = {
-                                showDatePicker = false
-                                selectedParticipant = null
-                            },
-                            selectableDates = SelectedAbleDatesWithFromTo(
-                                state.data.event.from,
-                                state.data.event.to
-                            )
-                        )
-                    }
                 }
 
-                is ResultState.Error -> TODO()
+                is ResultState.Error -> ErrorField(errorMessage = state.message)
                 ResultState.Loading -> MGCircularProgressIndicator()
             }
         }

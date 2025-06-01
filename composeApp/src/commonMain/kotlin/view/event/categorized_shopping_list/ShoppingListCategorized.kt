@@ -25,11 +25,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberBottomSheetScaffoldState
-import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,13 +35,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import model.Ingredient
 import model.ShoppingIngredient
-import model.Source
 import org.koin.compose.koinInject
 import view.event.actions.BaseAction
 import view.event.actions.NavigationActions
@@ -110,7 +105,8 @@ fun ShoppingListCategorized(
                     ) {
 
                         state.data.ingredientsByCategory.forEach { (category, ingredients) ->
-                            ShoppingList(ingredients, category,
+                            ShoppingList(
+                                ingredients, category,
                                 onCheckboxClicked = {
                                     onAction(EditShoppingListActions.ToggleShoppingDone(it))
                                 },
@@ -145,7 +141,8 @@ fun ShoppingList(
 ) {
     var categoryExpanded by remember { mutableStateOf(true) }
     Spacer(modifier = Modifier.height(16.dp))
-    Row(modifier = Modifier.fillMaxWidth()
+    Row(
+        modifier = Modifier.fillMaxWidth()
         .clickable { categoryExpanded = !categoryExpanded }
         .padding(start = 8.dp),
         verticalAlignment = Alignment.CenterVertically) {

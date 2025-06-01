@@ -52,7 +52,7 @@ class HelperFunctions {
         }
 
         fun formatDate(date: Instant): String {
-            return formatLongDate(date.epochSeconds * 1000);
+            return formatLongDate(date.toEpochMilliseconds());
         }
 
         /**

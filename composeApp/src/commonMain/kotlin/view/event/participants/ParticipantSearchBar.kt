@@ -37,7 +37,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import model.Participant
 import org.koin.compose.koinInject
 import view.admin.new_participant.ActionsNewParticipant
 import view.admin.new_participant.ViewModelNewParticipant
@@ -46,8 +45,11 @@ import view.event.SharedEventViewModel
 import view.event.actions.BaseAction
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
+import view.event.new_meal_screen.AllParticipantsState
 import view.event.new_meal_screen.AllParticipantsViewModel
+import view.login.ErrorField
 import view.navigation.Routes
+import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
 
@@ -82,7 +84,7 @@ fun ParticipantSearchBarScreen(
 fun ParticipantSearchBar(
     state: ResultState<EventState>,
     onAction: (BaseAction) -> Unit,
-    allParticipants: List<Participant>
+    allParticipants: ResultState<AllParticipantsState>
 ) {
     var searchText by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(true) }
@@ -168,26 +170,33 @@ fun ParticipantSearchBar(
                                 )
                             }
                         }
-                        getSelectableParticipants(
-                            allParticipants = allParticipants,
-                            participantsOfEvent = state.data.participantList
-                        ).filter {
-                            it.firstName.lowercase().contains(searchText.lowercase()) ||
-                                    it.lastName.lowercase().contains(searchText.lowercase()) ||
-                                    (it.firstName.lowercase() + " " + it.lastName.lowercase()).contains(
-                                        searchText.lowercase()
-                                    )
-                        }.forEach {
-                            Row(
-                                modifier = Modifier.padding(16.dp).clickable {
-                                    searchText = ""
-                                    onAction(EditParticipantActions.AddParticipant(it))
-                                }
+                        when (allParticipants) {
+                            is ResultState.Success -> {
+                                getSelectableParticipants(
+                                    allParticipants = allParticipants.data.allParticipants,
+                                    participantsOfEvent = state.data.participantList
+                                ).filter {
+                                    it.firstName.lowercase().contains(searchText.lowercase()) ||
+                                            it.lastName.lowercase()
+                                                .contains(searchText.lowercase()) ||
+                                            (it.firstName.lowercase() + " " + it.lastName.lowercase()).contains(
+                                                searchText.lowercase()
+                                            )
+                                }.forEach {
+                                    Row(
+                                        modifier = Modifier.padding(16.dp).clickable {
+                                            searchText = ""
+                                            onAction(EditParticipantActions.AddParticipant(it))
+                                        }
 
-                            ) {
-                                Text(text = it.firstName.trim() + " " + it.lastName.trim())
+                                    ) {
+                                        Text(text = it.firstName.trim() + " " + it.lastName.trim())
+                                    }
+                                    HorizontalDivider()
+                                }
                             }
-                            HorizontalDivider()
+
+                            else -> {}
                         }
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -199,7 +208,7 @@ fun ParticipantSearchBar(
                                 ExtendedFloatingActionButton(
                                     onClick = {
                                         onAction(ActionsNewParticipant.InitWithoutParticipant)
-                                        onAction(NavigationActions.GoToRoute(Routes.CreateNewParticipant))
+                                        onAction(NavigationActions.GoToRoute(Routes.CreateOrEditParticipant))
                                     },
                                     modifier = Modifier.padding(bottom = 16.dp)
                                         .clip(shape = RoundedCornerShape(75)), // Limit the width to prevent stretching,
@@ -235,8 +244,8 @@ fun ParticipantSearchBar(
 
                 }
 
-                is ResultState.Error -> TODO()
-                ResultState.Loading -> TODO()
+                is ResultState.Error -> ErrorField(errorMessage = state.message)
+                ResultState.Loading -> MGCircularProgressIndicator()
             }
         }
     ) {

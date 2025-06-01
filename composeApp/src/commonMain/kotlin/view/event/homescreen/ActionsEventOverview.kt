@@ -1,6 +1,8 @@
 package view.event.homescreen
 
-sealed interface ActionsEventOverview {
+import view.event.actions.BaseAction
+
+sealed interface ActionsEventOverview : BaseAction {
     data object Logout : ActionsEventOverview
     data object NewEvent : ActionsEventOverview
     data object Init : ActionsEventOverview

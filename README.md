@@ -28,6 +28,7 @@ Fragen oder Feedback gerne an: <a href="mailto:kontakt@bockbuecher.de">kontakt@b
 ### Möglicherweise
 
 - Erstellung von Küchendienstplänen?
+- Erweiterung der PDFs --> Teilnehmendenliste mit Unverträglichkeiten + Ernährungsweise
 
 ## Technical
 

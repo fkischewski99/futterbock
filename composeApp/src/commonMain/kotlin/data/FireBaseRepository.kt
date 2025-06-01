@@ -321,10 +321,17 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         val participantId = generateRandomStringId()
         participant.uid = participantId
         participant.group = loginAndRegister.getCustomUserGroup()
-        Logger.i("yooy")
         firestore.collection(PARTICIPANTS)
             .document(participant.uid)
             .set(participant)
+    }
+
+    override suspend fun updateParticipant(participant: Participant) {
+        firestore.collection(PARTICIPANTS).document(participant.uid).set(participant)
+    }
+
+    override suspend fun deleteParticipant(participantId: String) {
+        firestore.collection(PARTICIPANTS).document(participantId).delete()
     }
 
     override suspend fun deleteParticipantOfEvent(eventId: String, participantId: String) {

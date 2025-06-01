@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import model.EatingHabit
 import model.Participant
+import modules.viewModelModules
 import view.event.participants.ActionsParticipantsPage
 import view.shared.ResultState
 
@@ -19,7 +20,8 @@ data class NewParticipantState(
     val lastName: String = "",
     val showDatePicker: Boolean = false,
     val selectedHabit: EatingHabit,
-    val birthDate: Instant? = null
+    val birthDate: Instant? = null,
+    val isNewParticipant: Boolean = true
 )
 
 class ViewModelNewParticipant(
@@ -38,6 +40,17 @@ class ViewModelNewParticipant(
             is ActionsNewParticipant.SelectEatingHabit -> selectEatingHabit(actionsNewParticipant.item)
             is ActionsNewParticipant.Save -> saveParticipant()
             is ActionsNewParticipant.InitWithoutParticipant -> initializeScreenWithNewParticipant()
+            is ActionsNewParticipant.InitWithParticipant -> initializeWithParticipant(
+                actionsNewParticipant.participant
+            )
+
+            is ActionsNewParticipant.DeleteParticipant -> deleteParticipant(actionsNewParticipant.participantId)
+        }
+    }
+
+    private fun deleteParticipant(participantId: String) {
+        viewModelScope.launch {
+            eventRepository.deleteParticipant(participantId)
         }
     }
 
@@ -52,8 +65,13 @@ class ViewModelNewParticipant(
         }
         viewModelScope.launch {
             try {
-                Logger.i("abc")
-                eventRepository.createNewParticipant(participant)
+                if (data.isNewParticipant) {
+                    Logger.i("Create new Participant with name ${participant.firstName} ${participant.lastName}")
+                    eventRepository.createNewParticipant(participant)
+                } else {
+                    Logger.i("Update Participant with name ${participant.firstName} ${participant.lastName}")
+                    eventRepository.updateParticipant(participant)
+                }
             } catch (e: Exception) {
                 Logger.e("" + e.message)
                 ResultState.Error("Fehler beim anlegen des Teilnehmenden")
@@ -68,7 +86,8 @@ class ViewModelNewParticipant(
                 firstName = participant.firstName,
                 lastName = participant.lastName,
                 selectedHabit = participant.eatingHabit,
-                birthDate = participant.birthdate
+                birthDate = participant.birthdate,
+                isNewParticipant = true
             )
         )
     }
@@ -80,7 +99,8 @@ class ViewModelNewParticipant(
                 firstName = "",
                 lastName = "",
                 selectedHabit = EatingHabit.OMNIVORE,
-                birthDate = null
+                birthDate = null,
+                isNewParticipant = false
             )
         )
     }

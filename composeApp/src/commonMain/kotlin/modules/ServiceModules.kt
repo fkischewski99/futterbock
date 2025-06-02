@@ -7,6 +7,7 @@ import services.login.LoginAndRegister
 import services.login.FirebaseLoginAndRegister
 import services.materiallist.CalculateMaterialList
 import services.pdfService.PdfServiceModule
+import services.event.ParticipantCanEatRecipe
 
 val serviceModules = module {
     single<LoginAndRegister> { FirebaseLoginAndRegister() }
@@ -14,4 +15,5 @@ val serviceModules = module {
     single { CalculateMaterialList(get()) }
     single { PdfServiceModule(get(), get()) }
     single { ChangeDateOfEvent(get()) }
+    single { ParticipantCanEatRecipe(get()) }
 }

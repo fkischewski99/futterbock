@@ -26,7 +26,7 @@ class Recipe {
 
     var season: List<Season> = listOf()
 
-    private val foodIntolerances: List<FoodIntolerance> = listOf()
+    val foodIntolerances: List<FoodIntolerance> = listOf()
 
     var source: String = ""
 

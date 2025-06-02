@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.runBlocking
 import model.*
 
 @Composable
@@ -62,19 +64,13 @@ fun RecipeItem(recipe: Recipe, onClicked: (Recipe) -> Unit) {
     }
 }
 
-fun canParticipantEatRecipe(member: ParticipantTime, recipeSelection: RecipeSelection): Boolean {
-    return member.participant?.let { participant ->
-        recipeSelection.recipe?.let { recipe ->
-            participant.eatingHabit >= recipe.dietaryHabit
-        }
-    } ?: false
-}
-
 @Composable
 fun RecipeWithMembers(
     participants: List<ParticipantTime>,
     recipeSelection: RecipeSelection,
-    onAction: (EditMealActions) -> Unit
+    onAction: (EditMealActions) -> Unit,
+    canParticipantEatRecipe: (ParticipantTime, RecipeSelection) -> Boolean,
+    getErrorMessage: suspend (ParticipantTime, RecipeSelection) -> String?
 ) {
     val checkedState = remember { mutableStateMapOf<String, Boolean>() }
     var expanded by remember { mutableStateOf(false) }
@@ -88,8 +84,11 @@ fun RecipeWithMembers(
     }
 
     val selectedParticipants = participants.filter { checkedState[it.participantRef] == true }
-    val allSelectedCanEat =
-        selectedParticipants.all { canParticipantEatRecipe(it, recipeSelection) }
+    var allSelectedCanEat by remember { mutableStateOf(true) }
+    LaunchedEffect(selectedParticipants, recipeSelection) {
+        allSelectedCanEat =
+            selectedParticipants.all { canParticipantEatRecipe(it, recipeSelection) }
+    }
 
     Column {
         SelectAllRow(
@@ -117,8 +116,10 @@ fun RecipeWithMembers(
 
                 ParticipantCheckboxRow(
                     participant = participant,
+                    recipeSelection = recipeSelection,
                     isChecked = isChecked,
                     canEat = canEat,
+                    getErrorMessage = getErrorMessage,
                     onCheckedChange = { checked ->
                         checkedState[participant.participantRef] = checked
                         val action = if (checked) {
@@ -178,11 +179,14 @@ private fun SelectAllRow(
 @Composable
 private fun ParticipantCheckboxRow(
     participant: ParticipantTime,
+    recipeSelection: RecipeSelection,
     isChecked: Boolean,
     canEat: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    getErrorMessage: suspend (ParticipantTime, RecipeSelection) -> String?
 ) {
     val hasError = !canEat && isChecked
+    var showErrorDialog by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
@@ -195,14 +199,38 @@ private fun ParticipantCheckboxRow(
             checked = isChecked,
             onCheckedChange = onCheckedChange,
             colors = CheckboxDefaults.colors(
-                checkedColor = getCheckboxColorForErrorState(!canEat)
+                checkedColor = getCheckboxColorForErrorState(hasError)
             )
         )
         Text(
             text = participant.getListItemTitle(),
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).clickable { showErrorDialog = true },
             color = getTextColorForErrorState(hasError)
+        )
+        if (hasError) {
+            IconButton(onClick = { showErrorDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Fehlerinformation",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+
+    if (showErrorDialog && !canEat) {
+        val errorMessage = runBlocking { getErrorMessage(participant, recipeSelection) } ?: ""
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            text = { Text(errorMessage) },
+            confirmButton = {
+                Button(
+                    onClick = { showErrorDialog = false }
+                ) {
+                    Text("OK")
+                }
+            }
         )
     }
 }

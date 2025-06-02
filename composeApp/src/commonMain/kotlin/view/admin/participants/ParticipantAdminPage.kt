@@ -14,16 +14,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import model.Ingredient
 import org.koin.compose.koinInject
 import view.admin.new_participant.ActionsNewParticipant
 import view.admin.new_participant.ViewModelNewParticipant
 import view.event.actions.BaseAction
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
+import view.event.categorized_shopping_list.IngredientViewModel
 import view.event.new_meal_screen.AllParticipantsState
 import view.event.new_meal_screen.AllParticipantsViewModel
 import view.login.ErrorField
@@ -39,6 +42,7 @@ fun ParticipantAdminScreen(
 ) {
     val allParticipantsViewModel: AllParticipantsViewModel = koinInject()
     val state = allParticipantsViewModel.state.collectAsStateWithLifecycle()
+
 
     val viewModelNewParticipant = koinInject<ViewModelNewParticipant>()
 
@@ -58,7 +62,7 @@ fun ParticipantAdminScreen(
 @Composable
 fun ParticipantPage(
     state: ResultState<AllParticipantsState>,
-    onAction: (BaseAction) -> Unit
+    onAction: (BaseAction) -> Unit,
 ) {
     Scaffold(
         topBar = {

@@ -103,7 +103,9 @@ class HandleEditMealActions(
     }
 
     private suspend fun saveMeal(currentState: EventState): ResultState<EventState> {
-        eventRepository.updateMeal(eventId = currentState.event.uid, currentState.selectedMeal)
+        if (currentState.selectedMeal.recipeSelections.isNotEmpty()) {
+            eventRepository.updateMeal(eventId = currentState.event.uid, currentState.selectedMeal)
+        }
         return ResultState.Success(currentState)
     }
 

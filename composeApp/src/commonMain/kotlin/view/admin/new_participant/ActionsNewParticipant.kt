@@ -20,5 +20,10 @@ interface ActionsNewParticipant : BaseAction {
         ActionsNewParticipant {
     }
 
+    // allergy is the uid of the ingredient
+    data class AddOrRemoveAllergy(val allergy: String) :
+        ActionsNewParticipant {
+    }
+
     data object Save : ActionsNewParticipant
 }

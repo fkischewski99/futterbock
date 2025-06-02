@@ -11,8 +11,6 @@ import kotlinx.datetime.Instant
 import model.EatingHabit
 import model.FoodIntolerance
 import model.Participant
-import modules.viewModelModules
-import view.event.participants.ActionsParticipantsPage
 import view.shared.ResultState
 
 
@@ -24,7 +22,8 @@ data class NewParticipantState(
     val selectedHabit: EatingHabit,
     val birthDate: Instant? = null,
     val foodIntolerance: List<FoodIntolerance> = emptyList(),
-    val isNewParticipant: Boolean = true
+    val isNewParticipant: Boolean = true,
+    val allergies: List<String> = emptyList(),
 )
 
 class ViewModelNewParticipant(
@@ -51,8 +50,27 @@ class ViewModelNewParticipant(
                 actionsNewParticipant.foodIntolerance
             )
 
+            is ActionsNewParticipant.AddOrRemoveAllergy -> addOrRemoveAllergy(
+                actionsNewParticipant.allergy
+            )
+
             is ActionsNewParticipant.DeleteParticipant -> deleteParticipant(actionsNewParticipant.participantId)
         }
+    }
+
+    private fun addOrRemoveAllergy(allergy: String) {
+        val data = state.value.getSuccessData() ?: return
+        val updatedAllergies: MutableList<String> = data.allergies.toMutableList();
+        if (data.allergies.contains(allergy)) {
+            updatedAllergies.remove(allergy)
+        } else {
+            updatedAllergies.add(allergy)
+        }
+        _state.value = ResultState.Success(
+            data.copy(
+                allergies = updatedAllergies
+            )
+        )
     }
 
     private fun addOrRemoveIntolerance(foodIntolerance: FoodIntolerance) {
@@ -78,6 +96,9 @@ class ViewModelNewParticipant(
 
     private fun saveParticipant() {
         val data = state.value.getSuccessData() ?: return
+        if (data.firstName.isEmpty() || data.lastName.isEmpty()) {
+            return
+        }
         _state.value = ResultState.Loading
         val participant = Participant().apply {
             uid = data.participantId
@@ -86,6 +107,7 @@ class ViewModelNewParticipant(
             eatingHabit = data.selectedHabit
             birthdate = data.birthDate
             intolerances = data.foodIntolerance.toMutableList()
+            allergies = data.allergies
         }
         viewModelScope.launch {
             try {
@@ -113,6 +135,7 @@ class ViewModelNewParticipant(
                 selectedHabit = participant.eatingHabit,
                 birthDate = participant.birthdate,
                 foodIntolerance = participant.intolerances,
+                allergies = participant.allergies,
                 isNewParticipant = false
             )
         )

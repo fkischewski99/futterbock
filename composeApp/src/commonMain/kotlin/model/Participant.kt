@@ -8,7 +8,7 @@ import view.shared.list.ListItem
 @Serializable
 class Participant : ListItem<Participant> {
     var uid: String = "";
-    var allergies: MutableList<String> = mutableListOf();
+    var allergies: List<String> = emptyList();
     var intolerances: MutableList<FoodIntolerance> = mutableListOf();
     var group: String = ""
     var birthdate: Instant? = null;

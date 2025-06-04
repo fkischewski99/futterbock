@@ -134,7 +134,7 @@ class ParticipantCanEatRecipeTest : KoinTest {
 
         assertFalse(canParticipantCanEatRecipe.canParticipantEatRecipe(member, recipeSelection))
         assertEquals(
-            expected = "Teilnehmer ist allergisch gegen eine der Zutaten: TestIngredient12",
+            expected = "Teilnehmer ist allergisch gegen eine der Zutaten: TestIngredient",
             actual = canParticipantCanEatRecipe.getErrorMessageForParticipant(
                 member,
                 recipeSelection

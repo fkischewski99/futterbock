@@ -6,15 +6,15 @@ import kotlinx.serialization.Serializable
 class Recipe {
     var uid: String = ""
 
-    var cookingInstructions: MutableList<String> = mutableListOf()
+    var cookingInstructions: List<String> = listOf()
 
-    var notes: MutableList<String> = mutableListOf()
+    var notes: List<String> = listOf()
 
     var description: String = ""
 
     var dietaryHabit: EatingHabit = EatingHabit.OMNIVORE
 
-    var shoppingIngredients: MutableList<ShoppingIngredient> = mutableListOf()
+    var shoppingIngredients: List<ShoppingIngredient> = listOf()
 
     var materials: List<String> = listOf()
 
@@ -26,7 +26,7 @@ class Recipe {
 
     var season: List<Season> = listOf()
 
-    private val foodIntolerances: List<FoodIntolerance> = listOf()
+    var foodIntolerances: List<FoodIntolerance> = listOf()
 
     var source: String = ""
 

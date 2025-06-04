@@ -48,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import model.EatingHabit
 import model.FoodIntolerance
+import model.ParticipantTime
 import model.Range
 import model.Recipe
 import model.RecipeSelection
@@ -55,12 +56,14 @@ import model.RecipeType
 import model.Season
 import model.TimeRange
 import org.koin.compose.koinInject
+import services.event.ParticipantCanEatRecipe
 import view.event.EventState
 import view.event.SharedEventViewModel
 import view.event.actions.BaseAction
 import view.event.actions.EditEventActions
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
+import view.event.recepie_overview_screen.RecipeOverviewActions
 import view.event.recepie_overview_screen.RecipeOverviewViewModel
 import view.navigation.Routes
 import view.shared.HelperFunctions
@@ -77,17 +80,33 @@ fun EditMealScreen(
     val state = sharedEventViewModel.eventState.collectAsStateWithLifecycle()
     val recipeViewModel: RecipeViewModel = koinInject()
     val allRecipesState = recipeViewModel.state.collectAsState()
+    val canParticipantEat: ParticipantCanEatRecipe = koinInject()
 
     NewMealPage(
         state = state.value,
         allRecipes = allRecipesState.value,
         onAction = { action ->
             when (action) {
-                is EditMealActions.ViewRecipe -> recipeOverviewViewModel.initializeViewModel(action.recipeSelection)
+                is EditMealActions.ViewRecipe -> recipeOverviewViewModel.handleAction(
+                    RecipeOverviewActions.InitializeScreen(action.recipeSelection)
+                )
+
                 is NavigationActions -> handleNavigation(navController, action)
                 else -> sharedEventViewModel.onAction(action)
             }
-        }
+        },
+        participantCanEatRecipe = { participant: ParticipantTime, recipeSelection: RecipeSelection ->
+            canParticipantEat.canParticipantEatRecipe(
+                member = participant,
+                recipeSelection = recipeSelection
+            )
+        },
+        getRecipeEatingError = { participant: ParticipantTime, recipeSelection: RecipeSelection ->
+            canParticipantEat.getErrorMessageForParticipant(
+                member = participant,
+                recipeSelection = recipeSelection
+            )
+        },
     )
 }
 
@@ -95,7 +114,9 @@ fun EditMealScreen(
 fun NewMealPage(
     state: ResultState<EventState>,
     allRecipes: List<Recipe>,
-    onAction: (BaseAction) -> Unit
+    onAction: (BaseAction) -> Unit,
+    participantCanEatRecipe: (ParticipantTime, RecipeSelection) -> Boolean,
+    getRecipeEatingError: suspend (ParticipantTime, RecipeSelection) -> String?,
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var recipeToDelete: RecipeSelection? = null;
@@ -140,7 +161,8 @@ fun NewMealPage(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
-                                Icon(imageVector = Icons.Default.Info,
+                                Icon(
+                                    imageVector = Icons.Default.Info,
                                     contentDescription = "Rezept ansehen",
                                     modifier = Modifier.padding(start = 16.dp).clickable {
                                         navigateToRecipe(onAction, it)
@@ -171,7 +193,9 @@ fun NewMealPage(
                             RecipeWithMembers(
                                 participants = state.data.currentParticipantsOfMeal,
                                 recipeSelection = it,
-                                onAction = onAction
+                                onAction = onAction,
+                                canParticipantEatRecipe = participantCanEatRecipe,
+                                getErrorMessage = getRecipeEatingError
                             )
                         }
                         if (showDialog) {
@@ -376,9 +400,13 @@ fun AddMeal(
     ExtendedFloatingActionButton(
         onClick = {
             onAction(
-                EditEventActions.AddNewMeal(
-                    HelperFunctions.getLocalDate(state.selectedMeal.day)
-                )
+                if (state.selectedMeal.recipeSelections.isEmpty()) {
+                    return@ExtendedFloatingActionButton
+                } else {
+                    EditEventActions.AddNewMeal(
+                        HelperFunctions.getLocalDate(state.selectedMeal.day)
+                    )
+                }
             )
             HelperFunctions.getLocalDate(state.selectedMeal.day)
         },

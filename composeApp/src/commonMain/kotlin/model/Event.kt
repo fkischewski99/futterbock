@@ -17,7 +17,7 @@ class Event(val group: String) : ListItem<Event> {
     var name: String = "";
 
     fun isFutureEvent(): Boolean {
-        return this.to == null || this.to!! > Clock.System.now();
+        return this.to > Clock.System.now();
     }
 
     override fun getListItemTitle(): String {

@@ -1,19 +1,17 @@
 package view.navigation
 
-import CategorizedShoppingListViewModel
 import LoadingScreen
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import data.EventRepository
 import org.koin.compose.koinInject
 import services.login.LoginAndRegister
 import view.admin.new_participant.NewParticipantScreen
+import view.admin.participants.ParticipantAdminScreen
 import view.event.categorized_shopping_list.MaterialListScreen
-import view.event.categorized_shopping_list.ShoppingList
 import view.event.categorized_shopping_list.ShoppingListScreen
 import view.event.homescreen.EventOverviewScreen
 import view.event.new_event.NewEventScreen
@@ -21,7 +19,6 @@ import view.event.new_meal_screen.EditMealScreen
 import view.event.participants.ParticipantScreen
 import view.event.participants.ParticipantSearchBarScreen
 import view.event.recepie_overview_screen.RecipeOverviewScreen
-import view.event.recepie_overview_screen.RecipeOverviewViewModel
 import view.login.LoginScreen
 import view.login.Register
 
@@ -57,6 +54,9 @@ fun RootNavController(
                 navController = navController
             )
         }
+        composable<Routes.ParticipantAdministration> {
+            ParticipantAdminScreen(navController = navController)
+        }
         navigation<Routes.EditEventSubGraph>(
             startDestination = Routes.EditEvent,
         ) {
@@ -74,7 +74,7 @@ fun RootNavController(
             composable<Routes.AddOrRemoveParticipantsOfEvent> {
                 ParticipantSearchBarScreen(navController)
             }
-            composable<Routes.CreateNewParticipant> {
+            composable<Routes.CreateOrEditParticipant> {
                 NewParticipantScreen(navController)
             }
             composable<Routes.RecipeOverview> {

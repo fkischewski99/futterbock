@@ -38,29 +38,35 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
         }
     }
 
+    /**
+     * Calculates the amount of ingredients for a recipe
+     * If multiplier is added it is used, else the size of eater ids is used
+     */
     fun calculateAmountsForRecipe(
         map: MutableMap<String, ShoppingIngredient>,
-        recipeSelection: RecipeSelection
+        recipeSelection: RecipeSelection,
+        multiplier: Int? = null
     ): Map<String, ShoppingIngredient> {
         for (recipeIngredient in recipeSelection.recipe!!.shoppingIngredients) {
             try {
-                recipeIngredient.note = ""
-
-
+                Logger.i("recipe ${recipeIngredient.amount}")
                 val ingredient = getMetricUnitShoppingIngredient(
                     recipeIngredient,
                 )
+                Logger.i("recipe ${recipeIngredient.amount}")
                 val shoppingIngredient: ShoppingIngredient =
-                    map[recipeIngredient.ingredientRef] ?: recipeIngredient.apply { amount = 0.0 }
+                    map[recipeIngredient.ingredientRef] ?: ingredient.apply { amount = 0.0 }
+
                 if (shoppingIngredient.ingredient == null) shoppingIngredient.ingredient =
                     recipeIngredient.ingredient
+
                 ingredient.note = shoppingIngredient.note
                 if (ingredient.unit == shoppingIngredient.unit) {
-                    val amountToAdd = ingredient.amount * getEaterMultiplier(
-                        recipeSelection
-                    );
-                    shoppingIngredient.amount += amountToAdd
-                    map[recipeIngredient.ingredientRef] = shoppingIngredient
+                    val multiplierForIngredients = multiplier ?: getEaterMultiplier(recipeSelection)
+                    val amountToAdd = recipeIngredient.amount * multiplierForIngredients;
+                    Logger.i("amounttoadd: $amountToAdd, multiplier: $multiplierForIngredients, recipeIngredient: ${recipeIngredient.amount}")
+                    ingredient.amount += amountToAdd
+                    map[recipeIngredient.ingredientRef] = ingredient
                 }
             } catch (e: Exception) {
                 println(

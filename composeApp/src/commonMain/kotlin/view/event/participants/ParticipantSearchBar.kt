@@ -1,6 +1,7 @@
 package view.event.participants
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,10 +22,12 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,7 +40,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import model.Participant
 import org.koin.compose.koinInject
 import view.admin.new_participant.ActionsNewParticipant
 import view.admin.new_participant.ViewModelNewParticipant
@@ -46,8 +48,11 @@ import view.event.SharedEventViewModel
 import view.event.actions.BaseAction
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
+import view.event.new_meal_screen.AllParticipantsState
 import view.event.new_meal_screen.AllParticipantsViewModel
+import view.login.ErrorField
 import view.navigation.Routes
+import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
 
@@ -82,7 +87,7 @@ fun ParticipantSearchBarScreen(
 fun ParticipantSearchBar(
     state: ResultState<EventState>,
     onAction: (BaseAction) -> Unit,
-    allParticipants: List<Participant>
+    allParticipants: ResultState<AllParticipantsState>
 ) {
     var searchText by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(true) }
@@ -93,39 +98,49 @@ fun ParticipantSearchBar(
             NavigationIconButton()
             when (state) {
                 is ResultState.Success -> {
-                    SearchBar(
-                        modifier = Modifier.fillMaxWidth(),
-                        query = searchText,
-                        placeholder = { Text(text = "Teilnehmende hinzufügen") },
-                        onQueryChange = {
-                            searchText = it
-                        },
-                        onSearch = {
-                            active = false
-                        },
-                        active = active,
-                        onActiveChange = {
-                            active = it
-                        },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Search, contentDescription = "Suche")
-                        },
-                        trailingIcon = {
-                            if (active) {
-                                Icon(
-                                    modifier = Modifier.clickable {
-                                        if (searchText.isEmpty()) {
-                                            onAction(NavigationActions.GoBack)
-                                        } else {
-                                            searchText = ""
-                                        }
 
-                                    },
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Close"
-                                )
-                            }
-                        }
+                    SearchBar(
+                        inputField = {
+                            SearchBarDefaults.InputField(
+                                query = searchText,
+                                onQueryChange = { searchText = it },
+                                onSearch = {
+                                    active = false
+                                    // Optional: handle search
+                                },
+                                expanded = active,
+                                onExpandedChange = { active = it },
+                                enabled = true,
+                                placeholder = { Text("Teilnehmende hinzufügen") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Suche"
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (active) {
+                                        IconButton(onClick = {
+                                            if (searchText.isEmpty()) {
+                                                onAction(NavigationActions.GoBack)
+                                            } else {
+                                                searchText = ""
+                                            }
+                                        }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Leeren oder Zurück"
+                                            )
+                                        }
+                                    }
+                                },
+                                colors = SearchBarDefaults.inputFieldColors(),
+                                interactionSource = remember { MutableInteractionSource() }
+                            )
+                        },
+                        expanded = active,
+                        onExpandedChange = { active = it },
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         FlowRow(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -168,26 +183,33 @@ fun ParticipantSearchBar(
                                 )
                             }
                         }
-                        getSelectableParticipants(
-                            allParticipants = allParticipants,
-                            participantsOfEvent = state.data.participantList
-                        ).filter {
-                            it.firstName.lowercase().contains(searchText.lowercase()) ||
-                                    it.lastName.lowercase().contains(searchText.lowercase()) ||
-                                    (it.firstName.lowercase() + " " + it.lastName.lowercase()).contains(
-                                        searchText.lowercase()
-                                    )
-                        }.forEach {
-                            Row(
-                                modifier = Modifier.padding(16.dp).clickable {
-                                    searchText = ""
-                                    onAction(EditParticipantActions.AddParticipant(it))
-                                }
+                        when (allParticipants) {
+                            is ResultState.Success -> {
+                                getSelectableParticipants(
+                                    allParticipants = allParticipants.data.allParticipants,
+                                    participantsOfEvent = state.data.participantList
+                                ).filter {
+                                    it.firstName.lowercase().contains(searchText.lowercase()) ||
+                                            it.lastName.lowercase()
+                                                .contains(searchText.lowercase()) ||
+                                            (it.firstName.lowercase() + " " + it.lastName.lowercase()).contains(
+                                                searchText.lowercase()
+                                            )
+                                }.forEach {
+                                    Row(
+                                        modifier = Modifier.padding(16.dp).clickable {
+                                            searchText = ""
+                                            onAction(EditParticipantActions.AddParticipant(it))
+                                        }
 
-                            ) {
-                                Text(text = it.firstName.trim() + " " + it.lastName.trim())
+                                    ) {
+                                        Text(text = it.firstName.trim() + " " + it.lastName.trim())
+                                    }
+                                    HorizontalDivider()
+                                }
                             }
-                            HorizontalDivider()
+
+                            else -> {}
                         }
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -199,7 +221,7 @@ fun ParticipantSearchBar(
                                 ExtendedFloatingActionButton(
                                     onClick = {
                                         onAction(ActionsNewParticipant.InitWithoutParticipant)
-                                        onAction(NavigationActions.GoToRoute(Routes.CreateNewParticipant))
+                                        onAction(NavigationActions.GoToRoute(Routes.CreateOrEditParticipant))
                                     },
                                     modifier = Modifier.padding(bottom = 16.dp)
                                         .clip(shape = RoundedCornerShape(75)), // Limit the width to prevent stretching,
@@ -235,8 +257,8 @@ fun ParticipantSearchBar(
 
                 }
 
-                is ResultState.Error -> TODO()
-                ResultState.Loading -> TODO()
+                is ResultState.Error -> ErrorField(errorMessage = state.message)
+                ResultState.Loading -> MGCircularProgressIndicator()
             }
         }
     ) {

@@ -45,11 +45,13 @@ import model.TimeRange
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
+import view.event.actions.BaseAction
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
+import view.shared.step_counter.StepperCounter
 
 @Composable
 fun RecipeOverviewScreen(navHostController: NavHostController) {
@@ -58,7 +60,12 @@ fun RecipeOverviewScreen(navHostController: NavHostController) {
 
     RecipeOverview(
         state = state.value,
-        onAction = { action -> handleNavigation(navHostController, action) }
+        onAction = { action ->
+            when (action) {
+                is NavigationActions -> handleNavigation(navHostController, action)
+                is RecipeOverviewActions -> recipeOverviewViewModel.handleAction(action)
+            }
+        }
     )
 }
 
@@ -66,7 +73,7 @@ fun RecipeOverviewScreen(navHostController: NavHostController) {
 @Composable
 fun RecipeOverview(
     state: ResultState<RecipeOverviewState>,
-    onAction: (NavigationActions) -> Unit
+    onAction: (BaseAction) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -87,9 +94,10 @@ fun RecipeOverview(
                         .verticalScroll(rememberScrollState())
                         .padding(innerPadding)
                 ) {
+                    PortionCounter(recipeOverviewState = state.data, onAction = onAction)
                     RecipeDetails(recipeSelection = state.data.recipeSelection)
-                    IngredientList(groupedIngredients = state.data.calculatedIngredientAmounts.groupBy { it.title })
                     MaterialList(materials = state.data.recipeSelection.recipe!!.materials)
+                    IngredientList(ingredientList = state.data.calculatedIngredientAmounts)
                     CookingInstructions(instructions = state.data.recipeSelection.recipe!!.cookingInstructions)
                     Notes(notes = state.data.recipeSelection.recipe!!.notes)
                 }
@@ -100,6 +108,30 @@ fun RecipeOverview(
         }
     }
 }
+
+@Composable
+fun PortionCounter(
+    recipeOverviewState: RecipeOverviewState,
+    onAction: (BaseAction) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = recipeOverviewState.recipeSelection.recipe!!.name,
+            style = MaterialTheme.typography.headlineMedium
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        StepperCounter(
+            initialValue = recipeOverviewState.numberOfPortions,
+            onValueChange = { onAction(RecipeOverviewActions.UpdateNumberOfPortions(it)) },
+            bottomContent = { Text("Portionen") }
+        )
+
+    }
+}
+
 
 @Composable
 fun RecipeDetails(recipeSelection: RecipeSelection) {
@@ -195,39 +227,33 @@ fun CaptionedText(label: String, text: String) {
 }
 
 @Composable
-fun IngredientList(groupedIngredients: Map<String?, List<ShoppingIngredient>>) {
+fun IngredientList(ingredientList: List<ShoppingIngredient>) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
-            groupedIngredients.forEach { (ingredientsTitle, ingredientList) ->
-                Text(
-                    text = ingredientsTitle ?: "Zutaten:",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                HorizontalDivider(modifier = Modifier.padding(bottom = 8.dp))
-                ingredientList.forEach { ingredient ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+            ingredientList.forEach { ingredient ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = ingredient.getFormatedAmount(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    ingredient.ingredient?.let {
                         Text(
-                            text = ingredient.getFormatedAmount(),
+                            text = it.name,
                             style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(2f)
                         )
-                        ingredient.ingredient?.let {
-                            Text(
-                                text = it.name,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(2f)
-                            )
-                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
             }
+            Spacer(modifier = Modifier.height(8.dp))
+
         }
     }
 }

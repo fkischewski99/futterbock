@@ -26,16 +26,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import co.touchlab.kermit.Logger
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import view.event.SharedEventViewModel
+import view.event.actions.BaseAction
+import view.event.actions.NavigationActions
+import view.event.actions.handleNavigation
 import view.navigation.Routes
 import view.shared.MGCircularProgressIndicator
 import view.shared.ResultState
 
 @Composable
 fun EventOverviewScreen(
-    navController: NavController
+    navController: NavHostController
 ) {
     val viewModel: ViewModelEventOverview = koinInject()
     val viewModeNewEvent: SharedEventViewModel = koinInject()
@@ -56,7 +61,11 @@ fun EventOverviewScreen(
                     navController.navigate(Routes.EditEvent)
                 }
 
-                else -> viewModel.onAction(action)
+                is NavigationActions -> handleNavigation(navController, action)
+                is ActionsEventOverview -> viewModel.onAction(action)
+                else -> {
+                    Logger.w("Unknown action: $action")
+                }
             }
         }
     )
@@ -65,7 +74,7 @@ fun EventOverviewScreen(
 @Composable
 fun EventOverview(
     state: ResultState<EventOverviewState>,
-    onAction: (ActionsEventOverview) -> Unit
+    onAction: (BaseAction) -> Unit
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -79,7 +88,8 @@ fun EventOverview(
         drawerContent = {
             DrawerContent(
                 onClose = { scope.launch { drawerState.close() } },
-                onLogoutNavigation = { onAction(ActionsEventOverview.Logout) }
+                onLogoutNavigation = { onAction(ActionsEventOverview.Logout) },
+                onManageParticipants = { onAction(NavigationActions.GoToRoute(Routes.ParticipantAdministration)) }
             )
         },
         gesturesEnabled = true
@@ -111,12 +121,12 @@ fun EventOverview(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventOverviewTopBar(
-    onAction: (ActionsEventOverview) -> Unit
+    onAction: (BaseAction) -> Unit
 ) {
     TopAppBar(
         title = { Text(text = "Lagerübersicht") },
         actions = {
-            IconButton(onClick = { onAction(ActionsEventOverview.ShowUserScreen) }) {
+            IconButton(onClick = { onAction(NavigationActions.GoToRoute(Routes.ParticipantsOfEvent)) }) {
                 Icon(
                     imageVector = Icons.Filled.Person,
                     contentDescription = "User Icon"

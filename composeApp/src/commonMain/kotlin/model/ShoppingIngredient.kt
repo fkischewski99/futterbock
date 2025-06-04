@@ -1,8 +1,10 @@
 package model
 
+import co.touchlab.kermit.Logger
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import view.shared.list.ListItem
+import kotlin.math.ceil
 import kotlin.math.pow
 import kotlin.math.round
 import kotlin.math.roundToInt
@@ -43,6 +45,9 @@ class ShoppingIngredient() : ListItem<ShoppingIngredient> {
     }
 
     fun getFormatedAmount(): String {
+        if (amount == 0.0) {
+            return ""
+        }
         return convertUnitAndAmount(
             amount,
             unit
@@ -55,7 +60,7 @@ class ShoppingIngredient() : ListItem<ShoppingIngredient> {
                 return "${amount.format(1)} ${unit.display}"
             }
             if (amount < 10)
-                return "${amount.format(0, true)} ${if (amount == 1.0) "Zehe" else "Zehen"}"
+                return "${amount.format(1, true)} ${if (amount <= 1.0) "Zehe" else "Zehen"}"
             val newAmount = amount / 10
             return formatKnolle(newAmount)
         }
@@ -91,7 +96,8 @@ class ShoppingIngredient() : ListItem<ShoppingIngredient> {
         val pow = 10.0.pow(fracDigits.toDouble());
         var result = (round(this * pow) / pow)
         if (roundUp) {
-            result = result.roundToInt().toDouble()
+            // always round up
+            result = ceil(result)
         }
         if (result.toInt().toDouble() == result) {
             return result.toInt().toString()

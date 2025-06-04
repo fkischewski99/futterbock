@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import data.EventRepository
 import kotlinx.coroutines.launch
@@ -26,7 +27,8 @@ import services.login.LoginAndRegister
 @Composable
 fun DrawerContent(
     onClose: () -> Unit,
-    onLogoutNavigation: () -> Unit
+    onLogoutNavigation: () -> Unit,
+    onManageParticipants: () -> Unit
 ) {
     val login: LoginAndRegister = koinInject()
     var showConfirmDialog by remember { mutableStateOf(false) }
@@ -34,7 +36,16 @@ fun DrawerContent(
 
     Spacer(modifier = Modifier.height(16.dp))
     ModalDrawerSheet {
-        Text("Benutzer", modifier = Modifier.padding(16.dp))
+        Text("Administration", fontWeight = FontWeight.Bold, modifier = Modifier.padding(16.dp))
+        HorizontalDivider()
+        NavigationDrawerItem(
+            label = { Text(text = "Teilnehmende verwalten") },
+            selected = false,
+            onClick = {
+                onManageParticipants()
+            }
+        )
+        Text("Benutzer", fontWeight = FontWeight.Bold, modifier = Modifier.padding(16.dp))
         HorizontalDivider()
         NavigationDrawerItem(
             label = { Text(text = "Logout") },

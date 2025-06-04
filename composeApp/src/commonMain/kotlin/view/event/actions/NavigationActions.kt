@@ -1,5 +1,6 @@
 package view.event.actions
 
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import view.navigation.Routes
 

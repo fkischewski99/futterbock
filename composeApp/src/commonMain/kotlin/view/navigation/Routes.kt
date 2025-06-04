@@ -34,11 +34,14 @@ interface Routes {
     object EditMeal : Routes
 
     @Serializable
-    object CreateNewParticipant : Routes
+    object CreateOrEditParticipant : Routes
 
     @Serializable
     data object ParticipantsOfEvent : Routes
 
     @Serializable
     object AddOrRemoveParticipantsOfEvent : Routes
+
+    @Serializable
+    object ParticipantAdministration : Routes
 }

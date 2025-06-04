@@ -96,6 +96,8 @@ kotlin {
 
     sourceSets {
         val desktopMain by getting
+        val desktopTest by getting
+
 
         androidMain.dependencies {
             implementation(libs.compose.ui.tooling.preview)
@@ -126,7 +128,6 @@ kotlin {
             //implementation(libs.gitlive.firebase.crashlytics)
 
             implementation(libs.kermit)
-
         }
         desktopMain.dependencies {
             // TODO delete when this pr is merged: https://github.com/GitLiveApp/firebase-java-sdk/pull/33
@@ -134,6 +135,12 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.pdfbox)
+
+        }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+            implementation(libs.koinTest)
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }

@@ -3,6 +3,7 @@ package services.pdfService
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.CValue
 import kotlinx.cinterop.ExperimentalForeignApi
+import model.Material
 import model.ShoppingIngredient
 import platform.CoreGraphics.CGRect
 import platform.CoreGraphics.CGRectMake
@@ -48,7 +49,7 @@ actual class PdfServiceImpl {
     @OptIn(ExperimentalForeignApi::class)
     actual fun createPdf(
         shoppingList: Map<String, List<ShoppingIngredient>>,
-        materialList: Map<String, Int>
+        materialList: List<Material>
     ) {
         val pdfData = NSMutableData()
 

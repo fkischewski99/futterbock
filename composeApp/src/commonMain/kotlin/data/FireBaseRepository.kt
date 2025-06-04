@@ -219,20 +219,26 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         if (!mealsExist) {
             return emptyList()
         }
-        val allParticipantTime = firestore.collection(EVENTS).document(eventId)
+        var allParticipantTime = firestore.collection(EVENTS).document(eventId)
             .collection(PARTICIPANT_SCHEDULE)
             .get().documents.map<DocumentSnapshot, ParticipantTime> { querySnapshot ->
                 querySnapshot.data { }
             }
         if (!withParticipant)
             return allParticipantTime
-        allParticipantTime.map { participantTime ->
+        allParticipantTime = allParticipantTime.map { participantTime ->
             val participant =
                 firestore.collection(PARTICIPANTS).document(participantTime.participantRef)
-                    .get().data<Participant> { }
+                    .get().data<Participant?> { }
+            if (participant == null) {
+                deleteParticipantOfEvent(
+                    eventId = eventId,
+                    participantId = participantTime.participantRef
+                )
+            }
             participantTime.participant = participant
             participantTime
-        }
+        }.filter { participantTime -> participantTime.participant != null }
         return allParticipantTime
     }
 
@@ -321,10 +327,18 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         val participantId = generateRandomStringId()
         participant.uid = participantId
         participant.group = loginAndRegister.getCustomUserGroup()
-        Logger.i("yooy")
         firestore.collection(PARTICIPANTS)
             .document(participant.uid)
             .set(participant)
+    }
+
+    override suspend fun updateParticipant(participant: Participant) {
+        participant.group = loginAndRegister.getCustomUserGroup()
+        firestore.collection(PARTICIPANTS).document(participant.uid).set(participant)
+    }
+
+    override suspend fun deleteParticipant(participantId: String) {
+        firestore.collection(PARTICIPANTS).document(participantId).delete()
     }
 
     override suspend fun deleteParticipantOfEvent(eventId: String, participantId: String) {

@@ -38,7 +38,7 @@ jobs:
 
       - name: Run Tests
         run: ./gradlew test --no-daemon
-        continue-on-error: false # Set to true if you want pipeline to proceed despite test failures
+        continue-on-error: false
 
       - name: Upload Test Results
         if: always()

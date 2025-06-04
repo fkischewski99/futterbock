@@ -18,7 +18,7 @@ interface EventRepository {
     suspend fun deleteEvent(eventId: String)
     suspend fun getEventById(eventId: String): Event?
     suspend fun createNewEvent(): Event
-    suspend fun saveExistingEvent(futureEvent: Event)
+    suspend fun saveExistingEvent(event: Event)
     suspend fun getEventList(group: String): Flow<List<Event>>
 
 

@@ -1,6 +1,7 @@
 package view.event.participants
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,10 +22,12 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -95,39 +98,49 @@ fun ParticipantSearchBar(
             NavigationIconButton()
             when (state) {
                 is ResultState.Success -> {
-                    SearchBar(
-                        modifier = Modifier.fillMaxWidth(),
-                        query = searchText,
-                        placeholder = { Text(text = "Teilnehmende hinzufügen") },
-                        onQueryChange = {
-                            searchText = it
-                        },
-                        onSearch = {
-                            active = false
-                        },
-                        active = active,
-                        onActiveChange = {
-                            active = it
-                        },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Search, contentDescription = "Suche")
-                        },
-                        trailingIcon = {
-                            if (active) {
-                                Icon(
-                                    modifier = Modifier.clickable {
-                                        if (searchText.isEmpty()) {
-                                            onAction(NavigationActions.GoBack)
-                                        } else {
-                                            searchText = ""
-                                        }
 
-                                    },
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Close"
-                                )
-                            }
-                        }
+                    SearchBar(
+                        inputField = {
+                            SearchBarDefaults.InputField(
+                                query = searchText,
+                                onQueryChange = { searchText = it },
+                                onSearch = {
+                                    active = false
+                                    // Optional: handle search
+                                },
+                                expanded = active,
+                                onExpandedChange = { active = it },
+                                enabled = true,
+                                placeholder = { Text("Teilnehmende hinzufügen") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Suche"
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (active) {
+                                        IconButton(onClick = {
+                                            if (searchText.isEmpty()) {
+                                                onAction(NavigationActions.GoBack)
+                                            } else {
+                                                searchText = ""
+                                            }
+                                        }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Leeren oder Zurück"
+                                            )
+                                        }
+                                    }
+                                },
+                                colors = SearchBarDefaults.inputFieldColors(),
+                                interactionSource = remember { MutableInteractionSource() }
+                            )
+                        },
+                        expanded = active,
+                        onExpandedChange = { active = it },
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         FlowRow(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),

@@ -9,7 +9,7 @@ import view.shared.list.ListItem
 class Participant : ListItem<Participant> {
     var uid: String = "";
     var allergies: List<String> = emptyList();
-    var intolerances: MutableList<FoodIntolerance> = mutableListOf();
+    var intolerances: List<FoodIntolerance> = emptyList();
     var group: String = ""
     var birthdate: Instant? = null;
     var eatingHabit: EatingHabit = EatingHabit.OMNIVORE

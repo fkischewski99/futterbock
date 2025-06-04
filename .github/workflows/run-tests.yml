@@ -8,7 +8,7 @@ env:
   FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
   FIREBASE_APPLICATION_ID: ${{ secrets.FIREBASE_APPLICATION_ID }}
   FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-  
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -16,6 +16,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Write google-services.json from secret
+        run: |
+          echo '${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON }}' > composeApp/google-services.json
 
       - name: Set up JDK
         uses: actions/setup-java@v4

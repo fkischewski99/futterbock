@@ -176,6 +176,9 @@ android {
         debugImplementation(compose.uiTooling)
     }
 }
+dependencies {
+    testImplementation(libs.junit.jupiter)
+}
 
 compose.desktop {
     application {

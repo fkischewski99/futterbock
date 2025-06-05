@@ -47,35 +47,43 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
         recipeSelection: RecipeSelection,
         multiplier: Int? = null
     ): Map<String, ShoppingIngredient> {
+        val multiplierForIngredients = multiplier ?: getEaterMultiplier(recipeSelection)
+
         for (recipeIngredient in recipeSelection.recipe!!.shoppingIngredients) {
             try {
-                Logger.i("recipe ${recipeIngredient.amount}")
-                val ingredient = getMetricUnitShoppingIngredient(
-                    recipeIngredient,
-                )
-                Logger.i("recipe ${recipeIngredient.amount}")
-                val shoppingIngredient: ShoppingIngredient =
-                    map[recipeIngredient.ingredientRef] ?: ingredient.apply { amount = 0.0 }
+                Logger.i("Original amount: ${recipeIngredient.amount}")
 
-                if (shoppingIngredient.ingredient == null) shoppingIngredient.ingredient =
-                    recipeIngredient.ingredient
+                val converted = getMetricUnitShoppingIngredient(recipeIngredient)
+                val ingredientKey = recipeIngredient.ingredientRef
 
-                ingredient.note = shoppingIngredient.note
-                if (ingredient.unit == shoppingIngredient.unit) {
-                    val multiplierForIngredients = multiplier ?: getEaterMultiplier(recipeSelection)
-                    val amountToAdd = recipeIngredient.amount * multiplierForIngredients;
-                    Logger.i("amounttoadd: $amountToAdd, multiplier: $multiplierForIngredients, recipeIngredient: ${recipeIngredient.amount}")
-                    ingredient.amount += amountToAdd
-                    map[recipeIngredient.ingredientRef] = ingredient
+                val existing = map[ingredientKey]
+                val baseAmount = converted.amount * multiplierForIngredients
+
+                val target = if (existing != null && existing.unit == converted.unit) {
+                    // Merge with existing
+                    existing.amount += baseAmount
+                    existing
+                } else {
+                    // First time or different unit (ignore if units don't match)
+                    converted.amount = baseAmount
+                    converted
                 }
+
+                if (target.ingredient == null) {
+                    target.ingredient = recipeIngredient.ingredient
+                }
+
+                target.note = existing?.note ?: converted.note
+                map[ingredientKey] = target
+
+                Logger.i("Added $baseAmount to $ingredientKey, total: ${target.amount}")
+
             } catch (e: Exception) {
-                println(
-                    "Error Calculation Amount for " + (recipeIngredient.ingredient
-                        ?.name ?: "")
-                )
-                println(e.printStackTrace())
+                println("Error calculating amount for ingredient ${recipeIngredient.ingredient?.name ?: "unknown"}")
+                e.printStackTrace()
             }
         }
+
         return map
     }
 
@@ -138,7 +146,8 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
     }
 
     // Adds existing ingredients with a amount of 0, to not lose the description
-    private fun addExistingIngredients(
+    private fun
+            addExistingIngredients(
         listOfShoppingIngredients: List<ShoppingIngredient>,
         map: MutableMap<String, ShoppingIngredient>
     ) {
@@ -152,6 +161,7 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
                 unit = shopIngredient.unit
                 shoppingDone = shopIngredient.shoppingDone
                 nameEnteredByUser = shopIngredient.nameEnteredByUser
+                note = shopIngredient.note
             }
             shopIngredient.amount = 0.0
             map[ingredientKey] = newShoppingIngredient

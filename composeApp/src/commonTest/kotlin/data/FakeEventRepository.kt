@@ -12,6 +12,11 @@ import model.Recipe
 import model.ShoppingIngredient
 
 class FakeEventRepository : EventRepository {
+
+    var mealsForEvent: MutableList<Meal> = mutableListOf()
+    var materialsForEvent: MutableList<Material> = mutableListOf()
+    var shoppingIngredients: MutableList<ShoppingIngredient> = mutableListOf()
+
     override suspend fun deleteEvent(eventId: String) {
         TODO("Not yet implemented")
     }
@@ -83,11 +88,11 @@ class FakeEventRepository : EventRepository {
     }
 
     override suspend fun getAllMealsOfEvent(eventId: String): List<Meal> {
-        TODO("Not yet implemented")
+        return mealsForEvent
     }
 
     override suspend fun getShoppingIngredients(eventId: String): List<ShoppingIngredient> {
-        TODO("Not yet implemented")
+        return shoppingIngredients
     }
 
     override suspend fun createNewMeal(eventId: String, day: Instant): Meal {
@@ -117,7 +122,7 @@ class FakeEventRepository : EventRepository {
     }
 
     override suspend fun getMealsWithRecipeAndIngredients(eventId: String): List<Meal> {
-        TODO("Not yet implemented")
+        return mealsForEvent
     }
 
     override suspend fun getAllIngredients(): List<Ingredient> {
@@ -129,7 +134,7 @@ class FakeEventRepository : EventRepository {
     }
 
     override suspend fun getMaterialListOfEvent(eventId: String): List<Material> {
-        TODO("Not yet implemented")
+        return materialsForEvent
     }
 
     override suspend fun deleteMaterialById(eventId: String, materialId: String) {

@@ -186,6 +186,74 @@ class CalculateShoppingListTest : KoinTest {
         assertEquals(100.0, result[1].amount)
     }
 
+    @Test
+    fun `calculates correct total for many recipes and ingredients`() = runTest {
+        val eventId = "event-big"
+
+        val ingredientCount = 50
+        val recipeCount = 20
+
+        val allIngredients = (1..ingredientCount).map {
+            Ingredient().apply {
+                uid = "ing$it"
+                name = "Ingredient$it"
+            }
+        }
+
+        val allSelections = mutableListOf<RecipeSelection>()
+        repeat(recipeCount) { rIdx ->
+            val eaterIds = List((2..5).random()) { "eater${rIdx}_$it" }
+            val ingredientsPerRecipe = allIngredients.shuffled().take(5)
+
+            var calculatedShoppingIngredients = ingredientsPerRecipe.mapIndexed { i, ing ->
+                ShoppingIngredient().apply {
+                    ingredientRef = ing.uid
+                    amount = 10.0 + i
+                    unit = IngredientUnit.GRAMM
+                    ingredient = ing
+                }
+            }
+
+            val recipe = Recipe().apply {
+                uid = "recipe$rIdx"
+                shoppingIngredients = calculatedShoppingIngredients
+            }
+
+            allSelections += RecipeSelection().apply {
+                this.recipe = recipe
+                this.eaterIds = eaterIds.toMutableSet()
+            }
+        }
+
+        fakeRepo.mealsForEvent = allSelections.map { mealWithRecipe(it) }.toMutableList()
+
+        val result = calculator.calculate(eventId)
+
+        // Check some overall expectations
+        assertTrue(result.isNotEmpty(), "Result should not be empty")
+        assertTrue(result.size <= ingredientCount, "No more unique ingredients than created")
+
+        // Spot check a known ingredient
+        val sampleIngredient = allIngredients[0]
+        val totalExpected = allSelections
+            .flatMap { it.recipe?.shoppingIngredients ?: emptyList() }
+            .filter { it.ingredientRef == sampleIngredient.uid }
+            .sumOf {
+                it.amount * allSelections.first { sel ->
+                    sel.recipe?.shoppingIngredients?.contains(
+                        it
+                    ) == true
+                }.eaterIds.size
+            }
+
+        val matched = result.find { it.ingredientRef == sampleIngredient.uid }
+        if (matched != null) {
+            assertEquals(sampleIngredient.name, matched.ingredient?.name)
+            assertEquals(totalExpected, matched.amount)
+        }
+    }
+
+
     // -- Helpers --
 
     private fun recipeSelectionWithIngredient(

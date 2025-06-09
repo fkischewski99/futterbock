@@ -34,6 +34,7 @@ interface EventRepository {
     suspend fun createNewParticipant(participant: Participant)
     suspend fun updateParticipant(participant: Participant)
     suspend fun deleteParticipant(participantId: String)
+    suspend fun getParticipantById(participantId: String): Participant?
 
     suspend fun getAllRecipes(): List<Recipe>
     suspend fun getMealById(eventId: String, mealId: String): Meal

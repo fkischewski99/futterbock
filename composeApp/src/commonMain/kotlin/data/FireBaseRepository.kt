@@ -253,6 +253,10 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         }
     }
 
+    override suspend fun getParticipantById(participantId: String): Participant {
+        return firestore.collection(PARTICIPANTS).document(participantId).get().data { }
+    }
+
     override suspend fun getAllRecipes(): List<Recipe> {
         val recipes: MutableList<Recipe> = mutableListOf()
         firestore.collection(RECIPES).get().documents.map { query ->

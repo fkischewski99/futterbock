@@ -10,7 +10,6 @@ import kotlinx.coroutines.launch
 import model.RecipeSelection
 import model.ShoppingIngredient
 import services.shoppingList.CalculateShoppingList
-import view.event.actions.BaseAction
 import view.shared.ResultState
 
 data class RecipeOverviewState(
@@ -49,9 +48,9 @@ class RecipeOverviewViewModel(
         val state = _recipeState.value.getSuccessData() ?: return
         viewModelScope.launch {
             val calulatedMap = calculatedIngredientAmounts.calculateAmountsForRecipe(
-                map = mutableMapOf(),
+                existingShoppingIngredients = mutableMapOf(),
                 recipeSelection = state.recipeSelection,
-                multiplier = numberOfPortions
+                multiplier = numberOfPortions.toDouble()
 
             )
             Logger.i("Update number of portions to $numberOfPortions")

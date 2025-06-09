@@ -13,6 +13,7 @@ import model.ShoppingIngredient
 
 class FakeEventRepository : EventRepository {
 
+    var participants: Map<String, Participant> = mapOf()
     var mealsForEvent: MutableList<Meal> = mutableListOf()
     var materialsForEvent: MutableList<Material> = mutableListOf()
     var shoppingIngredients: MutableList<ShoppingIngredient> = mutableListOf()
@@ -73,6 +74,10 @@ class FakeEventRepository : EventRepository {
 
     override suspend fun deleteParticipant(participantId: String) {
         TODO("Not yet implemented")
+    }
+
+    override suspend fun getParticipantById(participantId: String): Participant? {
+        return participants.get(participantId)
     }
 
     override suspend fun getAllRecipes(): List<Recipe> {

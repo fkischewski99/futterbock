@@ -8,13 +8,28 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.Clock
-import model.*
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
+import model.Ingredient
+import model.IngredientUnit
+import model.Meal
+import model.Participant
+import model.Recipe
+import model.RecipeSelection
+import model.ShoppingIngredient
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.get
-import kotlin.test.*
+import view.shared.HelperFunctions
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CalculateShoppingListTest : KoinTest {
@@ -253,8 +268,126 @@ class CalculateShoppingListTest : KoinTest {
         }
     }
 
+    @Test
+    fun `calculate adjusts amounts by participant age multipliers`() = runTest {
+        val eventId = "event-age-test"
+
+        var newIngredient = Ingredient().apply { uid = "ing1"; name = "Milk" }
+        val shoppingIngredient = ShoppingIngredient().apply {
+            ingredientRef = "ing1"
+            amount = 100.0
+            unit = IngredientUnit.MILLILITER
+            ingredient = newIngredient
+        }
+        var testRecipe = Recipe().apply {
+            uid = "recipe-age-test"
+            shoppingIngredients = listOf(shoppingIngredient)
+        }
+
+        val now = Clock.System.now()
+        val timeZone = TimeZone.currentSystemDefault()
+
+        fun birthdateYearsAgo(yearsAgo: Int): Instant {
+            val localDate = now.toLocalDateTime(timeZone).date
+            val birthDate = localDate.minus(DatePeriod(years = yearsAgo))
+            return HelperFunctions.getInstant(birthDate)
+        }
+
+        fakeRepo.participants = mapOf(
+            "p1" to createParticipant("p1", birthdateYearsAgo(3)),
+            "p2" to createParticipant("p2", birthdateYearsAgo(8)),
+            "p3" to createParticipant("p3", birthdateYearsAgo(13)),
+            "p4" to createParticipant("p4", birthdateYearsAgo(19)),
+            "p5" to createParticipant("p5", birthdateYearsAgo(40)),
+        )
+
+        val recipeSelection = RecipeSelection().apply {
+            recipe = testRecipe
+            eaterIds = mutableSetOf("p1", "p2", "p3", "p4", "p5")
+        }
+
+        fakeRepo.mealsForEvent = mutableListOf(mealWithRecipe(recipeSelection))
+
+        val result = calculator.calculate(eventId)
+        assertEquals(1, result.size)
+        val totalAmount = 100.0 * (0.4 + 0.7 + 1.0 + 1.2 + 1.0)
+        assertEquals(totalAmount, result[0].amount, 0.0001)
+    }
+
+    @Test
+    fun `calculateAmountsForRecipe applies multiplier correctly`() = runTest {
+        // Set up one ingredient
+        val ingredient = Ingredient().apply {
+            uid = "ingredient-1"
+            name = "Sugar"
+        }
+
+        val shoppingIngredient = ShoppingIngredient().apply {
+            amount = 100.0
+            unit = IngredientUnit.GRAMM
+            ingredientRef = "ingredient-1"
+            this.ingredient = ingredient
+        }
+
+        val recipe = Recipe().apply {
+            shoppingIngredients = listOf(shoppingIngredient)
+        }
+
+        val recipeSelection = RecipeSelection().apply {
+            this.recipe = recipe
+        }
+
+        val map = mutableMapOf<String, ShoppingIngredient>()
+
+        // First call with multiplier 2
+        val firstCallMap =
+            calculator.calculateAmountsForRecipe(map, recipeSelection, multiplier = 2.0)
+        val afterFirstCallNewAmount = firstCallMap["ingredient-1"]?.amount ?: 0.0
+        assertEquals(
+            200.0,
+            afterFirstCallNewAmount,
+            0.01,
+            "First multiplier (2.0) should yield 200g"
+        )
+
+        // Second call with multiplier 3
+        val ingredientMap =
+            calculator.calculateAmountsForRecipe(firstCallMap, recipeSelection, multiplier = 3.0)
+        val afterSecondCall = ingredientMap["ingredient-1"]?.amount ?: 0.0
+        val afterFirstCallExistingAmount = firstCallMap["ingredient-1"]?.amount ?: 0.0
+        assertEquals(
+            500.0,
+            afterSecondCall,
+            0.01,
+            "Second multiplier (3.0) should add 300 to existing amount (500)"
+        )
+        assertEquals(
+            200.0,
+            afterFirstCallExistingAmount,
+            0.01,
+            "existing ingredient should not be changed"
+        )
+
+        // Third call with multiplier 4
+        val thirdCallMap =
+            calculator.calculateAmountsForRecipe(mutableMapOf(), recipeSelection, multiplier = 4.0)
+        val afterThirdCall = thirdCallMap["ingredient-1"]?.amount ?: 0.0
+        assertEquals(
+            400.0,
+            afterThirdCall,
+            0.01,
+            "Calculates the next amount correctly"
+        )
+    }
+
 
     // -- Helpers --
+
+    private fun createParticipant(id: String, birthdate: Instant) =
+        Participant().apply {
+            this.uid = id
+            this.birthdate = birthdate
+        }
 
     private fun recipeSelectionWithIngredient(
         ingredientRef: String,

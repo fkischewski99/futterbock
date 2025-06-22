@@ -32,6 +32,11 @@ class HandleParticipantsActions(
                     participantToAdd = editEventActions.participant
                 )
 
+                is EditParticipantActions.AddMultipleParticipants -> addParticipantsToEvent(
+                    currentState = currentState,
+                    participantsToAdd = editEventActions.participants
+                )
+
                 is EditParticipantActions.DeleteParticipant -> removeParticipantOfEvent(
                     currentState = currentState,
                     participantToDelete = editEventActions.participant
@@ -113,20 +118,34 @@ class HandleParticipantsActions(
         )
     }
 
+    private suspend fun addParticipantsToEvent(
+        currentState: EventState,
+        participantsToAdd: List<Participant>
+    ): ResultState<EventState> {
+        var mutableListOfParticipants = currentState.participantList.toMutableList()
+        participantsToAdd.forEach { participantToAdd ->
+            mutableListOfParticipants =
+                addParticipant(currentState, participantToAdd, mutableListOfParticipants)
+        }
+        return ResultState.Success(
+            currentState.copy(
+                participantList = mutableListOfParticipants,
+                currentParticipantsOfMeal = getParticipantsForDay(
+                    mutableListOfParticipants,
+                    currentState.selectedMeal.day
+                )
+            )
+        )
+    }
+
 
     private suspend fun addParticipantToEvent(
         currentState: EventState,
         participantToAdd: Participant
     ): ResultState<EventState> {
-        val newParticipantList = currentState.participantList.toMutableList()
-        val participantTime =
-            eventRepository.addParticipantToEvent(participantToAdd, currentState.event)
-        newParticipantList.add(participantTime)
-        for (meal in currentState.mealList) {
-            meal.recipeSelections.forEach { recipeSelection ->
-                recipeSelection.eaterIds.add(participantToAdd.uid)
-            }
-        }
+        val mutableListOfParticipants = currentState.participantList.toMutableList()
+        val newParticipantList =
+            addParticipant(currentState, participantToAdd, mutableListOfParticipants)
         return ResultState.Success(
             currentState.copy(
                 participantList = newParticipantList,
@@ -136,6 +155,22 @@ class HandleParticipantsActions(
                 )
             )
         )
+    }
+
+    private suspend fun addParticipant(
+        currentState: EventState,
+        participantToAdd: Participant, newParticipantList: MutableList<ParticipantTime>
+    ): MutableList<ParticipantTime> {
+
+        val participantTime =
+            eventRepository.addParticipantToEvent(participantToAdd, currentState.event)
+        newParticipantList.add(participantTime)
+        for (meal in currentState.mealList) {
+            meal.recipeSelections.forEach { recipeSelection ->
+                recipeSelection.eaterIds.add(participantToAdd.uid)
+            }
+        }
+        return newParticipantList
     }
 
 }

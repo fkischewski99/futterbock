@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -120,18 +121,26 @@ fun NewMealPage(
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var recipeToDelete: RecipeSelection? = null;
+    var isSearchBarActive by remember { mutableStateOf(false) }
 
     //val context = LocalContext.current
     Scaffold(
         topBar = {
-            SearchBarComponent(onAction = onAction, state = state, allRecipes = allRecipes)
+            SearchBarComponent(
+                onAction = onAction,
+                state = state,
+                allRecipes = allRecipes,
+                isSearchBarActive = isSearchBarActive,
+                onSearchBarActiveChange = { isSearchBarActive = it }
+            )
         },
         modifier = Modifier.fillMaxHeight(),
         floatingActionButton = {
             if (state is ResultState.Success) {
-                AddMeal(
+                ActionButtons(
                     onAction = onAction,
-                    state = state.data
+                    state = state.data,
+                    onOpenSearch = { isSearchBarActive = true }
                 )
             }
         }
@@ -238,10 +247,11 @@ private fun navigateToRecipe(
 fun SearchBarComponent(
     state: ResultState<EventState>,
     allRecipes: List<Recipe>,
-    onAction: (BaseAction) -> Unit
+    onAction: (BaseAction) -> Unit,
+    isSearchBarActive: Boolean,
+    onSearchBarActiveChange: (Boolean) -> Unit
 ) {
     var searchText by remember { mutableStateOf("") }
-    var isSearchBarActive by remember { mutableStateOf(false) }
     var selectedEatingHabitFilter: EatingHabit? by remember { mutableStateOf(null) }
     var selectedFoodIntoleranceFilter by remember { mutableStateOf(emptySet<FoodIntolerance>()) }
     var selectedPriceFilter: Range? by remember { mutableStateOf(null) }
@@ -259,9 +269,9 @@ fun SearchBarComponent(
                     SearchInputField(
                         searchText = searchText,
                         onQueryChange = { searchText = it },
-                        onSearch = { isSearchBarActive = false },
+                        onSearch = { onSearchBarActiveChange(false) },
                         isActive = isSearchBarActive,
-                        onActiveChange = { isSearchBarActive = it },
+                        onActiveChange = onSearchBarActiveChange,
                         onNavigateBack = {
                             onAction(EditMealActions.SaveMeal)
                             onAction(NavigationActions.GoBack)
@@ -269,7 +279,7 @@ fun SearchBarComponent(
                     )
                 },
                 expanded = isSearchBarActive,
-                onExpandedChange = { isSearchBarActive = it },
+                onExpandedChange = onSearchBarActiveChange,
                 modifier = Modifier.fillMaxWidth().padding(4.dp),
                 colors = colors,
                 content = {
@@ -316,7 +326,7 @@ fun SearchBarComponent(
                         allRecipes = allRecipes,
                         searchText = searchText,
                         onRecipeSelected = { recipe ->
-                            isSearchBarActive = false
+                            onSearchBarActiveChange(false)
                             searchText = ""
                             onAction(EditMealActions.SelectRecipe(recipe))
                         },
@@ -393,33 +403,68 @@ fun SearchInputField(
 
 
 @Composable
-fun AddMeal(
+fun ActionButtons(
     state: EventState,
-    onAction: (BaseAction) -> Unit
+    onAction: (BaseAction) -> Unit,
+    onOpenSearch: () -> Unit
 ) {
-    ExtendedFloatingActionButton(
-        onClick = {
-            onAction(
-                if (state.selectedMeal.recipeSelections.isEmpty()) {
-                    return@ExtendedFloatingActionButton
-                } else {
-                    EditEventActions.AddNewMeal(
-                        HelperFunctions.getLocalDate(state.selectedMeal.day)
-                    )
-                }
-            )
-            HelperFunctions.getLocalDate(state.selectedMeal.day)
-        },
-        modifier = Modifier.padding(bottom = 16.dp)
-            .clip(shape = RoundedCornerShape(75)), // Limit the width to prevent stretching,
-        containerColor = MaterialTheme.colorScheme.primary,
-
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.End
+    ) {
+        // Rezept hinzufügen button
+        ExtendedFloatingActionButton(
+            onClick = onOpenSearch,
+            modifier = Modifier
+                .width(400.dp)
+                .clip(shape = RoundedCornerShape(75)),
+            containerColor = MaterialTheme.colorScheme.secondary,
         ) {
-        Icon(
-            imageVector = Icons.Default.Add,
-            contentDescription = "Add Icon"
-        )
-        Text("Weitere Mahlzeit anlegen")
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Rezept hinzufügen"
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Rezept hinzufügen")
+            }
+        }
+
+        // Weitere Mahlzeit anlegen button
+        ExtendedFloatingActionButton(
+            onClick = {
+                onAction(
+                    if (state.selectedMeal.recipeSelections.isEmpty()) {
+                        return@ExtendedFloatingActionButton
+                    } else {
+                        EditEventActions.AddNewMeal(
+                            HelperFunctions.getLocalDate(state.selectedMeal.day)
+                        )
+                    }
+                )
+                HelperFunctions.getLocalDate(state.selectedMeal.day)
+            },
+            modifier = Modifier
+                .width(400.dp)
+                .clip(shape = RoundedCornerShape(75)),
+            containerColor = MaterialTheme.colorScheme.primary,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Icon"
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Weitere Mahlzeit anlegen")
+            }
+        }
     }
 }
-

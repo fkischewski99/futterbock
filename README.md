@@ -17,23 +17,70 @@ Die App basiert dabei auf dem hier erhältlichem Futterbock: https://bockbuecher
 
 Fragen oder Feedback gerne an: <a href="mailto:kontakt@bockbuecher.de">kontakt@bockbuecher.de</a>
 
+### 👶 Teilnehmer-Faktor nach Alter
+
+Teilnehmer werden abhängig vom Geburtsjahr unterschiedlich stark gewichtet:
+
+- **Kinder (unter 12 Jahren)** zählen z. B. als **0.5**
+- **Jugendliche (12–17 Jahre)** zählen als **0.75**
+- **Erwachsene (ab 18 Jahren)** zählen als **1.0**
+
+Diese Gewichtung fließt z. B. in die Berechnung von Portionen, Mengen und teilweise auch
+Materialbedarf mit ein.  
+So wird vermieden, dass für kleinere Kinder zu viel geplant oder eingekauft wird.
+
+### Import von Teilnehmern
+
+- Die App ermöglicht das Importieren von Teilnehmern über eine CSV-Datei
+- Als Beispiel für eine solche Datei ist die sample_participants.csv in dem Repository enthalten
+- Die Datei muss die folgenden Spalten besitzen: Vorname, Nachname (optional), Ernährungsweise,
+  Geburtsjahr)
+- 💡
+  Tipp: [Importieren oder Exportieren von Textdateien (TXT oder CSV) – Microsoft-Support](https://support.microsoft.com/de-de/office/importieren-oder-exportieren-von-textdateien-txt-oder-csv-5250ac4c-663c-47ce-937b-339e391393ba)
+
 ## Geplante Features
 
-### Auf jeden Fall
+- Gäste zu Rezepten hinzufügen
 
-- Verwaltung von Teilnehmenden (Stammesmitglieder)
-- Hinzufügen von Unverträglichkeiten (Gluten, Laktose etc)
-- Hinzufügen von Unverträglichkeiten gegen einzelne Lebensmittel
+## Installation & Setup
 
-### Möglicherweise
+### macOS: Datenschutz und Sicherheit
 
-- Erstellung von Küchendienstplänen?
-- Erweiterung der PDFs --> Teilnehmendenliste mit Unverträglichkeiten + Ernährungsweise
+Beim ersten Start der App auf macOS kann eine Sicherheitswarnung erscheinen. Um die App
+freizuschalten:
+
+1. **Sicherheitswarnung beim ersten Start:**
+    - Wenn die Meldung "App kann nicht geöffnet werden" erscheint, klicken Sie auf **"Abbrechen"**
+
+2. **Systemeinstellungen öffnen:**
+    - Gehen Sie zu **Systemeinstellungen** > **Datenschutz und Sicherheit**
+    - Oder drücken Sie `⌘ + Leertaste` und suchen nach "Datenschutz"
+
+3. **App freischalten:**
+    - Scrollen Sie zum Bereich **"Sicherheit"**
+    - Sie sehen eine Meldung: *"Die App wurde blockiert, da sie von einem nicht verifizierten
+      Entwickler stammt"*
+    - Klicken Sie auf **"Trotzdem öffnen"**
+
+4. **Bestätigung:**
+    - Bei der nächsten Sicherheitsabfrage klicken Sie auf **"Öffnen"**
+    - Die App startet nun und kann zukünftig normal verwendet werden
+
+> **Hinweis:** Diese Schritte sind nur beim ersten Start erforderlich. Danach kann die App normal
+> über das Dock oder den Finder gestartet werden.
 
 ## Technical
 
+### App starten
+
 ```shell
 ./gradlew :composeApp:desktopRun -PmainClass=MainKt
+```
+
+### Oder direkt mit
+
+```shell
+./gradlew run
 ```
 
 

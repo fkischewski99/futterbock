@@ -36,4 +36,11 @@ class AllParticipantsViewModel(
             }
         }
     }
+
+    fun addParticipant(participant: Participant) {
+        val newParticipants =
+            state.value.getSuccessData()?.allParticipants?.toMutableList() ?: mutableListOf()
+        newParticipants.add(participant)
+        _state.value = ResultState.Success(AllParticipantsState(allParticipants = newParticipants))
+    }
 }

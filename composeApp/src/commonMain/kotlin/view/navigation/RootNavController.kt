@@ -6,9 +6,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import data.EventRepository
 import org.koin.compose.koinInject
 import services.login.LoginAndRegister
+import view.admin.csv_import.CsvImportScreen
 import view.admin.new_participant.NewParticipantScreen
 import view.admin.participants.ParticipantAdminScreen
 import view.event.categorized_shopping_list.MaterialListScreen
@@ -56,6 +58,16 @@ fun RootNavController(
         }
         composable<Routes.ParticipantAdministration> {
             ParticipantAdminScreen(navController = navController)
+        }
+        composable<Routes.CsvImport> {
+            CsvImportScreen(navController = navController)
+        }
+        composable<Routes.EventCsvImport> { backStackEntry ->
+            val route = backStackEntry.toRoute<Routes.EventCsvImport>()
+            CsvImportScreen(
+                navController = navController,
+                eventId = route.eventId
+            )
         }
         navigation<Routes.EditEventSubGraph>(
             startDestination = Routes.EditEvent,

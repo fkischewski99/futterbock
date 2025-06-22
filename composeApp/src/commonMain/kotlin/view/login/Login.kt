@@ -56,6 +56,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import services.login.LoginAndRegister
 import view.shared.MGCircularProgressIndicator
+import view.shared.UpdateNotificationBanner
 
 
 @Composable
@@ -125,6 +126,8 @@ fun LoginContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        // Update notification banner at the top
+        UpdateNotificationBanner()
         Image(
             painter = painterResource(Res.drawable.startPage),
             contentDescription = "logo",

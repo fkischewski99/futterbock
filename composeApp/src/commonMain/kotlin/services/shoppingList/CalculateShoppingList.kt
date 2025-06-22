@@ -2,22 +2,45 @@ package services.shoppingList
 
 import co.touchlab.kermit.Logger
 import data.EventRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.merge
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.periodUntil
 import model.IngredientUnit
+import model.Participant
 import model.RecipeSelection
 import model.ShoppingIngredient
 
 //Calculates the Amount of Ingredients that need to be shoppend
 class CalculateShoppingList(private val eventRepository: EventRepository) {
+    var allParticipants = emptyMap<String, Participant>()
 
     suspend fun calculate(eventId: String): List<ShoppingIngredient> {
         val shoppingIngredients = eventRepository.getShoppingIngredients(eventId)
         val map = addExistingIngredients(shoppingIngredients)
+
+        // ✅ OPTIMIZED: Fetch all participants once for the entire calculation
+        allParticipants = fetchAllParticipantsForEvent(eventId)
         val finalMap = addAllAmounts(eventId, map)
+
         return finalMap.values.toList().sortedBy { it.ingredient?.name }
+    }
+
+    private suspend fun fetchAllParticipantsForEvent(eventId: String): Map<String, Participant> {
+        return try {
+            val participantTimes =
+                eventRepository.getParticipantsOfEvent(eventId, withParticipant = true)
+            participantTimes.mapNotNull { participantTime ->
+                participantTime.participant?.let { participant ->
+                    participant.uid to participant
+                }
+            }.toMap()
+        } catch (e: Exception) {
+            Logger.e("Error fetching participants for shopping calculation: ${e.message}")
+            emptyMap()
+        }
     }
 
 
@@ -140,7 +163,8 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
     }
 
     private suspend fun getMultiplierForParticipant(participantId: String): Double {
-        val participant = eventRepository.getParticipantById(participantId)
+        val participant =
+            allParticipants[participantId] ?: eventRepository.getParticipantById(participantId)
         if (participant?.birthdate == null) {
             return 1.0
         }

@@ -22,6 +22,19 @@ class PdfServiceModule(
         val shoppingIngredients = calculateShoppingList.calculate(eventId)
         val materialList = calculateMaterialList.calculate(eventId)
         pdfService!!.createPdf(groupIngredientByCategory(shoppingIngredients), materialList);
-        pdfService!!.sharePdf()
+        pdfService!!.sharePdf("Einkaufsliste.pdf")
+    }
+
+    suspend fun createRecipePlanPdf(
+        eventName: String,
+        startDate: kotlinx.datetime.LocalDate,
+        endDate: kotlinx.datetime.LocalDate,
+        mealsGroupedByDate: Map<kotlinx.datetime.LocalDate, List<model.Meal>>
+    ) {
+        if (pdfService == null) {
+            return
+        }
+        pdfService!!.createRecipePlanPdf(eventName, startDate, endDate, mealsGroupedByDate)
+        pdfService!!.sharePdf("Wochenplan.pdf")
     }
 }

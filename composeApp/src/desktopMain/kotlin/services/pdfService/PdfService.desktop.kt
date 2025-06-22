@@ -1,8 +1,11 @@
 package services.pdfService
 
+import kotlinx.datetime.LocalDate
 import model.Material
+import model.Meal
 import model.ShoppingIngredient
 import model.Source
+import services.pdfService.RecipePlanPdfProcessor
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
@@ -32,6 +35,7 @@ actual class PdfServiceImpl {
     var contentStream: PDPageContentStream? = null
     var document: PDDocument? = null
     var yPosition = PDF_PAGE_HEIGHT - 100F
+    var currentFilename: String = "Document.pdf"
 
 
     actual fun createPdf(
@@ -75,6 +79,77 @@ actual class PdfServiceImpl {
 
         createMaterialList(materialList = materialList)
 
+
+        contentStream!!.close()
+        currentDocument = document
+    }
+
+    actual fun createRecipePlanPdf(
+        eventName: String,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        mealsGroupedByDate: Map<LocalDate, List<Meal>>
+    ) {
+        document = PDDocument()
+        var page = PDPage()
+        document!!.addPage(page)
+
+        contentStream = PDPageContentStream(document, page)
+
+        // Process data using shared logic
+        val pdfData = RecipePlanPdfProcessor.processRecipePlanData(
+            eventName, startDate, endDate, mealsGroupedByDate
+        )
+
+        // Draw title
+        setTitleOfCurrentPage(pdfData.title)
+
+        yPosition -= 20f
+
+        // Create daily sections
+        for (daySection in pdfData.dailySections) {
+            checkForOverflowAndCreateNewPage(page, pdfFont)
+
+            // Day header
+            contentStream!!.beginText()
+            contentStream!!.newLineAtOffset(50f, yPosition)
+            contentStream!!.setFont(pdfFontHeading, 16f)
+            contentStream!!.showText(daySection.dayHeader)
+            contentStream!!.endText()
+
+            yPosition -= 25f
+
+            // Meal sections
+            for (mealSection in daySection.mealSections) {
+                checkForOverflowAndCreateNewPage(page, pdfFont)
+
+                // Meal type header
+                contentStream!!.beginText()
+                contentStream!!.newLineAtOffset(70f, yPosition)
+                contentStream!!.setFont(pdfFontHeading, 12f)
+                contentStream!!.showText(mealSection.mealTypeHeader)
+                contentStream!!.endText()
+
+                yPosition -= 18f
+
+                // Recipe list
+                for (recipeText in mealSection.recipes) {
+                    checkForOverflowAndCreateNewPage(page, pdfFont)
+
+                    contentStream!!.beginText()
+                    contentStream!!.newLineAtOffset(90f, yPosition)
+                    contentStream!!.setFont(pdfFont, 11f)
+                    contentStream!!.showText(recipeText)
+                    contentStream!!.endText()
+
+                    yPosition -= 15f
+                }
+
+                yPosition -= 5f // Extra spacing between meal types
+            }
+
+            yPosition -= 15f // Extra spacing between days
+        }
 
         contentStream!!.close()
         currentDocument = document
@@ -138,7 +213,7 @@ actual class PdfServiceImpl {
         contentStream!!.close()
     }
 
-    actual fun sharePdf() {
+    actual fun sharePdf(filename: String) {
         if (currentDocument == null) {
             throw Exception("No Document Created")
         }
@@ -149,7 +224,7 @@ actual class PdfServiceImpl {
         val fileChooser = JFileChooser().apply {
             dialogTitle = "Save PDF"
             fileFilter = FileNameExtensionFilter("PDF Documents", "pdf")
-            selectedFile = File("Einkaufsliste.pdf")
+            selectedFile = File(filename)
         }
 
         val userSelection = fileChooser.showSaveDialog(null)

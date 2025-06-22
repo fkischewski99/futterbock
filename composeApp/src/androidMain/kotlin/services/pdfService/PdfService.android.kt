@@ -10,8 +10,11 @@ import android.graphics.pdf.PdfDocument.Page
 import android.os.Environment
 import android.provider.MediaStore
 import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
 import model.Material
+import model.Meal
 import model.ShoppingIngredient
+import services.pdfService.RecipePlanPdfProcessor
 import java.io.IOException
 
 /**Dimension For A4 Size Paper (1 inch = 72 points)**/
@@ -59,6 +62,90 @@ actual class PdfServiceImpl(
         currentDocument = document;
     }
 
+    actual fun createRecipePlanPdf(
+        eventName: String,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        mealsGroupedByDate: Map<LocalDate, List<Meal>>
+    ) {
+        val document = PdfDocument()
+        var pageNumber = 1
+        var pageInfo =
+            PdfDocument.PageInfo.Builder(PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT, pageNumber).create()
+        var page = document.startPage(pageInfo)
+        var canvas = page.canvas
+
+        // Process data using shared logic
+        val pdfData = RecipePlanPdfProcessor.processRecipePlanData(
+            eventName, startDate, endDate, mealsGroupedByDate
+        )
+
+        // Draw title
+        drawHeadline(pdfData.title, canvas)
+        var yPosition = 80F
+
+        yPosition += 20F
+
+        // Create daily sections
+        for (daySection in pdfData.dailySections) {
+            // Check if we need a new page
+            if (yPosition > PDF_PAGE_HEIGHT - 150) {
+                page = getNextPage(document, page)
+                canvas = page.canvas
+                yPosition = 60F
+            }
+
+            // Day header
+            val dayPaint = Paint().apply {
+                textSize = 16f
+                isFakeBoldText = true
+            }
+            canvas.drawText(daySection.dayHeader, 50F, yPosition, dayPaint)
+            yPosition += 25F
+
+            // Meal sections
+            for (mealSection in daySection.mealSections) {
+                // Check if we need a new page
+                if (yPosition > PDF_PAGE_HEIGHT - 100) {
+                    page = getNextPage(document, page)
+                    canvas = page.canvas
+                    yPosition = 60F
+                }
+
+                // Meal type header
+                val mealTypePaint = Paint().apply {
+                    textSize = 12f
+                    isFakeBoldText = true
+                }
+                canvas.drawText(mealSection.mealTypeHeader, 70F, yPosition, mealTypePaint)
+                yPosition += 18F
+
+                // Recipe list
+                for (recipeText in mealSection.recipes) {
+                    // Check if we need a new page
+                    if (yPosition > PDF_PAGE_HEIGHT - 50) {
+                        page = getNextPage(document, page)
+                        canvas = page.canvas
+                        yPosition = 60F
+                    }
+
+                    val recipePaint = Paint().apply {
+                        textSize = 11f
+                    }
+                    canvas.drawText(recipeText, 90F, yPosition, recipePaint)
+                    yPosition += 15F
+                }
+
+                yPosition += 5F // Extra spacing between meal types
+            }
+
+            yPosition += 15F // Extra spacing between days
+        }
+
+        document.finishPage(page)
+        currentDocument = document
+    }
+
 
     private fun getNextPage(pdfDoc: PdfDocument, previousPage: Page): Page {
         pdfDoc.finishPage(previousPage); //Closes Previous page
@@ -73,12 +160,12 @@ actual class PdfServiceImpl(
         return (yPosition + 80F + listOfIngredient.size * 20F > PDF_PAGE_HEIGHT)
     }
 
-    actual fun sharePdf() {
+    actual fun sharePdf(filename: String) {
         // Check if the document exists
         val document = currentDocument ?: throw IllegalStateException("No Document Created")
 
         // Define constants
-        val fileName = "Einkaufsliste" + Clock.System.now().toEpochMilliseconds() + ".pdf"
+        val fileName = filename
         val mimeType = "application/pdf"
 
         // Prepare ContentValues for the PDF document

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -224,30 +225,50 @@ fun ParticipantSearchBar(
                                         onAction(NavigationActions.GoToRoute(Routes.CreateOrEditParticipant))
                                     },
                                     modifier = Modifier.padding(bottom = 16.dp)
+                                        .width(400.dp)
                                         .clip(shape = RoundedCornerShape(75)), // Limit the width to prevent stretching,
                                     containerColor = MaterialTheme.colorScheme.onPrimary,
 
                                     ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = "Add Icon"
-                                    )
-                                    Text("Teilnehmende anlegen       ")
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Start,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = "Add Icon"
+                                        )
+                                        Text(
+                                            text = "Teilnehmende anlegen",
+                                            modifier = Modifier.padding(start = 8.dp)
+                                        )
+                                    }
                                 }
                                 ExtendedFloatingActionButton(
                                     onClick = {
                                         onAction(NavigationActions.GoBack)
                                     },
                                     modifier = Modifier.padding(bottom = 16.dp)
+                                        .width(400.dp)
                                         .clip(shape = RoundedCornerShape(75)), // Limit the width to prevent stretching,
                                     elevation = FloatingActionButtonDefaults.elevation(16.dp),
                                     containerColor = MaterialTheme.colorScheme.primary
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = "Add Icon"
-                                    )
-                                    Text("Teilnehmende übernehmen")
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Start,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                            contentDescription = "Add Icon"
+                                        )
+                                        Text(
+                                            text = "Teilnehmende übernehmen",
+                                            modifier = Modifier.padding(start = 8.dp)
+                                        )
+                                    }
                                 }
                             }
                         }

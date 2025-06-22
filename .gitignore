@@ -26,4 +26,5 @@ composeApp/google-services.json
 composeApp/release
 iosApp/GoogleService-Info.plist
 
+.CLAUDE.local.md
 

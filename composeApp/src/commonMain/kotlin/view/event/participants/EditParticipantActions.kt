@@ -16,4 +16,6 @@ interface EditParticipantActions : BaseAction {
         val endMillis: Long
     ) : EditParticipantActions
 
+    data class AddMultipleParticipants(val participants: List<Participant>) : EditParticipantActions
+
 }

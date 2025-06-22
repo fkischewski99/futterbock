@@ -3,8 +3,11 @@ package services.pdfService
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.CValue
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.datetime.LocalDate
 import model.Material
+import model.Meal
 import model.ShoppingIngredient
+import services.pdfService.RecipePlanPdfProcessor
 import platform.CoreGraphics.CGRect
 import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSAttributedString
@@ -110,7 +113,92 @@ actual class PdfServiceImpl {
         pdfData.writeToFile(fileURL.path!!, true)
     }
 
-    actual fun sharePdf() {
+    @OptIn(ExperimentalForeignApi::class)
+    actual fun createRecipePlanPdf(
+        eventName: String,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        mealsGroupedByDate: Map<LocalDate, List<Meal>>
+    ) {
+        val pdfData = NSMutableData()
+
+        // Define PDF context
+        UIGraphicsBeginPDFContextToData(pdfData, CGRectMake(0.0, 0.0, 0.0, 0.0), null)
+
+        // Start a new PDF page
+        UIGraphicsBeginPDFPage()
+
+        pdfDocument = PDFDocument() // Create a new PDF document
+        val page = PDFPage()
+        page.setBounds(CGRectMake(0.0, 0.0, PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT), 0)
+        pdfDocument?.insertPage(page, atIndex = 0u)
+
+        // Process data using shared logic
+        val processedData = RecipePlanPdfProcessor.processRecipePlanData(
+            eventName, startDate, endDate, mealsGroupedByDate
+        )
+
+        // Define font sizes
+        val titleFontSize = 24.0
+        val subtitleFontSize = 14.0
+        val dayFontSize = 16.0
+        val mealTypeFontSize = 12.0
+        val recipeFontSize = 11.0
+
+        // Draw the title
+        drawTextOnPDF(processedData.title, titleFontSize, 50.0)
+        var yPosition = 70.0
+
+        // Create daily sections
+        for (daySection in processedData.dailySections) {
+            // Check for page overflow
+            if (yPosition + 150 > PDF_PAGE_HEIGHT) {
+                UIGraphicsBeginPDFPage()
+                yPosition = 50.0
+            }
+
+            // Day header
+            drawTextOnPDF(daySection.dayHeader, dayFontSize, yPosition)
+            yPosition += 25.0
+
+            // Meal sections
+            for (mealSection in daySection.mealSections) {
+                // Check for page overflow
+                if (yPosition + 100 > PDF_PAGE_HEIGHT) {
+                    UIGraphicsBeginPDFPage()
+                    yPosition = 50.0
+                }
+
+                // Meal type header
+                drawTextOnPDF(mealSection.mealTypeHeader, mealTypeFontSize, yPosition)
+                yPosition += 18.0
+
+                // Recipe list
+                for (recipeText in mealSection.recipes) {
+                    // Check for page overflow
+                    if (yPosition + 50 > PDF_PAGE_HEIGHT) {
+                        UIGraphicsBeginPDFPage()
+                        yPosition = 50.0
+                    }
+
+                    drawTextOnPDF(recipeText, recipeFontSize, yPosition)
+                    yPosition += 15.0
+                }
+
+                yPosition += 5.0 // Extra spacing between meal types
+            }
+
+            yPosition += 15.0 // Extra spacing between days
+        }
+
+        UIGraphicsEndPDFContext()
+
+        // Write PDF to file
+        val fileURL = NSURL.fileURLWithPath(pdfFilePath)
+        pdfData.writeToFile(fileURL.path!!, true)
+    }
+
+    actual fun sharePdf(filename: String) {
 
         // Verify if file exists
         val fileManager = NSFileManager.defaultManager

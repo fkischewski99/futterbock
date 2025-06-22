@@ -53,6 +53,7 @@ class HandleEditEvent(
             )
 
             is EditEventActions.SharePdf -> onPdfShare(currentState = currentState)
+            is EditEventActions.ShareRecipePlanPdf -> onRecipePlanPdfShare(currentState = currentState)
             is EditEventActions.CopyEventToFuture -> copyEventToFuture(
                 eventRepository = eventRepository,
                 oldState = currentState,
@@ -69,6 +70,16 @@ class HandleEditEvent(
 
     private suspend fun onPdfShare(currentState: EventState): ResultState.Success<EventState> {
         pdfServiceModule.createPdf(eventId = currentState.event.uid)
+        return ResultState.Success(currentState)
+    }
+
+    private suspend fun onRecipePlanPdfShare(currentState: EventState): ResultState.Success<EventState> {
+        pdfServiceModule.createRecipePlanPdf(
+            eventName = currentState.event.name,
+            startDate = view.shared.HelperFunctions.getLocalDate(currentState.event.from),
+            endDate = view.shared.HelperFunctions.getLocalDate(currentState.event.to),
+            mealsGroupedByDate = currentState.mealsGroupedByDate
+        )
         return ResultState.Success(currentState)
     }
 

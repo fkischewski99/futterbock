@@ -64,7 +64,7 @@ class FakeEventRepository : EventRepository {
         TODO("Not yet implemented")
     }
 
-    override suspend fun createNewParticipant(participant: Participant) {
+    override suspend fun createNewParticipant(participant: Participant): Boolean {
         TODO("Not yet implemented")
     }
 
@@ -80,6 +80,12 @@ class FakeEventRepository : EventRepository {
         return participants.get(participantId)
     }
 
+    override suspend fun findParticipantByName(firstName: String, lastName: String): Participant? {
+        return participants.values.find { 
+            it.firstName.equals(firstName, ignoreCase = true) && 
+            it.lastName.equals(lastName, ignoreCase = true) 
+        }
+    }
     override suspend fun getAllRecipes(): List<Recipe> {
         TODO("Not yet implemented")
     }

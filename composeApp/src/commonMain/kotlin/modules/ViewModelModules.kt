@@ -3,6 +3,7 @@ package modules
 import CategorizedShoppingListViewModel
 import MaterialListViewModel
 import org.koin.dsl.module
+import view.admin.csv_import.CsvImportViewModel
 import view.admin.new_participant.ViewModelNewParticipant
 import view.event.new_meal_screen.RecipeViewModel
 import view.event.SharedEventViewModel
@@ -21,4 +22,5 @@ val viewModelModules = module {
     single { AllParticipantsViewModel(get()) }
     single { RecipeOverviewViewModel(get(), get()) }
     single { MaterialListViewModel(get(), get()) }
+    single { CsvImportViewModel(get(), get()) }
 }

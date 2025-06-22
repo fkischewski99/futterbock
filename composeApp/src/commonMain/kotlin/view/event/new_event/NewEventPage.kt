@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -102,7 +103,7 @@ fun NewEventPage(
 
 ) {
     Scaffold(topBar = {
-        topBarEventPage(
+        TopBarEventPage(
             onAction = onAction,
             sharedState = sharedState
         )
@@ -246,66 +247,90 @@ private fun ShoppingAndMaterialList(
     onAction: (BaseAction) -> Unit,
     sharedState: ResultState.Success<EventState>
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 32.dp)
     ) {
-        Button(
-            onClick = {
-                onAction(EditShoppingListActions.Initialize(sharedState.data.event.uid))
-                onAction(
-                    NavigationActions.GoToRoute(
-                        Routes.ShoppingList(sharedState.data.event.uid)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Button(
+                onClick = {
+                    onAction(EditShoppingListActions.Initialize(sharedState.data.event.uid))
+                    onAction(
+                        NavigationActions.GoToRoute(
+                            Routes.ShoppingList(sharedState.data.event.uid)
+                        )
                     )
-                )
-            },
-            modifier = Modifier.padding(8.dp).height(IntrinsicSize.Min)
-                .align(Alignment.CenterVertically),
-            colors = ButtonColors(
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                containerColor = MaterialTheme.colorScheme.primary,
-                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                disabledContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ),
+                },
+                modifier = Modifier.padding(8.dp).height(IntrinsicSize.Min)
+                    .align(Alignment.CenterVertically),
+                colors = ButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    disabledContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
 
-            ) {
-            Icon(
-                imageVector = Icons.Default.ShoppingCart,
-                contentDescription = "Add Icon",
-                modifier = Modifier.padding(end = 8.dp)
-            )
-            Text("Einkaufsliste")
-        }
-        Button(
-            onClick = {
-                onAction(EditMaterialListActions.Initialize(sharedState.data.event.uid))
-                onAction(
-                    NavigationActions.GoToRoute(
-                        Routes.MaterialList
+                ) {
+                Icon(
+                    imageVector = Icons.Default.ShoppingCart,
+                    contentDescription = "Add Icon",
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text("Einkaufsliste")
+            }
+            Button(
+                onClick = {
+                    onAction(EditMaterialListActions.Initialize(sharedState.data.event.uid))
+                    onAction(
+                        NavigationActions.GoToRoute(
+                            Routes.MaterialList
+                        )
                     )
-                )
-            },
-            modifier = Modifier.padding(8.dp).height(IntrinsicSize.Min)
-                .align(Alignment.CenterVertically),
-            border = BorderStroke(
-                width = 2.dp,
-                color = MaterialTheme.colorScheme.primary
-            ),
-            colors = ButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary,
-                containerColor = MaterialTheme.colorScheme.onPrimary,
-                disabledContainerColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                disabledContentColor = MaterialTheme.colorScheme.primaryContainer
-            ),
+                },
+                modifier = Modifier.padding(8.dp).height(IntrinsicSize.Min)
+                    .align(Alignment.CenterVertically),
+                border = BorderStroke(
+                    width = 2.dp,
+                    color = MaterialTheme.colorScheme.primary
+                ),
+                colors = ButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    containerColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    disabledContentColor = MaterialTheme.colorScheme.primaryContainer
+                ),
 
+                ) {
+                Icon(
+                    imageVector = Icons.Default.Build,
+                    contentDescription = "Add Icon",
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text("Materialliste")
+            }
+            Button(
+                onClick = {
+                    onAction(EditEventActions.ShareRecipePlanPdf)
+                },
+                modifier = Modifier.padding(8.dp).height(IntrinsicSize.Min),
+                colors = ButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    disabledContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
             ) {
-            Icon(
-                imageVector = Icons.Default.Build,
-                contentDescription = "Add Icon",
-                modifier = Modifier.padding(end = 8.dp)
-            )
-            Text("Materialliste")
+                Icon(
+                    imageVector = Icons.Default.RestaurantMenu,
+                    contentDescription = "Rezeptplan",
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text("Rezeptplan")
+            }
         }
     }
 }
@@ -320,7 +345,7 @@ fun getButtonText(event: Event): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun topBarEventPage(
+fun TopBarEventPage(
     onAction: (BaseAction) -> Unit,
     sharedState: ResultState<EventState>
 ) {
@@ -349,24 +374,26 @@ fun topBarEventPage(
                     }
                 },
                 modifier = Modifier.clip(shape = RoundedCornerShape(75))
-                    .background(MaterialTheme.colorScheme.tertiary),
+                    .background(MaterialTheme.colorScheme.secondary),
 
                 ) {
                 Icon(
                     imageVector = Icons.Default.ShoppingCart,
                     contentDescription = "Shopping Cart Icon",
-                    tint = MaterialTheme.colorScheme.onTertiary
+                    tint = MaterialTheme.colorScheme.onSecondary
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
-            sharePdfButton(onAction)
+            ShareRecipePlanPdfButton(onAction)
+            Spacer(modifier = Modifier.width(8.dp))
+            SharePdfButton(onAction)
         }
     })
 
 }
 
 @Composable
-private fun sharePdfButton(onAction: (BaseAction) -> Unit) {
+private fun SharePdfButton(onAction: (BaseAction) -> Unit) {
     var isButtonEnabled by remember { mutableStateOf(true) }
 
     LaunchedEffect(isButtonEnabled) {
@@ -396,6 +423,35 @@ private fun sharePdfButton(onAction: (BaseAction) -> Unit) {
             tint = MaterialTheme.colorScheme.onTertiary
         )
 
+    }
+}
+
+@Composable
+private fun ShareRecipePlanPdfButton(onAction: (BaseAction) -> Unit) {
+    var isButtonEnabled by remember { mutableStateOf(true) }
+
+    LaunchedEffect(isButtonEnabled) {
+        if (isButtonEnabled) return@LaunchedEffect
+        else delay(2000L)
+        isButtonEnabled = true
+    }
+
+    IconButton(
+        onClick = {
+            if (isButtonEnabled) {
+                isButtonEnabled = false
+                onAction(EditEventActions.ShareRecipePlanPdf)
+            }
+        },
+        enabled = isButtonEnabled,
+        modifier = Modifier.clip(shape = RoundedCornerShape(75))
+            .background(MaterialTheme.colorScheme.tertiary),
+    ) {
+        Icon(
+            imageVector = Icons.Default.RestaurantMenu,
+            contentDescription = "Rezeptplan exportieren",
+            tint = MaterialTheme.colorScheme.onTertiary
+        )
     }
 }
 

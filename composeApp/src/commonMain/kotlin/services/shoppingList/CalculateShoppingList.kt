@@ -41,17 +41,12 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
             Logger.e("Error fetching participants for shopping calculation: ${e.message}")
             emptyMap()
         }
->>>>>>> session-20250622-122129
     }
 
 
     private suspend fun addAllAmounts(
         eventId: String,
-<<<<<<< HEAD
         map: MutableMap<String, ShoppingIngredient>
-=======
-        map: MutableMap<String, ShoppingIngredient>,
->>>>>>> session-20250622-122129
     ): Map<String, ShoppingIngredient> {
         val listOfMeals = eventRepository.getMealsWithRecipeAndIngredients(eventId)
         val calculatedShoppingIngredients: MutableMap<String, ShoppingIngredient> = map;
@@ -64,11 +59,7 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
                 val calculatedMap =
                     calculateAmountsForRecipe(
                         calculatedShoppingIngredients,
-<<<<<<< HEAD
                         recipeSelection
-=======
-                        recipeSelection,
->>>>>>> session-20250622-122129
                     ).toMutableMap()
                 calculatedShoppingIngredients.putAll(calculatedMap)
             }
@@ -83,11 +74,7 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
     suspend fun calculateAmountsForRecipe(
         existingShoppingIngredients: Map<String, ShoppingIngredient>,
         recipeSelection: RecipeSelection,
-<<<<<<< HEAD
         multiplier: Double? = null
-=======
-        multiplier: Double? = null,
->>>>>>> session-20250622-122129
     ): Map<String, ShoppingIngredient> {
         val multiplierForIngredients = multiplier ?: getEaterMultiplier(recipeSelection)
         val newIngredientMap = HashMap<String, ShoppingIngredient>()
@@ -176,12 +163,8 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
     }
 
     private suspend fun getMultiplierForParticipant(participantId: String): Double {
-<<<<<<< HEAD
-        val participant = eventRepository.getParticipantById(participantId)
-=======
         val participant =
             allParticipants[participantId] ?: eventRepository.getParticipantById(participantId)
->>>>>>> session-20250622-122129
         if (participant?.birthdate == null) {
             return 1.0
         }

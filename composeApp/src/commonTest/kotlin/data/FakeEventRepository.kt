@@ -64,7 +64,7 @@ class FakeEventRepository : EventRepository {
         TODO("Not yet implemented")
     }
 
-    override suspend fun createNewParticipant(participant: Participant): Boolean {
+    override suspend fun createNewParticipant(participant: Participant): Participant? {
         TODO("Not yet implemented")
     }
 

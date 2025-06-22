@@ -1,3 +1,3 @@
 ## Development Notes
 
-- Dont overload, make the method private
+- Dont use comments for changes you made. Only explain business logic in comments

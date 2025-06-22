@@ -431,25 +431,59 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             .set(participant)
     }
 
-    override suspend fun createNewParticipant(participant: Participant) {
-        val existing = firestore.collection(PARTICIPANTS)
-            .where { "__lastName__" equalTo participant.lastName }
-            .where { "__firstName__" equalTo participant.firstName }
-            .get()
-            .documents.map { it.data<Participant>() }
+    override suspend fun findParticipantByName(firstName: String, lastName: String): Participant? {
+        return try {
+            Logger.i("Find Participant by Name '$firstName' '$lastName'")
+            val userGroup = loginAndRegister.getCustomUserGroup()
+            Logger.i("Query parameters: firstName='${firstName.trim()}', lastName='${lastName.trim()}', group='$userGroup'")
 
-        if (existing.isNotEmpty()) {
-            Logger.w("Participant with name '${participant.lastName}' already exists. Skipping import.")
-            return
+            val documents = firestore.collection(PARTICIPANTS)
+                .where {
+                    ("firstName" equalTo firstName.trim()) and
+                            ("lastName" equalTo lastName.trim()) and
+                            ("group" equalTo userGroup)
+                }
+                .limit(10)
+                .get()
+                .documents
+
+            Logger.i("Query returned ${documents.size} documents")
+            documents.forEach { document ->
+                val participant = document.data<Participant>()
+                Logger.i("Found Participant: firstName='${participant.firstName}', lastName='${participant.lastName}', id='${participant.uid}'")
+            }
+
+            return documents.firstOrNull()?.data<Participant>()
+        } catch (e: Exception) {
+            Logger.e("Error finding participant by name: $firstName $lastName", e)
+            null
         }
+    }
 
-        Logger.i("Create New Participant")
-        val participantId = generateRandomStringId()
-        participant.uid = participantId
-        participant.group = loginAndRegister.getCustomUserGroup()
-        firestore.collection(PARTICIPANTS)
-            .document(participant.uid)
-            .set(participant)
+    override suspend fun createNewParticipant(participant: Participant): Participant? {
+        try {
+            val existing = findParticipantByName(participant.firstName, participant.lastName)
+
+            if (existing != null) {
+                Logger.w("Participant with name '${participant.firstName} ${participant.lastName}' already exists. Skipping import.")
+                return null
+            }
+
+            Logger.i("Create New Participant")
+            val participantId = generateRandomStringId()
+            participant.uid = participantId
+            participant.group = loginAndRegister.getCustomUserGroup()
+            firestore.collection(PARTICIPANTS)
+                .document(participant.uid)
+                .set(participant)
+            return participant
+        } catch (e: Exception) {
+            Logger.e(
+                "Error creating participant: ${participant.firstName} ${participant.lastName}",
+                e
+            )
+            return null
+        }
     }
 
     override suspend fun updateParticipant(participant: Participant) {

@@ -12,12 +12,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import model.Participant
 import view.event.new_meal_screen.AllParticipantsViewModel
+import view.event.participants.EditParticipantActions
+import view.event.SharedEventViewModel
 import view.shared.ResultState
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 class CsvImportViewModel(
     private val eventRepository: EventRepository,
     private val allParticipantsViewModel: AllParticipantsViewModel
-) : ViewModel() {
+) : ViewModel(), KoinComponent {
+
+    private val sharedEventViewModel: SharedEventViewModel by inject()
 
     private val _state = MutableStateFlow<ResultState<ImportWizardState>>(
         ResultState.Success(ImportWizardState())
@@ -26,6 +32,7 @@ class CsvImportViewModel(
 
     private val csvParser = CsvParser()
     private val validator = ParticipantCsvValidator()
+    private val eventImportService = EventParticipantImportService(eventRepository)
 
     fun onAction(action: CsvImportActions) {
         when (action) {
@@ -33,11 +40,14 @@ class CsvImportViewModel(
             is CsvImportActions.SetColumnMapping -> setColumnMapping(
                 action.firstNameColumn,
                 action.lastNameColumn,
-                action.birthDateColumn
+                action.birthDateColumn,
+                action.eatingHabitColumn
             )
 
             is CsvImportActions.StartValidation -> startValidation()
             is CsvImportActions.StartImport -> startImport()
+            is CsvImportActions.CancelImport -> cancelImport()
+            is CsvImportActions.GoBack -> goBack()
             is CsvImportActions.Reset -> reset()
             is CsvImportActions.Close -> {
                 // Handle close action - would typically navigate back
@@ -81,6 +91,17 @@ class CsvImportViewModel(
                         birthDateColumn = detectColumn(
                             parseResult.data.headers,
                             listOf("geburtsdatum", "birthdate", "birth_date", "geboren", "birthday")
+                        ),
+                        eatingHabitColumn = detectColumn(
+                            parseResult.data.headers,
+                            listOf(
+                                "essgewohnheit",
+                                "eating_habit",
+                                "ernaehrung",
+                                "diaet",
+                                "diet",
+                                "habit"
+                            )
                         )
                     )
                 }
@@ -105,13 +126,15 @@ class CsvImportViewModel(
     private fun setColumnMapping(
         firstNameColumn: Int?,
         lastNameColumn: Int?,
-        birthDateColumn: Int?
+        birthDateColumn: Int?,
+        eatingHabitColumn: Int?
     ) {
         updateState { currentState ->
             currentState.copy(
                 firstNameColumn = firstNameColumn,
                 lastNameColumn = lastNameColumn,
-                birthDateColumn = birthDateColumn
+                birthDateColumn = birthDateColumn,
+                eatingHabitColumn = eatingHabitColumn
             )
         }
     }
@@ -128,22 +151,82 @@ class CsvImportViewModel(
                     csvData = csvData,
                     firstNameColumn = firstNameColumn,
                     lastNameColumn = lastNameColumn,
-                    birthDateColumn = currentState.birthDateColumn
+                    birthDateColumn = currentState.birthDateColumn,
+                    eatingHabitColumn = currentState.eatingHabitColumn
                 )
 
                 // Check for existing participants to detect duplicates in database
                 val existingParticipants = try {
-                    eventRepository.getAllParticipantsOfStamm()
-                    // This would need to be collected, but for now we'll skip database duplicate checking
-                    emptyList<Participant>()
+                    allParticipantsViewModel.state.value.getSuccessData()?.allParticipants
+                        ?: emptyList()
                 } catch (e: Exception) {
-                    Logger.w("Could not fetch existing participants for duplicate check")
-                    emptyList<Participant>()
+                    Logger.w("Could not fetch existing participants for duplicate check: ${e.message}")
+                    emptyList()
                 }
+
+                // For event-specific imports, also check participants already in the event
+                val existingEventParticipants = if (currentState.eventId != null) {
+                    try {
+                        eventRepository.getParticipantsOfEvent(
+                            currentState.eventId,
+                            withParticipant = true
+                        )
+                            .mapNotNull { participantTime ->
+                                existingParticipants.find { it.uid == participantTime.participantRef }
+                            }
+                    } catch (e: Exception) {
+                        Logger.w("Could not fetch existing event participants: ${e.message}")
+                        emptyList()
+                    }
+                } else {
+                    emptyList()
+                }
+
+                // For event imports, only filter out participants already in the event
+                // For general imports, filter out participants already in the database
+                val filteredValidParticipants = if (currentState.eventId != null) {
+                    // Event import: only exclude participants already in this event
+                    validationResult.validParticipants.filter { importData ->
+                        val isEventDuplicate = existingEventParticipants.any { existing ->
+                            existing.firstName.equals(importData.firstName, ignoreCase = true) &&
+                                    existing.lastName.equals(importData.lastName, ignoreCase = true)
+                        }
+                        !isEventDuplicate
+                    }
+                } else {
+                    // General import: exclude participants already in the database
+                    validationResult.validParticipants.filter { importData ->
+                        val isDatabaseDuplicate = existingParticipants.any { existing ->
+                            existing.firstName.equals(importData.firstName, ignoreCase = true) &&
+                                    existing.lastName.equals(importData.lastName, ignoreCase = true)
+                        }
+                        !isDatabaseDuplicate
+                    }
+                }
+
+                // Create appropriate duplicate lists based on import type
+                val databaseDuplicates = if (currentState.eventId == null) {
+                    // Only show database duplicates for general imports
+                    validationResult.validParticipants.filter { importData ->
+                        existingParticipants.any { existing ->
+                            existing.firstName.equals(importData.firstName, ignoreCase = true) &&
+                                    existing.lastName.equals(importData.lastName, ignoreCase = true)
+                        }
+                    }
+                } else {
+                    emptyList()
+                }
+
+
+                // Update validation result with filtered participants
+                val finalValidationResult = validationResult.copy(
+                    validParticipants = filteredValidParticipants,
+                    duplicates = validationResult.duplicates + databaseDuplicates
+                )
 
                 updateState { currentState ->
                     currentState.copy(
-                        validationResult = validationResult,
+                        validationResult = finalValidationResult,
                         currentStep = ImportStep.VALIDATION
                     )
                 }
@@ -171,55 +254,23 @@ class CsvImportViewModel(
             currentState.copy(
                 currentStep = ImportStep.IMPORT_PROGRESS,
                 importProgress = 0f,
-                importedCount = 0
+                importedCount = 0,
+                participantsAddedToEvent = 0,
+                participantsCreated = 0,
+                participantsFound = 0
             )
         }
 
         viewModelScope.launch {
             try {
                 val validParticipants = validationResult.validParticipants
-                var importedCount = 0
 
-                validParticipants.forEachIndexed { index, participantData ->
-                    try {
-                        val participant = Participant().apply {
-                            firstName = participantData.firstName
-                            lastName = participantData.lastName
-                            birthdate = participantData.birthDate
-                        }
-
-                        eventRepository.createNewParticipant(participant)
-                        importedCount++
-                        allParticipantsViewModel.addParticipant(participant)
-
-                        // Update progress
-                        val progress = (index + 1).toFloat() / validParticipants.size
-                        updateState { currentState ->
-                            currentState.copy(
-                                importProgress = progress,
-                                importedCount = importedCount
-                            )
-                        }
-
-                        // Small delay to show progress (remove in production)
-                        delay(100)
-
-                    } catch (e: Exception) {
-                        Logger.e(
-                            "Error importing participant: ${participantData.firstName} ${participantData.lastName}",
-                            e
-                        )
-                        // Continue with other participants
-                    }
-                }
-
-                // Import completed
-                updateState { currentState ->
-                    currentState.copy(
-                        currentStep = ImportStep.RESULTS,
-                        importComplete = true,
-                        importedCount = importedCount
-                    )
+                if (currentState.eventId != null) {
+                    // Event-specific import
+                    handleEventImport(currentState.eventId, validParticipants)
+                } else {
+                    // General participant import
+                    handleGeneralImport(validParticipants)
                 }
 
             } catch (e: Exception) {
@@ -234,8 +285,143 @@ class CsvImportViewModel(
         }
     }
 
+    private suspend fun handleEventImport(
+        eventId: String,
+        participants: List<ParticipantImportData>
+    ) {
+        try {
+            val result = eventImportService.importParticipantsToEvent(
+                eventId = eventId,
+                participants = participants,
+                addParticipantCallback = { participant ->
+                    sharedEventViewModel.onAction(EditParticipantActions.AddParticipant(participant))
+                }
+            )
+
+            updateState { currentState ->
+                currentState.copy(
+                    currentStep = ImportStep.RESULTS,
+                    importComplete = true,
+                    participantsAddedToEvent = result.participantsAddedToEvent,
+                    participantsCreated = result.participantsCreated,
+                    participantsFound = result.participantsFound,
+                    importedCount = result.participantsAddedToEvent,
+                    importError = if (result.errors.isNotEmpty()) {
+                        "Einige Teilnehmer konnten nicht importiert werden: ${result.errors.size} Fehler"
+                    } else null
+                )
+            }
+
+        } catch (e: Exception) {
+            Logger.e("Event import failed", e)
+            updateState { currentState ->
+                currentState.copy(
+                    currentStep = ImportStep.RESULTS,
+                    importError = "Event-Import fehlgeschlagen: ${e.message}"
+                )
+            }
+        }
+    }
+
+    private suspend fun handleGeneralImport(participants: List<ParticipantImportData>) {
+        var importedCount = 0
+
+        participants.forEachIndexed { index, participantData ->
+            try {
+                val participant = Participant().apply {
+                    firstName = participantData.firstName
+                    lastName = participantData.lastName
+                    birthdate = participantData.birthDate
+                    eatingHabit = participantData.eatingHabit
+                }
+
+                val participantCreated = eventRepository.createNewParticipant(participant)
+                if (participantCreated != null) {
+                    importedCount++
+                    allParticipantsViewModel.addParticipant(participant)
+                }
+
+                // Update progress
+                val progress = (index + 1).toFloat() / participants.size
+                updateState { currentState ->
+                    currentState.copy(
+                        importProgress = progress,
+                        importedCount = importedCount
+                    )
+                }
+
+            } catch (e: Exception) {
+                Logger.e(
+                    "Error importing participant: ${participantData.firstName} ${participantData.lastName}",
+                    e
+                )
+                // Continue with other participants
+            }
+        }
+
+        // Import completed
+        updateState { currentState ->
+            currentState.copy(
+                currentStep = ImportStep.RESULTS,
+                importComplete = true,
+                importedCount = importedCount
+            )
+        }
+    }
+
+    private fun goBack() {
+        updateState { currentState ->
+            when (currentState.currentStep) {
+                ImportStep.PREVIEW_AND_MAPPING -> {
+                    currentState.copy(
+                        currentStep = ImportStep.FILE_SELECTION,
+                        csvData = null,
+                        firstNameColumn = null,
+                        lastNameColumn = null,
+                        birthDateColumn = null,
+                        eatingHabitColumn = null,
+                        parseError = null
+                    )
+                }
+
+                ImportStep.VALIDATION -> {
+                    currentState.copy(
+                        currentStep = ImportStep.PREVIEW_AND_MAPPING,
+                        validationResult = null
+                    )
+                }
+
+                ImportStep.RESULTS -> {
+                    // Don't allow going back from results, use reset instead
+                    currentState
+                }
+
+                else -> currentState
+            }
+        }
+    }
+
+    private fun cancelImport() {
+        updateState { currentState ->
+            currentState.copy(
+                currentStep = ImportStep.RESULTS,
+                importComplete = false,
+                importError = "Import wurde abgebrochen",
+                importProgress = 0f
+            )
+        }
+    }
+
+    fun setEventId(eventId: String?) {
+        updateState { currentState ->
+            currentState.copy(eventId = eventId)
+        }
+    }
+
+
     private fun reset() {
-        _state.value = ResultState.Success(ImportWizardState())
+        val currentEventId = getCurrentState()?.eventId
+        _state.value = ResultState.Success(ImportWizardState(eventId = currentEventId))
     }
 
     private fun getCurrentState(): ImportWizardState? {

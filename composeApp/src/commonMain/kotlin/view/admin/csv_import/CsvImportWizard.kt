@@ -31,11 +31,17 @@ data class ImportWizardState(
     val firstNameColumn: Int? = null,
     val lastNameColumn: Int? = null,
     val birthDateColumn: Int? = null,
+    val eatingHabitColumn: Int? = null,
     val validationResult: ValidationResult? = null,
     val importProgress: Float = 0f,
     val importComplete: Boolean = false,
     val importError: String? = null,
-    val importedCount: Int = 0
+    val importedCount: Int = 0,
+    // Event-specific import fields
+    val eventId: String? = null,
+    val participantsAddedToEvent: Int = 0,
+    val participantsCreated: Int = 0,
+    val participantsFound: Int = 0
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,9 +49,11 @@ data class ImportWizardState(
 fun CsvImportWizard(
     state: ImportWizardState,
     onFileSelected: (FilePickerResult) -> Unit,
-    onColumnMappingChanged: (Int?, Int?, Int?) -> Unit,
+    onColumnMappingChanged: (Int?, Int?, Int?, Int?) -> Unit,
     onStartValidation: () -> Unit,
     onStartImport: () -> Unit,
+    onCancelImport: () -> Unit,
+    onGoBack: () -> Unit,
     onReset: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier
@@ -67,6 +75,7 @@ fun CsvImportWizard(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             ImportProgressIndicator(
                 currentStep = state.currentStep,
@@ -87,9 +96,11 @@ fun CsvImportWizard(
                         firstNameColumn = state.firstNameColumn,
                         lastNameColumn = state.lastNameColumn,
                         birthDateColumn = state.birthDateColumn,
+                        eatingHabitColumn = state.eatingHabitColumn,
                         onColumnMappingChanged = onColumnMappingChanged,
                         onNext = onStartValidation,
-                        onBack = onReset
+                        onCancel = onCancelImport,
+                        onBack = onGoBack
                     )
                 }
 
@@ -97,22 +108,28 @@ fun CsvImportWizard(
                     ValidationStep(
                         validationResult = state.validationResult!!,
                         onStartImport = onStartImport,
-                        onBack = { /* Go back to mapping */ }
+                        onBack = onGoBack,
+                        onCancel = onCancelImport
                     )
                 }
 
                 ImportStep.IMPORT_PROGRESS -> {
                     ImportProgressStep(
                         progress = state.importProgress,
-                        importedCount = state.importedCount
+                        importedCount = state.importedCount,
+                        onCancel = onCancelImport
                     )
                 }
 
                 ImportStep.RESULTS -> {
                     ResultsStep(
-                        validationResult = state.validationResult!!,
+                        validationResult = state.validationResult,
                         importedCount = state.importedCount,
                         importError = state.importError,
+                        isEventImport = state.eventId != null,
+                        participantsAddedToEvent = state.participantsAddedToEvent,
+                        participantsCreated = state.participantsCreated,
+                        participantsFound = state.participantsFound,
                         onReset = onReset,
                         onClose = onClose
                     )
@@ -256,7 +273,7 @@ private fun FileSelectionStep(
                 )
 
                 Text(
-                    text = "Unterstützte Formate: .csv, .txt\nErwartete Spalten: Vorname, Nachname, Geburtsdatum (optional)",
+                    text = "Unterstützte Formate: .csv, .txt\nErwartete Spalten: Vorname, Nachname, Geburtsdatum (optional), Essgewohnheit (optional)",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -305,8 +322,10 @@ private fun PreviewAndMappingStep(
     firstNameColumn: Int?,
     lastNameColumn: Int?,
     birthDateColumn: Int?,
-    onColumnMappingChanged: (Int?, Int?, Int?) -> Unit,
+    eatingHabitColumn: Int?,
+    onColumnMappingChanged: (Int?, Int?, Int?, Int?) -> Unit,
     onNext: () -> Unit,
+    onCancel: () -> Unit,
     onBack: () -> Unit
 ) {
     Column(
@@ -328,29 +347,64 @@ private fun PreviewAndMappingStep(
             firstNameColumn = firstNameColumn,
             lastNameColumn = lastNameColumn,
             birthDateColumn = birthDateColumn,
+            eatingHabitColumn = eatingHabitColumn,
             onFirstNameColumnChange = { firstName ->
-                onColumnMappingChanged(firstName, lastNameColumn, birthDateColumn)
+                onColumnMappingChanged(
+                    firstName,
+                    lastNameColumn,
+                    birthDateColumn,
+                    eatingHabitColumn
+                )
             },
             onLastNameColumnChange = { lastName ->
-                onColumnMappingChanged(firstNameColumn, lastName, birthDateColumn)
+                onColumnMappingChanged(
+                    firstNameColumn,
+                    lastName,
+                    birthDateColumn,
+                    eatingHabitColumn
+                )
             },
             onBirthDateColumnChange = { birthDate ->
-                onColumnMappingChanged(firstNameColumn, lastNameColumn, birthDate)
+                onColumnMappingChanged(
+                    firstNameColumn,
+                    lastNameColumn,
+                    birthDate,
+                    eatingHabitColumn
+                )
+            },
+            onEatingHabitColumnChange = { eatingHabit ->
+                onColumnMappingChanged(
+                    firstNameColumn,
+                    lastNameColumn,
+                    birthDateColumn,
+                    eatingHabit
+                )
             },
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            OutlinedButton(onClick = onBack) {
+            OutlinedButton(
+                onClick = onBack,
+                modifier = Modifier.weight(1f)
+            ) {
                 Text("Zurück")
+            }
+
+            OutlinedButton(
+                onClick = onCancel,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Abbrechen")
             }
 
             Button(
                 onClick = onNext,
-                enabled = firstNameColumn != null && lastNameColumn != null
+                enabled = firstNameColumn != null && lastNameColumn != null,
+                modifier = Modifier.weight(1f)
             ) {
                 Text("Weiter")
             }
@@ -362,6 +416,7 @@ private fun PreviewAndMappingStep(
 private fun ValidationStep(
     validationResult: ValidationResult,
     onStartImport: () -> Unit,
+    onCancel: () -> Unit,
     onBack: () -> Unit
 ) {
     Column(
@@ -398,17 +453,28 @@ private fun ValidationStep(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            OutlinedButton(onClick = onBack) {
+            OutlinedButton(
+                onClick = onBack,
+                modifier = Modifier.weight(1f)
+            ) {
                 Text("Zurück")
+            }
+
+            OutlinedButton(
+                onClick = onCancel,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Abbrechen")
             }
 
             Button(
                 onClick = onStartImport,
-                enabled = validationResult.validParticipants.isNotEmpty()
+                enabled = validationResult.validParticipants.isNotEmpty(),
+                modifier = Modifier.weight(1f)
             ) {
-                Text("Import starten (${validationResult.validParticipants.size} Teilnehmer)")
+                Text("Import starten")
             }
         }
     }
@@ -417,7 +483,8 @@ private fun ValidationStep(
 @Composable
 private fun ImportProgressStep(
     progress: Float,
-    importedCount: Int
+    importedCount: Int,
+    onCancel: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -431,25 +498,37 @@ private fun ImportProgressStep(
         )
 
         LinearProgressIndicator(
-            progress = progress,
+            progress = { progress },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp)
+                .padding(bottom = 16.dp),
         )
 
         Text(
             text = "${(progress * 100).toInt()}% - $importedCount Teilnehmer importiert",
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 32.dp)
         )
+
+        OutlinedButton(
+            onClick = onCancel,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            Text("Import abbrechen")
+        }
     }
 }
 
 @Composable
 private fun ResultsStep(
-    validationResult: ValidationResult,
+    validationResult: ValidationResult?,
     importedCount: Int,
     importError: String?,
+    isEventImport: Boolean = false,
+    participantsAddedToEvent: Int = 0,
+    participantsCreated: Int = 0,
+    participantsFound: Int = 0,
     onReset: () -> Unit,
     onClose: () -> Unit
 ) {
@@ -483,11 +562,34 @@ private fun ResultsStep(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    Text(
-                        text = "$importedCount Teilnehmer wurden erfolgreich importiert",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+
+                    if (isEventImport) {
+                        Text(
+                            text = "$participantsAddedToEvent Teilnehmer zum Event hinzugefügt",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        if (participantsCreated > 0) {
+                            Text(
+                                text = "$participantsCreated neue Teilnehmer erstellt",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                        if (participantsFound > 0) {
+                            Text(
+                                text = "$participantsFound bestehende Teilnehmer gefunden",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "$importedCount Teilnehmer wurden erfolgreich importiert",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                 } else {
                     Text(
                         text = "✗ Import fehlgeschlagen",

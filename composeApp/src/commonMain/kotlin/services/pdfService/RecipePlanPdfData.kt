@@ -50,7 +50,7 @@ object RecipePlanPdfProcessor {
         val title = "WOCHENPLAN"
         val dateRange = "" // Remove date range from PDF
         
-        val dailySections = mealsGroupedByDate.toSortedMap().map { (date, meals) ->
+        val dailySections = mealsGroupedByDate.toList().sortedBy { it.first }.map { (date, meals) ->
             createDaySection(date, meals)
         }
         

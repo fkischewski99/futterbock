@@ -11,10 +11,18 @@ import view.shared.ResultState
 
 @Composable
 fun CsvImportScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    eventId: String? = null
 ) {
     val viewModel: CsvImportViewModel = koinInject()
     val state = viewModel.state.collectAsStateWithLifecycle()
+    
+    // Set the event ID for event-specific imports
+    LaunchedEffect(eventId) {
+        if (eventId != null) {
+            viewModel.setEventId(eventId)
+        }
+    }
     
     when (val currentState = state.value) {
         is ResultState.Success -> {
@@ -23,9 +31,9 @@ fun CsvImportScreen(
                 onFileSelected = { result ->
                     viewModel.onAction(CsvImportActions.FileSelected(result))
                 },
-                onColumnMappingChanged = { firstName, lastName, birthDate ->
+                onColumnMappingChanged = { firstName, lastName, birthDate, eatingHabit ->
                     viewModel.onAction(
-                        CsvImportActions.SetColumnMapping(firstName, lastName, birthDate)
+                        CsvImportActions.SetColumnMapping(firstName, lastName, birthDate, eatingHabit)
                     )
                 },
                 onStartValidation = {
@@ -33,6 +41,12 @@ fun CsvImportScreen(
                 },
                 onStartImport = {
                     viewModel.onAction(CsvImportActions.StartImport)
+                },
+                onCancelImport = {
+                    viewModel.onAction(CsvImportActions.CancelImport)
+                },
+                onGoBack = {
+                    viewModel.onAction(CsvImportActions.GoBack)
                 },
                 onReset = {
                     viewModel.onAction(CsvImportActions.Reset)
@@ -48,9 +62,11 @@ fun CsvImportScreen(
             CsvImportWizard(
                 state = ImportWizardState(),
                 onFileSelected = { },
-                onColumnMappingChanged = { _, _, _ -> },
+                onColumnMappingChanged = { _, _, _, _ -> },
                 onStartValidation = { },
                 onStartImport = { },
+                onCancelImport = { },
+                onGoBack = { },
                 onReset = { },
                 onClose = {
                     handleNavigation(navController, NavigationActions.GoBack)

@@ -113,7 +113,11 @@ class ViewModelNewParticipant(
             try {
                 if (data.isNewParticipant) {
                     Logger.i("Create new Participant with name ${participant.firstName} ${participant.lastName}")
-                    eventRepository.createNewParticipant(participant)
+                    val success = eventRepository.createNewParticipant(participant)
+                    if (success == null) {
+                        _state.value = ResultState.Error("Teilnehmer konnte nicht erstellt werden")
+                        return@launch
+                    }
                 } else {
                     Logger.i("Update Participant with name ${participant.firstName} ${participant.lastName}")
                     eventRepository.updateParticipant(participant)

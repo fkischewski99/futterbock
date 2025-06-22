@@ -36,34 +36,27 @@ fun CsvPreviewTable(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp), // Fixed height to avoid conflicts
-                verticalArrangement = Arrangement.spacedBy(1.dp)
+            Column(
+                modifier = Modifier.fillMaxWidth()
             ) {
                 // Header row
-                item {
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(1.dp)
-                    ) {
-                        itemsIndexed(csvData.headers) { index, header ->
-                            CsvCell(
-                                text = header,
-                                isHeader = true,
-                            )
-                        }
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    csvData.headers.forEachIndexed { index, header ->
+                        CsvCell(
+                            text = header,
+                            isHeader = true,
+                        )
                     }
                 }
 
                 // Data rows
-                items(csvData.rows.take(maxPreviewRows)) { row ->
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(1.dp)
+                csvData.rows.take(maxPreviewRows).forEach { row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        itemsIndexed(row) { index, cell ->
+                        row.forEachIndexed { index, cell ->
                             CsvCell(
                                 text = cell,
                                 isHeader = false,
@@ -74,14 +67,12 @@ fun CsvPreviewTable(
 
                 // Truncation message
                 if (csvData.rows.size > maxPreviewRows) {
-                    item {
-                        Text(
-                            text = "... und ${csvData.rows.size - maxPreviewRows} weitere Zeilen",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
+                    Text(
+                        text = "... und ${csvData.rows.size - maxPreviewRows} weitere Zeilen",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
                 }
             }
         }
@@ -126,9 +117,11 @@ fun ColumnMappingCard(
     firstNameColumn: Int?,
     lastNameColumn: Int?,
     birthDateColumn: Int?,
+    eatingHabitColumn: Int?,
     onFirstNameColumnChange: (Int?) -> Unit,
     onLastNameColumnChange: (Int?) -> Unit,
     onBirthDateColumnChange: (Int?) -> Unit,
+    onEatingHabitColumnChange: (Int?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -173,6 +166,18 @@ fun ColumnMappingCard(
                 selectedColumn = birthDateColumn,
                 options = csvData.headers,
                 onSelectionChange = onBirthDateColumnChange,
+                required = false,
+                allowNone = true
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Eating Habit Column
+            ColumnSelector(
+                label = "Essgewohnheit (optional)",
+                selectedColumn = eatingHabitColumn,
+                options = csvData.headers,
+                onSelectionChange = onEatingHabitColumnChange,
                 required = false,
                 allowNone = true
             )

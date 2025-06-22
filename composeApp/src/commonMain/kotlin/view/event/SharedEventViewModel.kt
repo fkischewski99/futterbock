@@ -113,9 +113,11 @@ class SharedEventViewModel(
                 }
                 val eventId = eventFromRepo.uid
 
-                // ✅ OPTIMIZED: Load participants and meals concurrently
                 val participantListDeferred = async {
-                    eventRepository.getParticipantsOfEvent(eventId = eventId, withParticipant = true)
+                    eventRepository.getParticipantsOfEvent(
+                        eventId = eventId,
+                        withParticipant = true
+                    )
                 }
                 val allMealsOfEventDeferred = async {
                     eventRepository.getAllMealsOfEvent(eventId)

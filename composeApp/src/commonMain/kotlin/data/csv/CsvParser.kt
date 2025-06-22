@@ -4,6 +4,8 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import model.EatingHabit
+import model.Participant
 
 data class CsvData(
     val headers: List<String>,
@@ -126,6 +128,7 @@ data class ParticipantImportData(
     val firstName: String,
     val lastName: String,
     val birthDate: Instant? = null,
+    val eatingHabit: EatingHabit = EatingHabit.OMNIVORE,
     val rowIndex: Int
 )
 
@@ -147,7 +150,8 @@ class ParticipantCsvValidator {
         csvData: CsvData,
         firstNameColumn: Int,
         lastNameColumn: Int,
-        birthDateColumn: Int? = null
+        birthDateColumn: Int? = null,
+        eatingHabitColumn: Int? = null
     ): ValidationResult {
         val validParticipants = mutableListOf<ParticipantImportData>()
         val errors = mutableListOf<ValidationError>()
@@ -195,10 +199,24 @@ class ParticipantCsvValidator {
                 }
             }
             
+            // Parse eating habit if column is provided
+            var eatingHabit = EatingHabit.OMNIVORE
+            if (eatingHabitColumn != null && eatingHabitColumn < row.size) {
+                val eatingHabitStr = row[eatingHabitColumn].trim()
+                if (eatingHabitStr.isNotEmpty()) {
+                    eatingHabit = parseEatingHabit(eatingHabitStr)
+                        ?: run {
+                            errors.add(ValidationError(rowNumber, "Essgewohnheit", "Ungültige Essgewohnheit. Erwartet: Vegan, Vegetarisch, Pescetarisch oder Omnivore"))
+                            return@forEachIndexed
+                        }
+                }
+            }
+            
             val participant = ParticipantImportData(
                 firstName = firstName,
                 lastName = lastName,
                 birthDate = birthDate,
+                eatingHabit = eatingHabit,
                 rowIndex = rowNumber
             )
             
@@ -262,5 +280,21 @@ class ParticipantCsvValidator {
         }
         
         return null
+    }
+    
+    private fun parseEatingHabit(habitStr: String): EatingHabit? {
+        val normalized = habitStr.trim().lowercase()
+        
+        return when {
+            normalized.contains("vegan") -> EatingHabit.VEGAN
+            normalized.contains("vegetar") -> EatingHabit.VEGETARISCH
+            normalized.contains("pescet") || normalized.contains("pesket") -> EatingHabit.PESCETARISCH
+            normalized.contains("omniv") || normalized.contains("allesesser") || normalized.contains("fleisch") -> EatingHabit.OMNIVORE
+            normalized == "v" -> EatingHabit.VEGAN
+            normalized == "veg" -> EatingHabit.VEGETARISCH
+            normalized == "pesc" -> EatingHabit.PESCETARISCH
+            normalized == "omni" || normalized == "o" -> EatingHabit.OMNIVORE
+            else -> null
+        }
     }
 }

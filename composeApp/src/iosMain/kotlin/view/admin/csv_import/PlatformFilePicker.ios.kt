@@ -15,7 +15,6 @@ import platform.Foundation.dataUsingEncoding
 import platform.UIKit.UIDocumentPickerViewController
 import platform.UIKit.UIDocumentPickerMode
 import platform.UIKit.UIViewController
-import platform.UIKit.presentViewController
 import platform.UniformTypeIdentifiers.UTTypeCommaSeparatedText
 import platform.UniformTypeIdentifiers.UTTypePlainText
 

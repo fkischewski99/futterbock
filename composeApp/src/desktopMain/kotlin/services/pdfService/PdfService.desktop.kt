@@ -104,7 +104,7 @@ actual class PdfServiceImpl {
         // Draw title
         setTitleOfCurrentPage(pdfData.title)
 
-        yPosition -= 20f
+        yPosition -= 60f
 
         // Create daily sections
         for (daySection in pdfData.dailySections) {
@@ -247,18 +247,14 @@ actual class PdfServiceImpl {
             } catch (e: Exception) {
                 JOptionPane.showMessageDialog(
                     null,
-                    "Error saving the PDF: ${e.message}",
+                    "Fehler beim speichern des PDF: ${e.message}",
                     "Error",
                     JOptionPane.ERROR_MESSAGE
                 )
+                currentDocument!!.close()
             }
         } else {
-            JOptionPane.showMessageDialog(
-                null,
-                "Save operation was cancelled",
-                "Info",
-                JOptionPane.INFORMATION_MESSAGE
-            )
+            currentDocument!!.close()
         }
     }
 }

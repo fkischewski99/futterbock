@@ -432,6 +432,17 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
     }
 
     override suspend fun createNewParticipant(participant: Participant) {
+        val existing = firestore.collection(PARTICIPANTS)
+            .where { "__lastName__" equalTo participant.lastName }
+            .where { "__firstName__" equalTo participant.firstName }
+            .get()
+            .documents.map { it.data<Participant>() }
+
+        if (existing.isNotEmpty()) {
+            Logger.w("Participant with name '${participant.lastName}' already exists. Skipping import.")
+            return
+        }
+
         Logger.i("Create New Participant")
         val participantId = generateRandomStringId()
         participant.uid = participantId

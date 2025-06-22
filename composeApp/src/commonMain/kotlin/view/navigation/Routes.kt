@@ -44,4 +44,7 @@ interface Routes {
 
     @Serializable
     object ParticipantAdministration : Routes
+
+    @Serializable
+    object CsvImport : Routes
 }

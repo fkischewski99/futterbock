@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import data.EventRepository
 import org.koin.compose.koinInject
 import services.login.LoginAndRegister
+import view.admin.csv_import.CsvImportScreen
 import view.admin.new_participant.NewParticipantScreen
 import view.admin.participants.ParticipantAdminScreen
 import view.event.categorized_shopping_list.MaterialListScreen
@@ -56,6 +57,9 @@ fun RootNavController(
         }
         composable<Routes.ParticipantAdministration> {
             ParticipantAdminScreen(navController = navController)
+        }
+        composable<Routes.CsvImport> {
+            CsvImportScreen(navController = navController)
         }
         navigation<Routes.EditEventSubGraph>(
             startDestination = Routes.EditEvent,

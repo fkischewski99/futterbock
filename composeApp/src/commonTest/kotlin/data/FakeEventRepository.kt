@@ -1,6 +1,7 @@
 package data
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import model.Event
 import model.Ingredient
@@ -46,7 +47,15 @@ class FakeEventRepository : EventRepository {
         eventId: String,
         withParticipant: Boolean
     ): List<ParticipantTime> {
-        TODO("Not yet implemented")
+        return participants.map { (id, participant) ->
+            ParticipantTime(
+                uid = id,
+                from = Clock.System.now(),
+                to = Clock.System.now(),
+                participant = if (withParticipant) participant else null,
+                participantRef = participant.uid
+            )
+        }
     }
 
     override suspend fun getAllParticipantsOfStamm(): Flow<List<Participant>> {
@@ -81,11 +90,9 @@ class FakeEventRepository : EventRepository {
     }
 
     override suspend fun findParticipantByName(firstName: String, lastName: String): Participant? {
-        return participants.values.find { 
-            it.firstName.equals(firstName, ignoreCase = true) && 
-            it.lastName.equals(lastName, ignoreCase = true) 
-        }
+        TODO("Not yet implemented")
     }
+
     override suspend fun getAllRecipes(): List<Recipe> {
         TODO("Not yet implemented")
     }

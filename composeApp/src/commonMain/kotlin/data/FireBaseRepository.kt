@@ -96,22 +96,61 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
     override suspend fun getMealsWithRecipeAndIngredients(eventId: String): List<Meal> {
         val mealList = getAllMealsOfEvent(eventId)
 
-        coroutineScope {
-            mealList.map { meal ->
-                async {
-                    meal.recipeSelections.map { recipeSelection ->
-                        async {
-                            val recipe = getRecipeById(recipeSelection.recipeRef)
-                            recipeSelection.recipe = recipe
-                            recipeSelection
-                        }
-                    }.awaitAll()
-                    meal
-                }
-            }.awaitAll()
-        }
-        return mealList
+        // Collect all unique recipe IDs to batch fetch
+        val allRecipeIds = mealList.flatMap { meal ->
+            meal.recipeSelections.map { it.recipeRef }
+        }.distinct()
 
+        // Batch fetch all recipes if any exist
+        val recipeBatch = if (allRecipeIds.isNotEmpty()) {
+            getBatchRecipes(allRecipeIds)
+        } else emptyMap()
+
+        // Map recipes to selections
+        mealList.forEach { meal ->
+            meal.recipeSelections.forEach { selection ->
+                selection.recipe = recipeBatch[selection.recipeRef]
+            }
+        }
+
+        return mealList
+    }
+
+    private suspend fun getBatchRecipes(recipeIds: List<String>): Map<String, Recipe> {
+        return coroutineScope {
+            // Firestore 'in' query limit is 10, so we chunk the requests
+            recipeIds.chunked(10).map { chunk ->
+                async {
+                    try {
+                        firestore.collection(RECIPES)
+                            .where {
+                                "__name__" inArray chunk
+                            }
+                            .get()
+                            .documents
+                            .associate { doc ->
+                                val recipe = doc.data<Recipe>()
+                                // Populate ingredients for each recipe
+                                coroutineScope {
+                                    recipe.shoppingIngredients.map { shoppingIngredient ->
+                                        async {
+                                            shoppingIngredient.ingredient =
+                                                firestore.collection(INGREDIENT)
+                                                    .document(shoppingIngredient.ingredientRef)
+                                                    .get()
+                                                    .data<Ingredient?>()
+                                        }
+                                    }.awaitAll()
+                                }
+                                doc.id to recipe
+                            }
+                    } catch (e: Exception) {
+                        Logger.e("Error batch fetching recipes: ${e.message}")
+                        emptyMap<String, Recipe>()
+                    }
+                }
+            }.awaitAll().fold(emptyMap<String, Recipe>()) { acc, map -> acc + map }
+        }
     }
 
     override suspend fun getAllIngredients(): List<Ingredient> {
@@ -164,24 +203,41 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         val mealList: List<Meal> = firestore.collection(EVENTS).document(eventId)
             .collection(MEALS).get().documents
             .map { meal -> meal.data { } }
-        val mealListWithRecipes = mealList.map { meal -> getMealById(eventId, meal.uid) }
-        return mealListWithRecipes
+
+        // Batch fetch all recipes for all meals at once
+        val allRecipeIds = mealList.flatMap { meal ->
+            meal.recipeSelections.map { it.recipeRef }
+        }.distinct()
+
+        val recipeBatch = if (allRecipeIds.isNotEmpty()) {
+            getBatchRecipes(allRecipeIds)
+        } else emptyMap()
+
+        // Map recipes to all meals
+        mealList.forEach { meal ->
+            meal.recipeSelections.forEach { selection ->
+                selection.recipe = recipeBatch[selection.recipeRef]
+            }
+        }
+
+        return mealList
     }
 
     override suspend fun getMealById(eventId: String, mealId: String): Meal {
         val snapshot = firestore.collection(EVENTS).document(eventId)
             .collection(MEALS).document(mealId)
         val meal = snapshot.get().data<Meal>()
-        coroutineScope {
-            meal.recipeSelections.map { recipeSelection ->
-                async {
-                    val recipe =
-                        firestore.collection(RECIPES).document(recipeSelection.recipeRef).get()
-                            .data<Recipe> { }
-                    recipeSelection.recipe = recipe
-                }
-            }.awaitAll()
+
+        // Use batch recipe fetching for consistency and performance
+        val recipeIds = meal.recipeSelections.map { it.recipeRef }.distinct()
+        val recipeBatch = if (recipeIds.isNotEmpty()) {
+            getBatchRecipes(recipeIds)
+        } else emptyMap()
+
+        meal.recipeSelections.forEach { recipeSelection ->
+            recipeSelection.recipe = recipeBatch[recipeSelection.recipeRef]
         }
+
         return meal
     }
 
@@ -214,32 +270,81 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         eventId: String,
         withParticipant: Boolean
     ): List<ParticipantTime> {
-        val mealsExist = firestore.collection(EVENTS).document(eventId).get().exists
-
-        if (!mealsExist) {
+        // Remove unnecessary existence check - just fetch participant schedule directly
+        val allParticipantTime = try {
+            firestore.collection(EVENTS).document(eventId)
+                .collection(PARTICIPANT_SCHEDULE)
+                .get().documents.map<DocumentSnapshot, ParticipantTime> { querySnapshot ->
+                    querySnapshot.data { }
+                }
+        } catch (e: Exception) {
+            Logger.e("Error fetching participant schedule: ${e.message}")
             return emptyList()
         }
-        var allParticipantTime = firestore.collection(EVENTS).document(eventId)
-            .collection(PARTICIPANT_SCHEDULE)
-            .get().documents.map<DocumentSnapshot, ParticipantTime> { querySnapshot ->
-                querySnapshot.data { }
-            }
-        if (!withParticipant)
+
+        if (!withParticipant || allParticipantTime.isEmpty()) {
             return allParticipantTime
-        allParticipantTime = allParticipantTime.map { participantTime ->
-            val participant =
-                firestore.collection(PARTICIPANTS).document(participantTime.participantRef)
-                    .get().data<Participant?> { }
+        }
+
+        // Batch fetch all participants
+        val participantIds = allParticipantTime.map { it.participantRef }.distinct()
+        val participantMap = getBatchParticipants(participantIds)
+
+        // Clean up missing participants and map results
+        val validParticipantTimes = mutableListOf<ParticipantTime>()
+        val participantsToDelete = mutableListOf<String>()
+
+        allParticipantTime.forEach { participantTime ->
+            val participant = participantMap[participantTime.participantRef]
             if (participant == null) {
-                deleteParticipantOfEvent(
-                    eventId = eventId,
-                    participantId = participantTime.participantRef
-                )
+                participantsToDelete.add(participantTime.participantRef)
+            } else {
+                participantTime.participant = participant
+                validParticipantTimes.add(participantTime)
             }
-            participantTime.participant = participant
-            participantTime
-        }.filter { participantTime -> participantTime.participant != null }
-        return allParticipantTime
+        }
+
+        // Cleanup orphaned participant references in background
+        if (participantsToDelete.isNotEmpty()) {
+            coroutineScope {
+                participantsToDelete.map { participantId ->
+                    async {
+                        try {
+                            deleteParticipantOfEvent(eventId, participantId)
+                        } catch (e: Exception) {
+                            Logger.e("Error deleting orphaned participant $participantId: ${e.message}")
+                        }
+                    }
+                }
+            }
+        }
+
+        return validParticipantTimes
+    }
+
+    private suspend fun getBatchParticipants(participantIds: List<String>): Map<String, Participant> {
+        if (participantIds.isEmpty()) return emptyMap()
+
+        return coroutineScope {
+            val group = loginAndRegister.getCustomUserGroup()
+            participantIds.chunked(10).map { chunk ->
+                async {
+                    try {
+                        firestore.collection(PARTICIPANTS)
+                            .where {
+                                "__name__" inArray chunk
+                                "group" equalTo group
+                            }
+                            .get()
+                            .documents
+                            .associate { doc -> doc.id to doc.data<Participant>() }
+                    } catch (e: Exception) {
+                        Logger.e("Error batch fetching participants: ${e.message}")
+                        emptyMap<String, Participant>()
+                    }
+                }
+            }.awaitAll().fold(emptyMap<String, Participant>()) { acc, map -> acc + map }
+        }
     }
 
     override suspend fun getAllParticipantsOfStamm() = flow {

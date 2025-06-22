@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import data.EventRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -101,37 +102,49 @@ class SharedEventViewModel(
     fun initializeScreen(eventIdPrm: String?) {
         _eventState.value = ResultState.Loading
         viewModelScope.launch(Dispatchers.IO) {
-            val eventFromRepo =
-                if (eventIdPrm == null) eventRepository.createNewEvent() else eventRepository.getEventById(
-                    eventIdPrm
-                )
-            if (eventFromRepo == null) {
-                _eventState.value = ResultState.Error("Fehler beim Abrufen des Lagers")
-                return@launch
-            }
-            val eventId = eventFromRepo.uid
-            val participantList =
-                eventRepository.getParticipantsOfEvent(eventId = eventId, withParticipant = true)
-            val allMealsOfEvent: List<Meal> = eventRepository.getAllMealsOfEvent(eventId)
-
-            _eventState.value =
-                ResultState.Success(
-                    EventState(
-                        event = eventFromRepo,
-                        mealList = allMealsOfEvent,
-                        mealsGroupedByDate = groupMealsByDate(
-                            eventFromRepo.from,
-                            eventFromRepo.to,
-                            allMealsOfEvent
-                        ),
-                        participantList = participantList,
-                        currentParticipantsOfMeal = listOf(),
-                        dateRange = generateDateRange(eventFromRepo.from, eventFromRepo.to),
-                        selectedMeal = allMealsOfEvent.firstOrNull()
-                            ?: Meal(day = Clock.System.now())
+            try {
+                val eventFromRepo =
+                    if (eventIdPrm == null) eventRepository.createNewEvent() else eventRepository.getEventById(
+                        eventIdPrm
                     )
-                )
+                if (eventFromRepo == null) {
+                    _eventState.value = ResultState.Error("Fehler beim Abrufen des Lagers")
+                    return@launch
+                }
+                val eventId = eventFromRepo.uid
 
+                // ✅ OPTIMIZED: Load participants and meals concurrently
+                val participantListDeferred = async {
+                    eventRepository.getParticipantsOfEvent(eventId = eventId, withParticipant = true)
+                }
+                val allMealsOfEventDeferred = async {
+                    eventRepository.getAllMealsOfEvent(eventId)
+                }
+
+                // Wait for both operations to complete
+                val participantList = participantListDeferred.await()
+                val allMealsOfEvent = allMealsOfEventDeferred.await()
+
+                _eventState.value =
+                    ResultState.Success(
+                        EventState(
+                            event = eventFromRepo,
+                            mealList = allMealsOfEvent,
+                            mealsGroupedByDate = groupMealsByDate(
+                                eventFromRepo.from,
+                                eventFromRepo.to,
+                                allMealsOfEvent
+                            ),
+                            participantList = participantList,
+                            currentParticipantsOfMeal = listOf(),
+                            dateRange = generateDateRange(eventFromRepo.from, eventFromRepo.to),
+                            selectedMeal = allMealsOfEvent.firstOrNull()
+                                ?: Meal(day = Clock.System.now())
+                        )
+                    )
+            } catch (e: Exception) {
+                _eventState.value = ResultState.Error("Fehler beim Laden der Daten: ${e.message}")
+            }
         }
     }
 

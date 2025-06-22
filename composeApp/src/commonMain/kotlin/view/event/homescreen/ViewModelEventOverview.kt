@@ -8,7 +8,11 @@ import data.EventRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import model.Event
 import services.login.LoginAndRegister
@@ -27,66 +31,67 @@ class ViewModelEventOverview(
 
     private var _state = MutableStateFlow<ResultState<EventOverviewState>>(ResultState.Loading)
     val state = _state.asStateFlow()
+    
+    init {
+        // Initialize the Flow in a coroutine
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val userGroup = loginAndRegister.getCustomUserGroup()
+                eventRepository.getEventList(userGroup)
+                    .collect { events -> 
+                        try {
+                            Logger.i("Processing ${events.size} events")
+                            val (pastEvents, upcomingEvents) = events.partition { !it.isFutureEvent() }
+                            _state.value = ResultState.Success(
+                                EventOverviewState(
+                                    pastEvents = pastEvents,
+                                    upcommingEvents = upcomingEvents
+                                )
+                            )
+                        } catch (e: Exception) {
+                            Logger.e("Error processing events: ${e.message}")
+                            _state.value = ResultState.Error("Fehler beim Verarbeiten der Lager")
+                        }
+                    }
+            } catch (e: Exception) {
+                Logger.e("Error initializing event flow: ${e.message}")
+                _state.value = ResultState.Error("Fehler beim Initialisieren der Lager")
+            }
+        }
+    }
+
     var data = mutableStateOf(emptyList<Event>())
 
     fun onAction(actionsEventOverview: ActionsEventOverview) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-
                 when (actionsEventOverview) {
                     is ActionsEventOverview.DeleteEvent -> onDeleteClick(actionsEventOverview.eventId)
-                    ActionsEventOverview.Init -> initializeScreen()
+                    ActionsEventOverview.Init -> {
+                        // No longer needed - Flow is automatically managed
+                        Logger.i("ViewModel initialized - Flow will handle data updates")
+                    }
                     else -> {
-                        //only navigagion
+                        //only navigation
                     }
                 }
             } catch (e: Exception) {
-                Logger.e("Error when loading events: " + e.stackTraceToString())
-                _state.value = ResultState.Error("Fehler beim Abrufen der Lager")
+                Logger.e("Error handling action: " + e.stackTraceToString())
             }
         }
-    }
-
-    private fun sortEventsByDate(eventList: List<Event>) {
-        val upcommingEvents = ArrayList<Event>()
-        val pastEvents = ArrayList<Event>()
-        for (event in eventList) {
-            if (event.isFutureEvent()) {
-                upcommingEvents.add(event)
-            } else {
-                pastEvents.add(event)
-            }
-        }
-        _state.value = ResultState.Success(
-            EventOverviewState(
-                pastEvents = pastEvents,
-                upcommingEvents = upcommingEvents
-            )
-        )
-        Logger.i("Sorted Events")
-
-
     }
 
     fun onDeleteClick(eventId: String) {
-        val data = _state.value.getSuccessData() ?: return;
-        var upcommingEvents = data.upcommingEvents.filter { it.uid !== eventId }
-        val copy = _state.value.getSuccessData()!!.copy(
-            upcommingEvents = upcommingEvents
-        )
-        _state.value = ResultState.Success(copy)
-        //Delete from DB
-        viewModelScope.launch(Dispatchers.IO) { eventRepository.deleteEvent(eventId); }
-    }
-
-    private suspend fun initializeScreen() {
-        Logger.i("Init viewmodel EventOverview")
-
-
-        val list = eventRepository.getEventList(loginAndRegister.getCustomUserGroup())
-        Logger.i("Get Events was sucessfull")
-        list.collect { listOfEvents ->
-            sortEventsByDate(listOfEvents)
+        // Optimistic UI update is now handled by the reactive Flow
+        // Just delete from DB and the Flow will automatically update the UI
+        viewModelScope.launch(Dispatchers.IO) { 
+            try {
+                eventRepository.deleteEvent(eventId)
+                Logger.i("Deleted event: $eventId")
+            } catch (e: Exception) {
+                Logger.e("Error deleting event: ${e.message}")
+                // Consider showing error message to user
+            }
         }
     }
 }

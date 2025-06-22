@@ -56,6 +56,12 @@ buildkonfig {
             "FIREBASE_API_KEY",
             getEnvOrLocal("FIREBASE_API_KEY")
         )
+        
+        buildConfigField(
+            com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
+            "APP_VERSION",
+            "\"$versionNameProperty\""
+        )
     }
 }
 
@@ -135,7 +141,11 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.pdfbox)
-
+            
+            // Ktor dependencies for update checker
+            implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

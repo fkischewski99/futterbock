@@ -19,11 +19,12 @@ Fragen oder Feedback gerne an: <a href="mailto:kontakt@bockbuecher.de">kontakt@b
 
 ### 👶 Teilnehmer-Faktor nach Alter
 
-Teilnehmer werden abhängig vom Geburtsjahr unterschiedlich stark gewichtet:
-
-- **Kinder (unter 12 Jahren)** zählen z. B. als **0.5**
-- **Jugendliche (12–17 Jahre)** zählen als **0.75**
-- **Erwachsene (ab 18 Jahren)** zählen als **1.0**
+Teilnehmer werden abhängig vom Geburtsjahr unterschiedlich stark gewichtet:           
+- **Babys (unter 4 Jahren)** zählen **0.4x** 
+- **Kinder (unter 10 Jahren)** zählen **0.7x** 
+- **Jugendliche (11–14 Jahre)** zählen **1.0x**
+- **junge Erwachsene (15–23 Jahre)** zählen **1.2x**
+- **Erwachsene (ab 14 Jahren)** zählen **1.0x**
 
 Diese Gewichtung fließt z. B. in die Berechnung von Portionen, Mengen und teilweise auch
 Materialbedarf mit ein.  

@@ -13,14 +13,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -31,6 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
@@ -43,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -71,6 +77,7 @@ import view.shared.HelperFunctions
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
+import view.shared.step_counter.StepperCounter
 
 @Composable
 fun EditMealScreen(
@@ -177,7 +184,7 @@ fun NewMealPage(
                                         navigateToRecipe(onAction, it)
                                     })
                                 Text(
-                                    it.selectedRecipeName,
+                                    "${it.selectedRecipeName} (${it.eaterIds.size + it.guestCount} ${if (it.eaterIds.size + it.guestCount == 1) "Person" else "Personen"})",
                                     style = MaterialTheme.typography.titleMedium,
                                     modifier = Modifier.padding(8.dp).clickable {
                                         navigateToRecipe(onAction, it)
@@ -198,7 +205,6 @@ fun NewMealPage(
                                 }
                             }
                             Spacer(modifier = Modifier.height(16.dp))
-                            // Replace this with your recipe content
                             RecipeWithMembers(
                                 participants = state.data.currentParticipantsOfMeal,
                                 recipeSelection = it,

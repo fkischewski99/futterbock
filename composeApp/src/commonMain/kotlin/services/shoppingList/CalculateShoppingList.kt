@@ -159,7 +159,7 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
     private suspend fun getEaterMultiplier(recipeSelection: RecipeSelection): Double {
 
         return recipeSelection.eaterIds.map { eaterId -> getMultiplierForParticipant(eaterId) }
-            .sum()
+            .sum() + recipeSelection.guestCount
     }
 
     private suspend fun getMultiplierForParticipant(participantId: String): Double {

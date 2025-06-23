@@ -315,6 +315,137 @@ class CalculateShoppingListTest : KoinTest {
     }
 
     @Test
+    fun `calculates amount with guests only no participants`() = runTest {
+        val eventId = "event-guests-only"
+        val ingredient = Ingredient().apply { uid = "ing1"; name = "Pasta" }
+        val selection = recipeSelectionWithIngredient(
+            "ing1",
+            50.0,
+            IngredientUnit.GRAMM,
+            listOf()
+        )
+        selection.guestCount = 4
+        selection.recipe!!.shoppingIngredients[0].ingredient = ingredient
+
+        fakeRepo.mealsForEvent = mutableListOf(mealWithRecipe(selection))
+
+        val result = calculator.calculate(eventId)
+
+        assertEquals(1, result.size)
+        assertEquals("Pasta", result[0].ingredient?.name)
+        assertEquals(200.0, result[0].amount)
+    }
+
+    @Test
+    fun `calculates amount with participants and guests combined`() = runTest {
+        val eventId = "event-participants-and-guests"
+        val ingredient = Ingredient().apply { uid = "ing1"; name = "Rice" }
+        val selection = recipeSelectionWithIngredient(
+            "ing1",
+            100.0,
+            IngredientUnit.GRAMM,
+            listOf("p1", "p2")
+        )
+        selection.guestCount = 3
+        selection.recipe!!.shoppingIngredients[0].ingredient = ingredient
+
+        fakeRepo.mealsForEvent = mutableListOf(mealWithRecipe(selection))
+
+        val result = calculator.calculate(eventId)
+
+        assertEquals(1, result.size)
+        assertEquals("Rice", result[0].ingredient?.name)
+        assertEquals(500.0, result[0].amount)
+    }
+
+    @Test
+    fun `guest count is preserved when combining same ingredients from different recipes`() = runTest {
+        val eventId = "event-multiple-recipes-with-guests"
+        val tomato = Ingredient().apply { uid = "ing1"; name = "Tomato" }
+
+        val s1 = recipeSelectionWithIngredient("ing1", 50.0, IngredientUnit.GRAMM, listOf("p1"))
+        s1.guestCount = 2
+        s1.recipe!!.shoppingIngredients[0].ingredient = tomato
+
+        val s2 = recipeSelectionWithIngredient("ing1", 30.0, IngredientUnit.GRAMM, listOf("p2", "p3"))
+        s2.guestCount = 1
+        s2.recipe!!.shoppingIngredients[0].ingredient = tomato
+
+        fakeRepo.mealsForEvent = mutableListOf(mealWithRecipe(s1), mealWithRecipe(s2))
+
+        val result = calculator.calculate(eventId)
+        assertEquals(1, result.size)
+        assertEquals("Tomato", result[0].ingredient?.name)
+        assertEquals((50.0 * 3) + (30.0 * 3), result[0].amount)
+    }
+
+    @Test
+    fun `guest count zero works correctly backward compatibility`() = runTest {
+        val eventId = "event-zero-guests"
+        val ingredient = Ingredient().apply { uid = "ing1"; name = "Cheese" }
+        val selection = recipeSelectionWithIngredient(
+            "ing1",
+            200.0,
+            IngredientUnit.GRAMM,
+            listOf("p1", "p2")
+        )
+        selection.guestCount = 0
+        selection.recipe!!.shoppingIngredients[0].ingredient = ingredient
+
+        fakeRepo.mealsForEvent = mutableListOf(mealWithRecipe(selection))
+
+        val result = calculator.calculate(eventId)
+
+        assertEquals(1, result.size)
+        assertEquals("Cheese", result[0].ingredient?.name)
+        assertEquals(400.0, result[0].amount)
+    }
+
+    @Test
+    fun `guest count with age-based participant multipliers works correctly`() = runTest {
+        val eventId = "event-guests-with-age-multipliers"
+        
+        val ingredient = Ingredient().apply { uid = "ing1"; name = "Bread" }
+        val shoppingIngredient = ShoppingIngredient().apply {
+            ingredientRef = "ing1"
+            amount = 100.0
+            unit = IngredientUnit.GRAMM
+            this.ingredient = ingredient
+        }
+        val recipe = Recipe().apply {
+            uid = "recipe-bread"
+            shoppingIngredients = listOf(shoppingIngredient)
+        }
+
+        val now = Clock.System.now()
+        val timeZone = TimeZone.currentSystemDefault()
+        
+        fun birthdateYearsAgo(yearsAgo: Int): Instant {
+            val localDate = now.toLocalDateTime(timeZone).date
+            val birthDate = localDate.minus(DatePeriod(years = yearsAgo))
+            return HelperFunctions.getInstant(birthDate)
+        }
+
+        fakeRepo.participants = mapOf(
+            "child" to createParticipant("child", birthdateYearsAgo(5)),
+            "adult" to createParticipant("adult", birthdateYearsAgo(30))
+        )
+
+        val recipeSelection = RecipeSelection().apply {
+            this.recipe = recipe
+            eaterIds = mutableSetOf("child", "adult")
+            guestCount = 2
+        }
+
+        fakeRepo.mealsForEvent = mutableListOf(mealWithRecipe(recipeSelection))
+
+        val result = calculator.calculate(eventId)
+        assertEquals(1, result.size)
+        val expectedAmount = 100.0 * (0.7 + 1.0 + 2.0)
+        assertEquals(expectedAmount, result[0].amount, 0.0001)
+    }
+
+    @Test
     fun `calculateAmountsForRecipe applies multiplier correctly`() = runTest {
         // Set up one ingredient
         val ingredient = Ingredient().apply {

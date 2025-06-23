@@ -19,12 +19,14 @@ Fragen oder Feedback gerne an: <a href="mailto:kontakt@bockbuecher.de">kontakt@b
 
 ### 👶 Teilnehmer-Faktor nach Alter
 
-Teilnehmer werden abhängig vom Geburtsjahr unterschiedlich stark gewichtet:           
-- **Babys (unter 4 Jahren)** zählen **0.4x** 
-- **Kinder (unter 10 Jahren)** zählen **0.7x** 
+Teilnehmer werden abhängig vom Geburtsjahr unterschiedlich stark gewichtet:
+
+- **Babys (unter 4 Jahren)** zählen **0.4x**
+- **Kinder (unter 10 Jahren)** zählen **0.7x**
 - **Jugendliche (11–14 Jahre)** zählen **1.0x**
 - **junge Erwachsene (15–23 Jahre)** zählen **1.2x**
 - **Erwachsene (ab 14 Jahren)** zählen **1.0x**
+- Hinzugefügte Gäste werden mit dem Faktor **1.0** berechnet
 
 Diese Gewichtung fließt z. B. in die Berechnung von Portionen, Mengen und teilweise auch
 Materialbedarf mit ein.  
@@ -33,7 +35,9 @@ So wird vermieden, dass für kleinere Kinder zu viel geplant oder eingekauft wir
 ### Import von Teilnehmern
 
 - Die App ermöglicht das Importieren von Teilnehmern über eine CSV-Datei
-- Als Beispiel für eine solche Datei ist die [sample_participants.csv](https://github.com/fkischewski99/futterbock/blob/main/sample_participants.csv) in dem Repository enthalten
+- Als Beispiel für eine solche Datei ist
+  die [sample_participants.csv](https://github.com/fkischewski99/futterbock/blob/main/sample_participants.csv)
+  in dem Repository enthalten
 - Die Datei muss die folgenden Spalten besitzen: Vorname, Nachname (optional), Ernährungsweise,
   Geburtsjahr)
 - 💡

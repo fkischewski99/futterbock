@@ -23,6 +23,7 @@ interface EditMealActions : BaseAction {
     data class ChangeDateOfMeal(val newDayOfMeal: LocalDate) : EditMealActions
     data class ChangeMealType(val mealType: MealType) : EditMealActions
     data class ViewRecipe(val recipeSelection: RecipeSelection) : EditMealActions
+    data class UpdateGuestCount(val recipeSelection: RecipeSelection, val guestCount: Int) : EditMealActions
 
     data object SaveMeal : EditMealActions
 }

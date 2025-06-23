@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.runBlocking
 import model.*
+import view.shared.step_counter.StepperCounter
 
 @Composable
 fun RecipeList(
@@ -110,6 +111,23 @@ fun RecipeWithMembers(
         )
 
         if (expanded) {
+            StepperCounter(
+                initialValue = recipeSelection.guestCount,
+                onValueChange = { guestCount ->
+                    if (guestCount in 0..500) {
+                        onAction(EditMealActions.UpdateGuestCount(recipeSelection, guestCount))
+                    }
+                },
+                modifier = Modifier.padding(vertical = 8.dp),
+                bottomContent = { Text("Gäste") }
+            )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.outline
+            )
+            
             participants.forEach { participant ->
                 val isChecked = checkedState[participant.participantRef] ?: false
                 val canEat = canParticipantEatRecipe(participant, recipeSelection)

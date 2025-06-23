@@ -141,8 +141,8 @@ fun RecipeDetails(recipeSelection: RecipeSelection) {
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Text(
-                text = "${recipeSelection.selectedRecipeName} (${recipeSelection.eaterIds.size}" +
-                        "${if (recipeSelection.eaterIds.size == 1) " Person" else " Personen"})",
+                text = "${recipeSelection.selectedRecipeName} (${recipeSelection.eaterIds.size + recipeSelection.guestCount}" +
+                        "${if (recipeSelection.eaterIds.size + recipeSelection.guestCount == 1) " Person" else " Personen"})",
                 style = MaterialTheme.typography.titleLarge,
             )
             VerticalDivider(modifier = Modifier.padding(top = 12.dp))

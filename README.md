@@ -33,7 +33,7 @@ So wird vermieden, dass für kleinere Kinder zu viel geplant oder eingekauft wir
 ### Import von Teilnehmern
 
 - Die App ermöglicht das Importieren von Teilnehmern über eine CSV-Datei
-- Als Beispiel für eine solche Datei ist die sample_participants.csv in dem Repository enthalten
+- Als Beispiel für eine solche Datei ist die [sample_participants.csv](https://github.com/fkischewski99/futterbock/blob/main/sample_participants.csv) in dem Repository enthalten
 - Die Datei muss die folgenden Spalten besitzen: Vorname, Nachname (optional), Ernährungsweise,
   Geburtsjahr)
 - 💡

@@ -6,18 +6,18 @@ import view.shared.list.ListItem
 
 @Serializable
 data class Meal(
-    val uid: String = "",  // Default value for uid
-    var day: Instant,      // day is required and can't be null
+    val uid: String = "",
+    var day: Instant,
     var mealType: MealType = MealType.MITTAG,
-    var recipeSelections: List<RecipeSelection> = emptyList() // Immutable list
+    var recipeSelections: List<RecipeSelection> = emptyList(),
+    var guestCount: Int = 0
 ) : ListItem<Meal> {
 
     override fun getListItemTitle(): String {
-        return mealType.name // Custom title using 'meal_type' and 'day'
+        return mealType.name
     }
 
     override fun getSubtitle(): String {
-        // Custom subtitle logic based on 'recipe_selections' or any other properties
         return recipeSelections.joinToString(", ") { it.selectedRecipeName }
     }
 

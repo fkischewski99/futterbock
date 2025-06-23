@@ -38,7 +38,7 @@ class RecipeOverviewViewModel(
                 RecipeOverviewState(
                     recipeSelection = recipeSelection,
                     calculatedIngredientAmounts = calulatedMap.values.toList(),
-                    numberOfPortions = recipeSelection.eaterIds.size
+                    numberOfPortions = recipeSelection.eaterIds.size + recipeSelection.guestCount
                 )
             )
         }

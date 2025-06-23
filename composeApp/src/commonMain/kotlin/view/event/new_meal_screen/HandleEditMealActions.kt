@@ -56,6 +56,12 @@ class HandleEditMealActions(
                     recipeSelection = editEventActions.recipeSelection
                 )
 
+                is EditMealActions.UpdateGuestCount -> updateGuestCount(
+                    currentState = currentState,
+                    recipeSelection = editEventActions.recipeSelection,
+                    guestCount = editEventActions.guestCount
+                )
+
                 else -> {
                     Logger.i(editEventActions.toString())
                     return ResultState.Error("wrong action")
@@ -82,6 +88,15 @@ class HandleEditMealActions(
                 selectedMeal = currentState.selectedMeal
             )
         )
+    }
+
+    private fun updateGuestCount(
+        currentState: EventState,
+        recipeSelection: RecipeSelection,
+        guestCount: Int
+    ): ResultState<EventState> {
+        recipeSelection.guestCount = guestCount
+        return ResultState.Success(currentState)
     }
 
     private fun addEaterToRecipe(

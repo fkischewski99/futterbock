@@ -10,7 +10,6 @@ data class Meal(
     var day: Instant,
     var mealType: MealType = MealType.MITTAG,
     var recipeSelections: List<RecipeSelection> = emptyList(),
-    var guestCount: Int = 0
 ) : ListItem<Meal> {
 
     override fun getListItemTitle(): String {

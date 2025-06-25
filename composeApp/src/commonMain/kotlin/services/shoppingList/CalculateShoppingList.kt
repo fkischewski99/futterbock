@@ -1,5 +1,6 @@
 package services.shoppingList
 
+import androidx.compose.runtime.toMutableStateMap
 import co.touchlab.kermit.Logger
 import data.EventRepository
 import kotlinx.coroutines.async
@@ -15,7 +16,7 @@ import model.ShoppingIngredient
 
 //Calculates the Amount of Ingredients that need to be shoppend
 class CalculateShoppingList(private val eventRepository: EventRepository) {
-    var allParticipants = emptyMap<String, Participant>()
+    var allParticipants = mutableMapOf<String, Participant>()
 
     suspend fun calculate(eventId: String): List<ShoppingIngredient> {
         val shoppingIngredients = eventRepository.getShoppingIngredients(eventId)
@@ -28,7 +29,7 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
         return finalMap.values.toList().sortedBy { it.ingredient?.name }
     }
 
-    private suspend fun fetchAllParticipantsForEvent(eventId: String): Map<String, Participant> {
+    private suspend fun fetchAllParticipantsForEvent(eventId: String): MutableMap<String, Participant> {
         return try {
             val participantTimes =
                 eventRepository.getParticipantsOfEvent(eventId, withParticipant = true)
@@ -36,10 +37,10 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
                 participantTime.participant?.let { participant ->
                     participant.uid to participant
                 }
-            }.toMap()
+            }.toMutableStateMap()
         } catch (e: Exception) {
             Logger.e("Error fetching participants for shopping calculation: ${e.message}")
-            emptyMap()
+            mutableMapOf()
         }
     }
 
@@ -74,8 +75,12 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
     suspend fun calculateAmountsForRecipe(
         existingShoppingIngredients: Map<String, ShoppingIngredient>,
         recipeSelection: RecipeSelection,
-        multiplier: Double? = null
+        multiplier: Double? = null,
+        eventId: String? = null
     ): Map<String, ShoppingIngredient> {
+        if (eventId != null && allParticipants.isEmpty()) {
+            allParticipants = fetchAllParticipantsForEvent(eventId)
+        }
         val multiplierForIngredients = multiplier ?: getEaterMultiplier(recipeSelection)
         val newIngredientMap = HashMap<String, ShoppingIngredient>()
         for (recipeIngredient in recipeSelection.recipe!!.shoppingIngredients) {
@@ -163,9 +168,14 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
     }
 
     private suspend fun getMultiplierForParticipant(participantId: String): Double {
-        val participant =
-            allParticipants[participantId] ?: eventRepository.getParticipantById(participantId)
-        if (participant?.birthdate == null) {
+        var participant =
+            allParticipants[participantId];
+        if (participant == null) {
+            participant =
+                eventRepository.getParticipantById(participantId)
+            allParticipants[participantId] = participant!!
+        }
+        if (participant.birthdate == null) {
             return 1.0
         }
         return getFactorByBirthdate(participant.birthdate!!)

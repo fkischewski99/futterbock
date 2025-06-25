@@ -96,7 +96,10 @@ fun EditMealScreen(
         onAction = { action ->
             when (action) {
                 is EditMealActions.ViewRecipe -> recipeOverviewViewModel.handleAction(
-                    RecipeOverviewActions.InitializeScreen(action.recipeSelection)
+                    RecipeOverviewActions.InitializeScreen(
+                        action.recipeSelection,
+                        state.value.getSuccessData()?.event?.uid
+                    )
                 )
 
                 is NavigationActions -> handleNavigation(navController, action)

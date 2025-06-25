@@ -347,6 +347,29 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         }
     }
 
+    private suspend fun getBatchIngredients(ingredientIds: List<String>): List<Ingredient> {
+        if (ingredientIds.isEmpty()) return emptyList()
+
+        return coroutineScope {
+            ingredientIds.chunked(10).map { chunk ->
+                async {
+                    try {
+                        firestore.collection(INGREDIENT)
+                            .where {
+                                "__name__" inArray chunk
+                            }
+                            .get()
+                            .documents
+                            .map { doc -> doc.data<Ingredient> { } }
+                    } catch (e: Exception) {
+                        Logger.e("Error fetching ingredient batch: ${e.message}")
+                        emptyList()
+                    }
+                }
+            }.awaitAll().flatten()
+        }
+    }
+
     override suspend fun getAllParticipantsOfStamm() = flow {
         firestore.collection(PARTICIPANTS).snapshots.collect { querySnapshot ->
             val userEvents = querySnapshot.documents.filter { documentSnapshot ->
@@ -379,16 +402,19 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             .get()
             .data<Recipe> {
             }
-        coroutineScope {
-            recipe.shoppingIngredients.map { shoppingIngredient ->
-                async {
-                    shoppingIngredient.ingredient =
-                        firestore.collection(INGREDIENT).document(shoppingIngredient.ingredientRef)
-                            .get()
-                            .data<Ingredient?> { }
-                }
-            }.awaitAll()
+        
+        // Batch load all ingredients in a single request instead of individual requests
+        val ingredientRefs = recipe.shoppingIngredients.map { it.ingredientRef }.distinct()
+        if (ingredientRefs.isNotEmpty()) {
+            val ingredients = getBatchIngredients(ingredientRefs)
+            val ingredientMap = ingredients.associateBy { it.uid }
+            
+            // Map ingredients to shopping ingredients
+            recipe.shoppingIngredients.forEach { shoppingIngredient ->
+                shoppingIngredient.ingredient = ingredientMap[shoppingIngredient.ingredientRef]
+            }
         }
+        
         return recipe
     }
 

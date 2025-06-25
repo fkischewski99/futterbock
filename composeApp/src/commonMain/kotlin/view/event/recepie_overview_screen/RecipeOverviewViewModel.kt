@@ -26,13 +26,14 @@ class RecipeOverviewViewModel(
         MutableStateFlow<ResultState<RecipeOverviewState>>(ResultState.Loading)
     val recipeState = _recipeState.asStateFlow()
 
-    private fun initializeViewModel(recipeSelection: RecipeSelection) {
+    private fun initializeViewModel(recipeSelection: RecipeSelection, eventId: String?) {
         _recipeState.value = ResultState.Loading
         viewModelScope.launch {
             recipeSelection.recipe = eventRepository.getRecipeById(recipeSelection.recipeRef)
             val calulatedMap = calculatedIngredientAmounts.calculateAmountsForRecipe(
                 mutableMapOf(),
-                recipeSelection
+                recipeSelection,
+                eventId = eventId
             )
             _recipeState.value = ResultState.Success(
                 RecipeOverviewState(
@@ -63,7 +64,11 @@ class RecipeOverviewViewModel(
 
     fun handleAction(action: RecipeOverviewActions) {
         when (action) {
-            is RecipeOverviewActions.InitializeScreen -> initializeViewModel(action.recipeSelection)
+            is RecipeOverviewActions.InitializeScreen -> initializeViewModel(
+                action.recipeSelection,
+                action.eventId
+            )
+
             is RecipeOverviewActions.UpdateNumberOfPortions -> changePortionNumber(action.newNumberOfPortions)
         }
     }

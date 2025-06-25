@@ -2,6 +2,7 @@ package data
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
 import model.Event
 import model.Ingredient
@@ -86,7 +87,9 @@ class FakeEventRepository : EventRepository {
     }
 
     override suspend fun getParticipantById(participantId: String): Participant? {
-        return participants.get(participantId)
+        return participants[participantId] ?: Participant().apply {
+            uid = participantId
+        }
     }
 
     override suspend fun findParticipantByName(firstName: String, lastName: String): Participant? {

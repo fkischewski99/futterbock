@@ -2,6 +2,8 @@ package modules
 
 import CategorizedShoppingListViewModel
 import MaterialListViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.viewModelFactory
 import org.koin.dsl.module
 import view.admin.csv_import.CsvImportViewModel
 import view.admin.new_participant.ViewModelNewParticipant

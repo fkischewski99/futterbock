@@ -295,6 +295,15 @@ class CsvImportViewModel(
                 participants = participants,
                 addParticipantCallback = { participant ->
                     sharedEventViewModel.onAction(EditParticipantActions.AddParticipant(participant))
+                },
+                progressCallback = { processed, total ->
+                    val progress = processed.toFloat() / total
+                    updateState { currentState ->
+                        currentState.copy(
+                            importProgress = progress,
+                            importedCount = processed
+                        )
+                    }
                 }
             )
 

@@ -92,9 +92,12 @@ class DayAssignmentAlgorithm {
             for ((ingredientId, shoppingIngredient) in dayIngredients) {
                 val expirationOfIngredient =
                     shoppingIngredient.ingredient?.expirationDateInDays ?: 999
-                if (expirationOfIngredient > durationOfEvent) {
+                val daysBetweenStartAndCookingDay =
+                    daysBetween(startDate = eventStartDate, endDate = day)
+                if (expirationOfIngredient > durationOfEvent || daysBetweenStartAndCookingDay <= expirationOfIngredient) {
                     firstDayIngredients.add(shoppingIngredient)
                 } else {
+                    Logger.i("Ingredient ${shoppingIngredient.ingredient?.name} expires in $expirationOfIngredient days and got deferred. Is needed on day: $day")
                     deferredIngredients.getOrPut(day) { mutableListOf() }.add(shoppingIngredient)
                 }
             }

@@ -42,6 +42,10 @@ class HelperFunctions {
                 .toLocalDateTime(TimeZone.currentSystemDefault()).date
         }
 
+        fun getCurrentLocalDate(): LocalDate {
+            return Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        }
+
         fun formatDate(date: LocalDate): String {
             return "" + date.dayOfMonth + "." + date.monthNumber + "." + date.year;
         }

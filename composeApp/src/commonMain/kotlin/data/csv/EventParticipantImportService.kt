@@ -24,7 +24,8 @@ class EventParticipantImportService(
     suspend fun importParticipantsToEvent(
         eventId: String,
         participants: List<ParticipantImportData>,
-        addParticipantCallback: (Participant) -> Unit
+        addParticipantCallback: (Participant) -> Unit,
+        progressCallback: (Int, Int) -> Unit = { _, _ -> }
     ): EventImportResult {
 
         val existingEventParticipants = try {
@@ -48,7 +49,7 @@ class EventParticipantImportService(
         val errors = mutableListOf<EventImportError>()
         val createdParticipants = mutableListOf<Participant>()
 
-        participants.forEach { importData ->
+        participants.forEachIndexed { index, importData ->
             try {
                 val participantName = "${importData.firstName} ${importData.lastName}"
 
@@ -79,7 +80,8 @@ class EventParticipantImportService(
                                 "Teilnehmer konnte nicht erstellt werden"
                             )
                         )
-                        return@forEach
+                        progressCallback(index + 1, participants.size)
+                        return@forEachIndexed
                     } else {
                         participantsCreated++
                         Logger.i("Created new participant: $participantName")
@@ -90,7 +92,8 @@ class EventParticipantImportService(
                 Logger.i("Checking if participant ${participant.uid} is in existing participants: $existingEventParticipants")
                 if (existingEventParticipants.contains(participant.uid)) {
                     Logger.i("Participant $participantName already in event, skipping")
-                    return@forEach
+                    progressCallback(index + 1, participants.size)
+                    return@forEachIndexed
                 }
 
                 // Add participant to event
@@ -109,6 +112,9 @@ class EventParticipantImportService(
                     )
                 }
 
+                // Update progress after processing each participant
+                progressCallback(index + 1, participants.size)
+
             } catch (e: Exception) {
                 val participantName = "${importData.firstName} ${importData.lastName}"
                 Logger.e("Error processing participant: $participantName", e)
@@ -119,6 +125,8 @@ class EventParticipantImportService(
                         "Unerwarteter Fehler: ${e.message}"
                     )
                 )
+                // Update progress even on error
+                progressCallback(index + 1, participants.size)
             }
         }
 

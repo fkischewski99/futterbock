@@ -13,6 +13,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import model.Material
 import model.Meal
+import model.MultiDayShoppingList
 import model.ShoppingIngredient
 import services.pdfService.RecipePlanPdfProcessor
 import java.io.IOException
@@ -26,8 +27,8 @@ actual class PdfServiceImpl(
 ) {
     private var currentDocument: PdfDocument? = null;
 
-    actual fun createPdf(
-        shoppingList: Map<String, List<ShoppingIngredient>>,
+    actual fun createMultiDayShoppingListPdf(
+        multiDayShoppingList: MultiDayShoppingList,
         materialList: List<Material>
     ) {
         val document = PdfDocument()
@@ -37,29 +38,79 @@ actual class PdfServiceImpl(
         var page = document.startPage(pageInfo)
         var canvas = page.canvas
         drawHeadline("Einkaufsliste", canvas)
-        var yPosition = 50F // Adjust yPosition for the next line
+        var yPosition = 80F
 
+        // Process each shopping day
+        val sortedDays = multiDayShoppingList.getShoppingDaysInOrder()
 
-        shoppingList.forEach { entry ->
-            yPosition += 50F
-            if (checkForNewPage(entry.value, yPosition)) {
+        for (shoppingDate in sortedDays) {
+            val dailyList = multiDayShoppingList.dailyLists[shoppingDate] ?: continue
+
+            // Check if we need a new page for this day
+            if (yPosition > PDF_PAGE_HEIGHT - 200) {
                 page = getNextPage(document, page)
                 canvas = page.canvas
                 yPosition = 60F
             }
-            drawCategoryHeadline(entry.key, canvas, yPosition)
-            entry.value.forEach {
-                yPosition += 20F // Move to the next line
+
+            // Draw day header
+            yPosition += 30F
+            val dayPaint = Paint().apply {
+                textSize = 20f
+                isFakeBoldText = true
+            }
+            canvas.drawText("Einkaufstag: $shoppingDate", 50F, yPosition, dayPaint)
+            yPosition += 15F
+
+            // Group ingredients by category for this day
+            val categorizedIngredients = dailyList.getIngredientsByCategory()
+
+            categorizedIngredients.forEach { (category, ingredients) ->
+                // Check space for category
+                if (yPosition > PDF_PAGE_HEIGHT - 100) {
+                    page = getNextPage(document, page)
+                    canvas = page.canvas
+                    yPosition = 60F
+                }
+
+                yPosition += 25F
+                drawCategoryHeadline(category, canvas, yPosition)
+
+                ingredients.forEach { ingredient ->
+                    yPosition += 20F
+                    if (yPosition > PDF_PAGE_HEIGHT - 20) {
+                        page = getNextPage(document, page)
+                        canvas = page.canvas
+                        yPosition = 60F
+                    }
+                    drawIngredient(ingredient, canvas, yPosition)
+                }
+            }
+
+            yPosition += 20F // Extra space between days
+        }
+
+        // Add material list on new page
+        if (materialList.isNotEmpty()) {
+            page = getNextPage(document, page)
+            canvas = page.canvas
+            yPosition = 60F
+            drawHeadline("Materialliste", canvas)
+            yPosition = 100F
+
+            materialList.forEach { material ->
+                yPosition += 20F
                 if (yPosition > PDF_PAGE_HEIGHT - 20) {
                     page = getNextPage(document, page)
                     canvas = page.canvas
                     yPosition = 60F
                 }
-                drawIngredient(it, canvas, yPosition)
+                drawMaterial(material, canvas, yPosition)
             }
         }
-        document.finishPage(page);
-        currentDocument = document;
+
+        document.finishPage(page)
+        currentDocument = document
     }
 
     actual fun createRecipePlanPdf(
@@ -220,5 +271,12 @@ actual class PdfServiceImpl(
         canvas.drawText(s, 80F, yPosition, paint)
     }
 
-
+    private fun drawMaterial(material: Material, canvas: Canvas, yPosition: Float) {
+        val text = if (material.amount > 0) {
+            "[  ] ${material.amount}x ${material.name}"
+        } else {
+            "[  ] ${material.name}"
+        }
+        canvas.drawText(text, 80F, yPosition, Paint())
+    }
 }

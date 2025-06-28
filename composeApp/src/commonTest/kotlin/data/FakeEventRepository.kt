@@ -4,10 +4,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import model.DailyShoppingList
 import model.Event
 import model.Ingredient
 import model.Material
 import model.Meal
+import model.MultiDayShoppingList
 import model.Participant
 import model.ParticipantTime
 import model.Recipe
@@ -19,6 +22,7 @@ class FakeEventRepository : EventRepository {
     var mealsForEvent: MutableList<Meal> = mutableListOf()
     var materialsForEvent: MutableList<Material> = mutableListOf()
     var shoppingIngredients: MutableList<ShoppingIngredient> = mutableListOf()
+    var multiDayShoppingLists: MutableMap<String, MultiDayShoppingList> = mutableMapOf()
 
     override suspend fun deleteEvent(eventId: String) {
         TODO("Not yet implemented")
@@ -112,9 +116,6 @@ class FakeEventRepository : EventRepository {
         return mealsForEvent
     }
 
-    override suspend fun getShoppingIngredients(eventId: String): List<ShoppingIngredient> {
-        return shoppingIngredients
-    }
 
     override suspend fun createNewMeal(eventId: String, day: Instant): Meal {
         TODO("Not yet implemented")
@@ -138,13 +139,11 @@ class FakeEventRepository : EventRepository {
         }
     }
 
-    override suspend fun saveShoppingList(eventId: String, shoppingList: List<ShoppingIngredient>) {
-        TODO("Not yet implemented")
-    }
 
     override suspend fun getMealsWithRecipeAndIngredients(eventId: String): List<Meal> {
         return mealsForEvent
     }
+
 
     override suspend fun getAllIngredients(): List<Ingredient> {
         TODO("Not yet implemented")
@@ -162,11 +161,54 @@ class FakeEventRepository : EventRepository {
         TODO("Not yet implemented")
     }
 
-    override suspend fun deleteShoppingListItemById(eventId: String, listItemId: String) {
-        TODO("Not yet implemented")
-    }
 
     override suspend fun getAllMaterials(): List<Material> {
         TODO("Not yet implemented")
+    }
+
+    // Multi-day shopping list methods
+    override suspend fun getMultiDayShoppingList(eventId: String): MultiDayShoppingList? {
+        return multiDayShoppingLists[eventId]
+    }
+
+    override suspend fun saveMultiDayShoppingList(eventId: String, multiDayShoppingList: MultiDayShoppingList) {
+        multiDayShoppingLists[eventId] = multiDayShoppingList
+    }
+
+    override suspend fun getDailyShoppingList(eventId: String, date: LocalDate): DailyShoppingList? {
+        return multiDayShoppingLists[eventId]?.dailyLists?.get(date)
+    }
+
+    override suspend fun saveDailyShoppingList(eventId: String, date: LocalDate, dailyShoppingList: DailyShoppingList) {
+        val multiDayList = multiDayShoppingLists[eventId]
+        if (multiDayList != null) {
+            val updatedDailyLists = multiDayList.dailyLists.toMutableMap()
+            updatedDailyLists[date] = dailyShoppingList
+            multiDayShoppingLists[eventId] = multiDayList.copy(dailyLists = updatedDailyLists)
+        }
+    }
+
+    override suspend fun updateShoppingIngredientStatus(eventId: String, date: LocalDate, ingredientId: String, completed: Boolean) {
+        val dailyList = getDailyShoppingList(eventId, date)
+        if (dailyList != null) {
+            val updatedIngredients = dailyList.ingredients.map { ingredient ->
+                if (ingredient.uid == ingredientId || ingredient.ingredientRef == ingredientId) {
+                    ingredient.apply { shoppingDone = completed }
+                } else {
+                    ingredient
+                }
+            }
+            val updatedDailyList = dailyList.copy(ingredients = updatedIngredients)
+            saveDailyShoppingList(eventId, date, updatedDailyList)
+        }
+    }
+
+    override suspend fun deleteShoppingListForDate(eventId: String, date: LocalDate) {
+        val multiDayList = multiDayShoppingLists[eventId]
+        if (multiDayList != null) {
+            val updatedDailyLists = multiDayList.dailyLists.toMutableMap()
+            updatedDailyLists.remove(date)
+            multiDayShoppingLists[eventId] = multiDayList.copy(dailyLists = updatedDailyLists)
+        }
     }
 }

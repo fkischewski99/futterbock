@@ -6,6 +6,7 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.datetime.LocalDate
 import model.Material
 import model.Meal
+import model.MultiDayShoppingList
 import model.ShoppingIngredient
 import services.pdfService.RecipePlanPdfProcessor
 import platform.CoreGraphics.CGRect
@@ -50,8 +51,8 @@ actual class PdfServiceImpl {
     private val pdfFileURL = NSURL.fileURLWithPath(pdfFilePath)
 
     @OptIn(ExperimentalForeignApi::class)
-    actual fun createPdf(
-        shoppingList: Map<String, List<ShoppingIngredient>>,
+    actual fun createMultiDayShoppingListPdf(
+        multiDayShoppingList: MultiDayShoppingList,
         materialList: List<Material>
     ) {
         val pdfData = NSMutableData()
@@ -63,49 +64,94 @@ actual class PdfServiceImpl {
         UIGraphicsBeginPDFPage()
 
         pdfDocument = PDFDocument() // Create a new PDF document
-        // Start a new page for PDF
         val page = PDFPage()
         page.setBounds(CGRectMake(0.0, 0.0, PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT), 0)
         pdfDocument?.insertPage(page, atIndex = 0u)
 
-        // Define some attributes
+        // Define font sizes
         val titleFontSize = 24.0
-        val headingFontSize = 18.0
+        val dayFontSize = 20.0
+        val headingFontSize = 16.0
         val bodyFontSize = 12.0
 
         // Draw the title
-        val title = "Einkaufsliste"
-        drawTextOnPDF(title, titleFontSize, 50.0)
-        var yPosition = 100.0 // Initial vertical position for content
+        drawTextOnPDF("Einkaufsliste", titleFontSize, 50.0)
+        var yPosition = 100.0
 
-        // Draw categories and ingredients
-        for ((category, ingredients) in shoppingList) {
-            // Draw category name
-            drawTextOnPDF(
-                category,
-                headingFontSize,
-                yPosition
-            )
-            yPosition += 30.0 // Move down for ingredients
-
-            // Draw each ingredient
-            for (ingredient in ingredients) {
-                val ingredientText = "[ ] ${ingredient.ingredient!!.name}"
-                drawTextOnPDF(
-                    ingredientText,
-                    bodyFontSize,
-                    yPosition
-                )
-                yPosition += 20.0
-
-                // Check for page overflow
-                if (yPosition + 80 > PDF_PAGE_HEIGHT) { // Assuming a page height limit
+        // Process each shopping day
+        val sortedDays = multiDayShoppingList.getShoppingDaysInOrder()
+        
+        for (shoppingDate in sortedDays) {
+            val dailyList = multiDayShoppingList.dailyLists[shoppingDate] ?: continue
+            
+            // Check if we need a new page for this day
+            if (yPosition + 200 > PDF_PAGE_HEIGHT) {
+                UIGraphicsBeginPDFPage()
+                yPosition = 50.0
+            }
+            
+            // Draw day header
+            yPosition += 30.0
+            drawTextOnPDF("Einkaufstag: $shoppingDate", dayFontSize, yPosition)
+            yPosition += 20.0
+            
+            // Group ingredients by category for this day
+            val categorizedIngredients = dailyList.getIngredientsByCategory()
+            
+            categorizedIngredients.forEach { (category, ingredients) ->
+                // Check space for category
+                if (yPosition + 100 > PDF_PAGE_HEIGHT) {
                     UIGraphicsBeginPDFPage()
-                    yPosition = 50.0 // Reset position on new page
+                    yPosition = 50.0
+                }
+                
+                yPosition += 25.0
+                drawTextOnPDF(category, headingFontSize, yPosition)
+                
+                ingredients.forEach { ingredient ->
+                    yPosition += 20.0
+                    if (yPosition + 50 > PDF_PAGE_HEIGHT) {
+                        UIGraphicsBeginPDFPage()
+                        yPosition = 50.0
+                    }
+                    
+                    val ingredientText = "[ ] $ingredient"
+                    XPOS = 100.0 // Indent ingredients
+                    drawTextOnPDF(ingredientText, bodyFontSize, yPosition)
+                    XPOS = 80.0 // Reset position
                 }
             }
-            yPosition += 10.0 // Space between categories
+            
+            yPosition += 20.0 // Extra space between days
         }
+        
+        // Add material list if not empty
+        if (materialList.isNotEmpty()) {
+            if (yPosition + 100 > PDF_PAGE_HEIGHT) {
+                UIGraphicsBeginPDFPage()
+                yPosition = 50.0
+            }
+            
+            yPosition += 40.0
+            drawTextOnPDF("Materialliste", titleFontSize, yPosition)
+            yPosition += 30.0
+            
+            materialList.forEach { material ->
+                yPosition += 20.0
+                if (yPosition + 50 > PDF_PAGE_HEIGHT) {
+                    UIGraphicsBeginPDFPage()
+                    yPosition = 50.0
+                }
+                
+                val materialText = if (material.amount > 0) {
+                    "[ ] ${material.amount}x ${material.name}"
+                } else {
+                    "[ ] ${material.name}"
+                }
+                drawTextOnPDF(materialText, bodyFontSize, yPosition)
+            }
+        }
+        
         UIGraphicsEndPDFContext()
 
         // Write PDF to file

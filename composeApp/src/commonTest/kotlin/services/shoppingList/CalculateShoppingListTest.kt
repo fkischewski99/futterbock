@@ -10,11 +10,14 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
+import model.DailyShoppingList
 import model.Ingredient
 import model.IngredientUnit
+import model.MultiDayShoppingList
 import model.Meal
 import model.Participant
 import model.Recipe
@@ -164,12 +167,24 @@ class CalculateShoppingListTest : KoinTest {
         selection.recipe!!.shoppingIngredients[0].ingredient = ing
 
         fakeRepo.mealsForEvent = mutableListOf(mealWithRecipe(selection))
-        fakeRepo.shoppingIngredients = mutableListOf(existing)
+        
+        // Set up multiday shopping list with existing ingredient
+        val testDate = LocalDate(2023, 1, 1)
+        val dailyList = DailyShoppingList(
+            purchaseDate = testDate,
+            ingredients = listOf(existing)
+        )
+        val multiDayList = MultiDayShoppingList(
+            eventId = eventId,
+            dailyLists = mapOf(testDate to dailyList)
+        )
+        fakeRepo.multiDayShoppingLists[eventId] = multiDayList
 
         val result = calculator.calculate(eventId)
         assertEquals(1, result.size)
-        assertEquals("Extra cheese", result[0].note)
-        assertEquals(2.0, result[0].amount)
+        val cheeseItem = result.find { it.ingredient?.name == "Cheese" }!!
+        assertEquals("Extra cheese", cheeseItem.note)
+        assertEquals(2.0, cheeseItem.amount)
     }
 
     @Test
@@ -473,7 +488,7 @@ class CalculateShoppingListTest : KoinTest {
         // First call with multiplier 2
         val firstCallMap =
             calculator.calculateAmountsForRecipe(map, recipeSelection, multiplier = 2.0)
-        val afterFirstCallNewAmount = firstCallMap["ingredient-1"]?.amount ?: 0.0
+        val afterFirstCallNewAmount = firstCallMap["ingredient-1GRAMM"]?.amount ?: 0.0
         assertEquals(
             200.0,
             afterFirstCallNewAmount,
@@ -484,8 +499,8 @@ class CalculateShoppingListTest : KoinTest {
         // Second call with multiplier 3
         val ingredientMap =
             calculator.calculateAmountsForRecipe(firstCallMap, recipeSelection, multiplier = 3.0)
-        val afterSecondCall = ingredientMap["ingredient-1"]?.amount ?: 0.0
-        val afterFirstCallExistingAmount = firstCallMap["ingredient-1"]?.amount ?: 0.0
+        val afterSecondCall = ingredientMap["ingredient-1GRAMM"]?.amount ?: 0.0
+        val afterFirstCallExistingAmount = firstCallMap["ingredient-1GRAMM"]?.amount ?: 0.0
         assertEquals(
             500.0,
             afterSecondCall,
@@ -502,7 +517,7 @@ class CalculateShoppingListTest : KoinTest {
         // Third call with multiplier 4
         val thirdCallMap =
             calculator.calculateAmountsForRecipe(mutableMapOf(), recipeSelection, multiplier = 4.0)
-        val afterThirdCall = thirdCallMap["ingredient-1"]?.amount ?: 0.0
+        val afterThirdCall = thirdCallMap["ingredient-1GRAMM"]?.amount ?: 0.0
         assertEquals(
             400.0,
             afterThirdCall,

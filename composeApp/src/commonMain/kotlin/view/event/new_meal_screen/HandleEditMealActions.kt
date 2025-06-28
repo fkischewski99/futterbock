@@ -21,7 +21,6 @@ class HandleEditMealActions(
         editEventActions: EditMealActions
     ): ResultState<EventState> {
         try {
-
             return when (editEventActions) {
                 is EditMealActions.ChangeMealType -> changeMealTypeOfEvent(
                     currentState = currentState,
@@ -118,9 +117,7 @@ class HandleEditMealActions(
     }
 
     private suspend fun saveMeal(currentState: EventState): ResultState<EventState> {
-        if (currentState.selectedMeal.recipeSelections.isNotEmpty()) {
-            eventRepository.updateMeal(eventId = currentState.event.uid, currentState.selectedMeal)
-        }
+        eventRepository.updateMeal(eventId = currentState.event.uid, currentState.selectedMeal)
         return ResultState.Success(currentState)
     }
 

@@ -5,6 +5,8 @@ import data.EventRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import model.MultiDayShoppingList
 import model.ShoppingIngredient
 import model.Source
 import services.shoppingList.CalculateShoppingList
@@ -19,7 +21,10 @@ import view.shared.ResultState
 data class ShoppingListState(
     val ingredientsByCategory: Map<String, List<ShoppingIngredient>> = emptyMap(),
     val currentList: List<ShoppingIngredient> = emptyList(),
-    val eventId: String
+    val eventId: String,
+    val multiDayShoppingList: MultiDayShoppingList? = null,
+    val selectedDate: LocalDate? = null,
+    val isMultiDayMode: Boolean = false
 )
 
 class CategorizedShoppingListViewModel(
@@ -53,6 +58,16 @@ class CategorizedShoppingListViewModel(
                 is EditShoppingListActions.DeleteShoppingItem -> deleteIngredient(
                     editShoppingListActions.shoppingIngredient
                 )
+
+                is EditShoppingListActions.InitializeMultiDay -> initializeMultiDayShoppingList(
+                    editShoppingListActions.eventId
+                )
+
+                is EditShoppingListActions.SelectShoppingDay -> selectShoppingDay(
+                    editShoppingListActions.date
+                )
+
+                is EditShoppingListActions.ToggleMultiDayMode -> toggleMultiDayMode()
             }
         } catch (e: Exception) {
             _state.value = ResultState.Error("Fehler beim laden der Einkaufsliste")
@@ -79,24 +94,90 @@ class CategorizedShoppingListViewModel(
 
     }
 
-    fun initializeShoppingList(eventId: String) {
+    private fun initializeShoppingList(eventId: String) {
+        // Always use multi-day mode now
+        initializeMultiDayShoppingList(eventId)
+    }
+
+    /**
+     * Initialize multi-day shopping list mode
+     */
+    private fun initializeMultiDayShoppingList(eventId: String) {
         _state.value = ResultState.Loading
         viewModelScope.launch {
-            val ingredientsList = calculateShoppingList.calculate(eventId)
+            try {
+                // First try to load existing multi-day shopping list
+                var multiDayList = eventRepository.getMultiDayShoppingList(eventId)
 
-            val ingredientsByCategory = groupIngredientByCategory(ingredientsList)
-            val list = ingredientsByCategory.toList()
-            val (done, notDone) = list.partition { it.first == shoppingDone }
-            val sortedList = notDone + done;
-            val sortedMap = sortedList.toMap(LinkedHashMap())
-            _state.value = ResultState.Success(
-                ShoppingListState(
-                    eventId = eventId,
-                    ingredientsByCategory = sortedMap,
-                    currentList = ingredientsList
+                // If none exists, calculate a new one
+                multiDayList = calculateShoppingList.calculateMultiDay(eventId)
+
+
+                // Get the first shopping day or current day
+                val firstShoppingDay = multiDayList.getShoppingDaysInOrder().firstOrNull()
+                val dailyList = firstShoppingDay?.let { multiDayList.dailyLists[it] }
+
+                val ingredientsByCategory = if (dailyList != null) {
+                    groupIngredientByCategory(dailyList.ingredients)
+                } else {
+                    emptyMap()
+                }
+
+                val list = ingredientsByCategory.toList()
+                val (done, notDone) = list.partition { it.first == shoppingDone }
+                val sortedList = notDone + done
+                val sortedMap = sortedList.toMap(LinkedHashMap())
+
+                _state.value = ResultState.Success(
+                    ShoppingListState(
+                        eventId = eventId,
+                        ingredientsByCategory = sortedMap,
+                        currentList = dailyList?.ingredients ?: emptyList(),
+                        multiDayShoppingList = multiDayList,
+                        selectedDate = firstShoppingDay,
+                        isMultiDayMode = true
+                    )
                 )
-            )
+            } catch (e: Exception) {
+                _state.value =
+                    ResultState.Error("Fehler beim Laden der mehrtägigen Einkaufsliste: ${e.message}")
+            }
         }
+    }
+
+    /**
+     * Switch to a different shopping day
+     */
+    private fun selectShoppingDay(date: LocalDate) {
+        val currentState = state.value.getSuccessData() ?: return
+        val multiDayList = currentState.multiDayShoppingList ?: return
+
+        val dailyList = multiDayList.dailyLists[date]
+        if (dailyList == null) {
+            _state.value = ResultState.Error("Einkaufsliste für den gewählten Tag nicht gefunden")
+            return
+        }
+
+        val ingredientsByCategory = groupIngredientByCategory(dailyList.ingredients)
+        val list = ingredientsByCategory.toList()
+        val (done, notDone) = list.partition { it.first == shoppingDone }
+        val sortedList = notDone + done
+        val sortedMap = sortedList.toMap(LinkedHashMap())
+
+        _state.value = ResultState.Success(
+            currentState.copy(
+                ingredientsByCategory = sortedMap,
+                currentList = dailyList.ingredients,
+                selectedDate = date
+            )
+        )
+    }
+
+    /**
+     * Toggle between single-day and multi-day mode (disabled - always multi-day now)
+     */
+    fun toggleMultiDayMode() {
+        // No longer needed - always in multi-day mode
     }
 
     private fun addIngredientToList(ingredient: String) {
@@ -119,7 +200,21 @@ class CategorizedShoppingListViewModel(
     private fun saveListToEvent() {
         val successData = state.value.getSuccessData() ?: return
         viewModelScope.launch {
-            eventRepository.saveShoppingList(successData.eventId, successData.currentList)
+            if (successData.isMultiDayMode && successData.multiDayShoppingList != null && successData.selectedDate != null) {
+                // Save multi-day shopping list - update the specific day
+                val updatedDailyLists = successData.multiDayShoppingList.dailyLists.toMutableMap()
+                updatedDailyLists[successData.selectedDate] = model.DailyShoppingList(
+                    purchaseDate = successData.selectedDate,
+                    ingredients = successData.currentList
+                )
+                val updatedMultiDayList = successData.multiDayShoppingList.copy(
+                    dailyLists = updatedDailyLists
+                )
+                eventRepository.saveMultiDayShoppingList(successData.eventId, updatedMultiDayList)
+            } else {
+                // Save traditional single-day shopping list
+                eventRepository.saveShoppingList(successData.eventId, successData.currentList)
+            }
         }
     }
 

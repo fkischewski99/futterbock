@@ -10,10 +10,13 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import model.DailyShoppingList
 import model.Event
 import model.Ingredient
 import model.Material
 import model.Meal
+import model.MultiDayShoppingList
 import model.Participant
 import model.ParticipantTime
 import model.Recipe
@@ -30,6 +33,7 @@ private const val INGREDIENT = "INGREDIENTS"
 private const val RECIPES = "RECIPE"
 private const val PARTICIPANTS = "PARTICIPANTS"
 private const val SHOPPING_LIST = "SHOPPING_LIST"
+private const val MULTI_DAY_SHOPPING_LIST = "MULTI_DAY_SHOPPING_LIST"
 private const val MATERIAL_LIST = "MATERIAL_LIST"
 private const val MATERIALS = "MATERIALS"
 
@@ -547,5 +551,78 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             .document(participantId)
             .set(participant)
         return participant
+    }
+
+    // Multi-day shopping list methods
+    override suspend fun getMultiDayShoppingList(eventId: String): MultiDayShoppingList? {
+        return try {
+            val snapshot = firestore.collection(EVENTS)
+                .document(eventId)
+                .collection(MULTI_DAY_SHOPPING_LIST)
+                .document("multiDayList")
+                .get()
+            
+            if (snapshot.exists) {
+                snapshot.data<MultiDayShoppingList>()
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Logger.e("Error getting multi-day shopping list: ${e.message}")
+            null
+        }
+    }
+    
+    override suspend fun saveMultiDayShoppingList(eventId: String, multiDayShoppingList: MultiDayShoppingList) {
+        firestore.collection(EVENTS)
+            .document(eventId)
+            .collection(MULTI_DAY_SHOPPING_LIST)
+            .document("multiDayList")
+            .set(multiDayShoppingList)
+    }
+    
+    override suspend fun getDailyShoppingList(eventId: String, date: LocalDate): DailyShoppingList? {
+        return try {
+            val multiDayList = getMultiDayShoppingList(eventId)
+            multiDayList?.dailyLists?.get(date)
+        } catch (e: Exception) {
+            Logger.e("Error getting daily shopping list: ${e.message}")
+            null
+        }
+    }
+    
+    override suspend fun saveDailyShoppingList(eventId: String, date: LocalDate, dailyShoppingList: DailyShoppingList) {
+        val multiDayList = getMultiDayShoppingList(eventId)
+        if (multiDayList != null) {
+            val updatedDailyLists = multiDayList.dailyLists.toMutableMap()
+            updatedDailyLists[date] = dailyShoppingList
+            val updatedMultiDayList = multiDayList.copy(dailyLists = updatedDailyLists)
+            saveMultiDayShoppingList(eventId, updatedMultiDayList)
+        }
+    }
+    
+    override suspend fun updateShoppingIngredientStatus(eventId: String, date: LocalDate, ingredientId: String, completed: Boolean) {
+        val dailyList = getDailyShoppingList(eventId, date)
+        if (dailyList != null) {
+            val updatedIngredients = dailyList.ingredients.map { ingredient ->
+                if (ingredient.uid == ingredientId || ingredient.ingredientRef == ingredientId) {
+                    ingredient.apply { shoppingDone = completed }
+                } else {
+                    ingredient
+                }
+            }
+            val updatedDailyList = dailyList.copy(ingredients = updatedIngredients)
+            saveDailyShoppingList(eventId, date, updatedDailyList)
+        }
+    }
+    
+    override suspend fun deleteShoppingListForDate(eventId: String, date: LocalDate) {
+        val multiDayList = getMultiDayShoppingList(eventId)
+        if (multiDayList != null) {
+            val updatedDailyLists = multiDayList.dailyLists.toMutableMap()
+            updatedDailyLists.remove(date)
+            val updatedMultiDayList = multiDayList.copy(dailyLists = updatedDailyLists)
+            saveMultiDayShoppingList(eventId, updatedMultiDayList)
+        }
     }
 }

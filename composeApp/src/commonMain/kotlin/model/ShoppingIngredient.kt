@@ -93,15 +93,46 @@ class ShoppingIngredient() : ListItem<ShoppingIngredient> {
     }
 
     private fun Double.format(fracDigits: Int, roundUp: Boolean = false): String {
-        val pow = 10.0.pow(fracDigits.toDouble());
+        val pow = 10.0.pow(fracDigits.toDouble())
         var result = (round(this * pow) / pow)
         if (roundUp) {
             // always round up
             result = ceil(result)
         }
-        if (result.toInt().toDouble() == result) {
-            return result.toInt().toString()
+        
+        // For numbers >= 100, don't show decimal places
+        val actualFracDigits = if (result >= 100.0) 0 else fracDigits
+        
+        // Format the number
+        val formattedNumber = if (actualFracDigits == 0 || result.toInt().toDouble() == result) {
+            result.toInt().toString()
+        } else {
+            // Use manual formatting since String.format is not available on all platforms
+            val integerPart = result.toInt()
+            val multiplier = 10.0.pow(actualFracDigits.toDouble())
+            val fractionalPart = ((result - integerPart) * multiplier).toInt()
+            val fractionalStr = fractionalPart.toString().padStart(actualFracDigits, '0')
+            "$integerPart.$fractionalStr"
         }
-        return result.toString()
+        
+        // Add thousand separators (dots) for numbers >= 1000
+        return if (result >= 1000.0) {
+            formatNumberWithThousandSeparators(formattedNumber)
+        } else {
+            formattedNumber
+        }
+    }
+    
+    private fun formatNumberWithThousandSeparators(number: String): String {
+        val parts = number.split(".")
+        val integerPart = parts[0]
+        val decimalPart = if (parts.size > 1) ".${parts[1]}" else ""
+        
+        // Add dots every 3 digits from right to left
+        val reversedInteger = integerPart.reversed()
+        val chunked = reversedInteger.chunked(3).joinToString(".")
+        val formattedInteger = chunked.reversed()
+        
+        return formattedInteger + decimalPart
     }
 }

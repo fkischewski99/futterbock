@@ -2,10 +2,13 @@ package data
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import model.DailyShoppingList
 import model.Event
 import model.Ingredient
 import model.Material
 import model.Meal
+import model.MultiDayShoppingList
 import model.Participant
 import model.ParticipantTime
 import model.Recipe
@@ -55,6 +58,14 @@ interface EventRepository {
     suspend fun getIngredientById(ingredientId: String): Ingredient
     suspend fun saveShoppingList(eventId: String, shoppingList: List<ShoppingIngredient>)
     suspend fun getMealsWithRecipeAndIngredients(eventId: String): List<Meal>
+
+    // Multi-day shopping list methods
+    suspend fun getMultiDayShoppingList(eventId: String): MultiDayShoppingList?
+    suspend fun saveMultiDayShoppingList(eventId: String, multiDayShoppingList: MultiDayShoppingList)
+    suspend fun getDailyShoppingList(eventId: String, date: LocalDate): DailyShoppingList?
+    suspend fun saveDailyShoppingList(eventId: String, date: LocalDate, dailyShoppingList: DailyShoppingList)
+    suspend fun updateShoppingIngredientStatus(eventId: String, date: LocalDate, ingredientId: String, completed: Boolean)
+    suspend fun deleteShoppingListForDate(eventId: String, date: LocalDate)
 
     suspend fun getAllIngredients(): List<Ingredient>
     suspend fun saveMaterialList(eventId: String, materialList: List<Material>)

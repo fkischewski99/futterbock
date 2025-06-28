@@ -5,26 +5,37 @@ import ConfirmDialog
 import ShoppingListState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -38,12 +49,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import kotlinx.datetime.LocalDate
 import model.Ingredient
 import model.ShoppingIngredient
+import view.shared.HelperFunctions
 import org.koin.compose.koinInject
 import view.event.actions.BaseAction
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
+import view.event.categorized_shopping_list.BottomSheetWithSearchBar
+import services.shoppingList.shoppingDone
 import view.login.ErrorField
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
@@ -90,7 +105,6 @@ fun ShoppingListCategorized(
                                 onAction(EditShoppingListActions.SaveToEvent)
                                 onAction(NavigationActions.GoBack)
                             }
-
                         )
                     })
                 },
@@ -103,6 +117,18 @@ fun ShoppingListCategorized(
                                 end = 8.dp
                             )
                     ) {
+                        // Multi-day navigation - always shown now
+                        if (state.data.multiDayShoppingList != null) {
+                            MultiDayNavigationBar(
+                                multiDayShoppingList = state.data.multiDayShoppingList,
+                                selectedDate = state.data.selectedDate,
+                                currentState = state.data,
+                                onDateSelected = { date ->
+                                    onAction(EditShoppingListActions.SelectShoppingDay(date))
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
 
                         state.data.ingredientsByCategory.forEach { (category, ingredients) ->
                             ShoppingList(
@@ -141,20 +167,29 @@ fun ShoppingList(
 ) {
     var categoryExpanded by remember { mutableStateOf(true) }
     Spacer(modifier = Modifier.height(16.dp))
+    
     Row(
-        modifier = Modifier.fillMaxWidth()
-        .clickable { categoryExpanded = !categoryExpanded }
-        .padding(start = 8.dp),
-        verticalAlignment = Alignment.CenterVertically) {
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { categoryExpanded = !categoryExpanded }
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
         Text(
             text = category + " (" + ingredientsList.size + ")",
             style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.weight(1f)
         )
         Icon(
             imageVector = if (categoryExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.ArrowDropDown,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(start = 8.dp)
+            contentDescription = if (categoryExpanded) "Kategorie einklappen" else "Kategorie ausklappen",
+            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.size(24.dp)
         )
     }
     if (categoryExpanded) {
@@ -182,20 +217,38 @@ fun ShoppingItem2(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(4.dp, top = 8.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.8f))
-
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                if (ingredient.shoppingDone) {
+                    MaterialTheme.colorScheme.surfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainer
+                }
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Checkbox(
-            ingredient.shoppingDone,
-            modifier = Modifier.weight(1f),
+            checked = ingredient.shoppingDone,
             onCheckedChange = { onCheckboxClicked(ingredient) },
-            colors = CheckboxDefaults.colors(uncheckedColor = MaterialTheme.colorScheme.onPrimary)
+            modifier = Modifier.padding(end = 8.dp),
+            colors = CheckboxDefaults.colors(
+                checkedColor = MaterialTheme.colorScheme.primary,
+                uncheckedColor = MaterialTheme.colorScheme.outline,
+                checkmarkColor = MaterialTheme.colorScheme.onPrimary,
+                disabledCheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                disabledUncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            )
         )
         Text(
-            modifier = Modifier.weight(4f).padding(top = 4.dp, bottom = 4.dp),
-            text = ingredient.toString(), color = MaterialTheme.colorScheme.onPrimary
+            modifier = Modifier.weight(1f),
+            text = ingredient.toString(),
+            color = if (ingredient.shoppingDone) {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
+            style = MaterialTheme.typography.bodyMedium
         )
         IconButton(
             onClick = {
@@ -205,19 +258,21 @@ fun ShoppingItem2(
                     showDialog = true
                 }
             },
-            modifier = Modifier.padding(end = 8.dp).weight(1f),
+            modifier = Modifier.size(40.dp)
         ) {
             if (ingredient.nameEnteredByUser != "") {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "Löschen",
-                    tint = MaterialTheme.colorScheme.error
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(20.dp)
                 )
             } else {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = "Add note",
-                    tint = MaterialTheme.colorScheme.onBackground
+                    contentDescription = "Notiz hinzufügen",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
@@ -234,6 +289,88 @@ fun ShoppingItem2(
             ConfirmDialog(
                 onConfirm = { onDeleteShoppingItem(ingredient) },
                 onDismiss = { showDeleteDialog = false })
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MultiDayNavigationBar(
+    multiDayShoppingList: model.MultiDayShoppingList,
+    selectedDate: LocalDate?,
+    currentState: ShoppingListState,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    val shoppingDays = multiDayShoppingList.getShoppingDaysInOrder()
+    
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 4.dp
+    ) {
+        Column {
+            // Horizontal row of TopAppBar-style day items
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                shoppingDays.forEach { date ->
+                    val isSelected = date == selectedDate
+                    
+                    // Calculate completion from current state when this day is selected
+                    val (completedCount, totalCount) = if (isSelected) {
+                        val completed = currentState.ingredientsByCategory[shoppingDone]?.size ?: 0
+                        val total = currentState.currentList.size
+                        completed to total
+                    } else {
+                        // For non-selected days, use the stored daily list data
+                        val dailyList = multiDayShoppingList.dailyLists[date]
+                        val completed = dailyList?.getCompletedItemsCount() ?: 0
+                        val total = dailyList?.ingredients?.size ?: 0
+                        completed to total
+                    }
+                    
+                    Surface(
+                        modifier = Modifier
+                            .clickable { onDateSelected(date) }
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp)),
+                        color = if (isSelected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.surfaceVariant
+                        },
+                        shadowElevation = if (isSelected) 4.dp else 0.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = HelperFunctions.formatDate(date),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = if (isSelected) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+                            )
+                            
+                            if (totalCount > 0) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "$completedCount/$totalCount",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (isSelected) {
+                                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

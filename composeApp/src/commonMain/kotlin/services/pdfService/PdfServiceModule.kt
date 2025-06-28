@@ -19,9 +19,14 @@ class PdfServiceModule(
         if (pdfService == null) {
             return
         }
-        val shoppingIngredients = calculateShoppingList.calculate(eventId)
+        // Use multi-day calculation for optimal shopping day planning
+        val multiDayShoppingList =
+            calculateShoppingList.calculateMultiDay(eventId, saveToRepository = false)
         val materialList = calculateMaterialList.calculate(eventId)
-        pdfService!!.createPdf(groupIngredientByCategory(shoppingIngredients), materialList);
+
+        // Convert multi-day shopping list to categorized format for PDF
+        val allIngredients = multiDayShoppingList.dailyLists.values.flatMap { it.ingredients }
+        pdfService!!.createPdf(groupIngredientByCategory(allIngredients), materialList);
         pdfService!!.sharePdf("Einkaufsliste.pdf")
     }
 

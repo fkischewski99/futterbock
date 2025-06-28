@@ -16,6 +16,7 @@ class Ingredient : ListItem<Ingredient> {
     var amountWeight: Double? = null
     var unitWeight: IngredientUnit? = null
     var category: String = ""
+    var expirationDateInDays: Int? = null
 
     override fun getListItemTitle(): String {
         return name

@@ -66,7 +66,6 @@ class CategorizedShoppingListViewModel(
                     editShoppingListActions.date
                 )
 
-                is EditShoppingListActions.ToggleMultiDayMode -> toggleMultiDayMode()
             }
         } catch (e: Exception) {
             _state.value = ResultState.Error("Fehler beim laden der Einkaufsliste")
@@ -89,7 +88,7 @@ class CategorizedShoppingListViewModel(
                 dailyLists = updatedDailyLists
             )
             eventRepository.saveMultiDayShoppingList(successData.eventId, updatedMultiDayList)
-            
+
             _state.value = ResultState.Success(
                 successData.copy(
                     currentList = updatedIngredients,
@@ -177,13 +176,6 @@ class CategorizedShoppingListViewModel(
                 selectedDate = date
             )
         )
-    }
-
-    /**
-     * Toggle between single-day and multi-day mode (disabled - always multi-day now)
-     */
-    fun toggleMultiDayMode() {
-        // No longer needed - always in multi-day mode
     }
 
     private fun addIngredientToList(ingredient: String) {

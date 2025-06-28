@@ -13,7 +13,6 @@ interface EditShoppingListActions : BaseAction {
     data class Initialize(val eventId: String) : EditShoppingListActions
     data class InitializeMultiDay(val eventId: String) : EditShoppingListActions
     data class SelectShoppingDay(val date: LocalDate) : EditShoppingListActions
-    data object ToggleMultiDayMode : EditShoppingListActions
     class DeleteShoppingItem(val shoppingIngredient: ShoppingIngredient) : EditShoppingListActions {
 
     }

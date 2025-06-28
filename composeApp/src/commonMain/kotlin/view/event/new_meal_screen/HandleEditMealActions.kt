@@ -21,7 +21,6 @@ class HandleEditMealActions(
         editEventActions: EditMealActions
     ): ResultState<EventState> {
         try {
-            Logger.i(editEventActions.toString())
             return when (editEventActions) {
                 is EditMealActions.ChangeMealType -> changeMealTypeOfEvent(
                     currentState = currentState,

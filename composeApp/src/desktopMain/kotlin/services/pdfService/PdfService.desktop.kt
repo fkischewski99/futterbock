@@ -3,6 +3,7 @@ package services.pdfService
 import kotlinx.datetime.LocalDate
 import model.Material
 import model.Meal
+import model.MultiDayShoppingList
 import model.ShoppingIngredient
 import model.Source
 import services.pdfService.RecipePlanPdfProcessor
@@ -38,8 +39,8 @@ actual class PdfServiceImpl {
     var currentFilename: String = "Document.pdf"
 
 
-    actual fun createPdf(
-        shoppingList: Map<String, List<ShoppingIngredient>>,
+    actual fun createMultiDayShoppingListPdf(
+        multiDayShoppingList: MultiDayShoppingList,
         materialList: List<Material>
     ) {
         document = PDDocument()
@@ -51,34 +52,58 @@ actual class PdfServiceImpl {
         // Draw the heading
         setTitleOfCurrentPage("Einkaufsliste")
 
-        // Draw category headers and ingredients
-        for ((category, ingredients) in shoppingList) {
+        // Process each shopping day
+        val sortedDays = multiDayShoppingList.getShoppingDaysInOrder()
+        
+        for (shoppingDate in sortedDays) {
+            val dailyList = multiDayShoppingList.dailyLists[shoppingDate] ?: continue
+            
+            // Check if we need a new page for this day
+            checkForOverflowAndCreateNewPage(page, pdfFont)
+            
+            // Draw day header
+            yPosition -= 30f
             contentStream!!.beginText()
             contentStream!!.newLineAtOffset(50f, yPosition)
-            contentStream!!.setFont(pdfFontHeading, 18f)
-            contentStream!!.showText(category)
+            contentStream!!.setFont(pdfFontHeading, 20f)
+            contentStream!!.showText("Einkaufstag: $shoppingDate")
             contentStream!!.endText()
-
-            yPosition -= 20f // Move down for ingredients
-
-            contentStream!!.setFont(pdfFont, 12f) // Reset font for ingredients
-            ingredients.forEach {
-                contentStream!!.beginText()
-                contentStream!!.newLineAtOffset(80f, yPosition)
-                contentStream!!.showText("[  ] $it") // Print each ingredient
-                contentStream!!.endText()
-                yPosition -= 20f // Move to the next line
-
-                // Check for page overflow
+            
+            yPosition -= 20f
+            
+            // Group ingredients by category for this day
+            val categorizedIngredients = dailyList.getIngredientsByCategory()
+            
+            categorizedIngredients.forEach { (category, ingredients) ->
+                // Check space for category
                 checkForOverflowAndCreateNewPage(page, pdfFont)
+                
+                yPosition -= 25f
+                contentStream!!.beginText()
+                contentStream!!.newLineAtOffset(70f, yPosition)
+                contentStream!!.setFont(pdfFontHeading, 16f)
+                contentStream!!.showText(category)
+                contentStream!!.endText()
+                
+                contentStream!!.setFont(pdfFont, 12f) // Reset font for ingredients
+                ingredients.forEach { ingredient ->
+                    yPosition -= 20f
+                    checkForOverflowAndCreateNewPage(page, pdfFont)
+                    
+                    contentStream!!.beginText()
+                    contentStream!!.newLineAtOffset(90f, yPosition)
+                    contentStream!!.showText("[  ] $ingredient")
+                    contentStream!!.endText()
+                }
             }
-
-            // Add space between categories
-            yPosition -= 10f
+            
+            yPosition -= 20f // Extra space between days
         }
 
-        createMaterialList(materialList = materialList)
-
+        // Add material list on new page if not empty
+        if (materialList.isNotEmpty()) {
+            createMaterialList(materialList = materialList)
+        }
 
         contentStream!!.close()
         currentDocument = document

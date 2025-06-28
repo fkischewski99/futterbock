@@ -3,7 +3,6 @@ package services.pdfService
 import org.koin.core.component.KoinComponent
 import services.materiallist.CalculateMaterialList
 import services.shoppingList.CalculateShoppingList
-import services.shoppingList.groupIngredientByCategory
 
 class PdfServiceModule(
     private val calculateShoppingList: CalculateShoppingList,
@@ -24,9 +23,8 @@ class PdfServiceModule(
             calculateShoppingList.calculateMultiDay(eventId, saveToRepository = false)
         val materialList = calculateMaterialList.calculate(eventId)
 
-        // Convert multi-day shopping list to categorized format for PDF
-        val allIngredients = multiDayShoppingList.dailyLists.values.flatMap { it.ingredients }
-        pdfService!!.createPdf(groupIngredientByCategory(allIngredients), materialList);
+        // Use the new multi-day PDF creation function
+        pdfService!!.createMultiDayShoppingListPdf(multiDayShoppingList, materialList)
         pdfService!!.sharePdf("Einkaufsliste.pdf")
     }
 

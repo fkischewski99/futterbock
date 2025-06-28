@@ -3,12 +3,13 @@ package services.pdfService
 import kotlinx.datetime.LocalDate
 import model.Material
 import model.Meal
+import model.MultiDayShoppingList
 import model.ShoppingIngredient
 
 
 expect class PdfServiceImpl {
-    fun createPdf(
-        shoppingList: Map<String, List<ShoppingIngredient>>,
+    fun createMultiDayShoppingListPdf(
+        multiDayShoppingList: MultiDayShoppingList,
         materialList: List<Material>
     )
 

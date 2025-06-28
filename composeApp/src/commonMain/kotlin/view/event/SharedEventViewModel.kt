@@ -64,7 +64,6 @@ class SharedEventViewModel(
 
     fun onAction(editEventActions: BaseAction) {
         when (editEventActions) {
-            is BaseAction.Loading -> _eventState.value = ResultState.Loading
             is EditMealActions -> handleEditMealActions(editEventActions)
             is EditEventActions -> handleEventActions(editEventActions)
             is EditParticipantActions -> handleEditParticipantActions(editEventActions)

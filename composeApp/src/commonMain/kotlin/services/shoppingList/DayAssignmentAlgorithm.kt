@@ -119,16 +119,25 @@ class DayAssignmentAlgorithm {
 
         // Add first day ingredients
         if (firstDayIngredients.isNotEmpty()) {
-            purchaseStrategy[eventStartDate] = firstDayIngredients.toMutableList()
+            val purchaseDateIngredients = mutableMapOf<String, ShoppingIngredient>()
+            firstDayIngredients.forEach {
+                putIngredientIntoPurchaseDate(it, purchaseDateIngredients)
+            }
+            purchaseStrategy[eventStartDate] = purchaseDateIngredients.values.toMutableList()
         }
 
         var minDate = findLatestRequiredPurchaseDate(deferredIngredients, eventEndDate);
         var newDeferredIngredients = deferredIngredients;
+        val durationOfEvent = daysBetween(startDate = eventStartDate, endDate = eventEndDate)
+        var numberOfRuns = 0;
         while (newDeferredIngredients.values.isNotEmpty()) {
             newDeferredIngredients =
                 addAllIngredientsThatCanBuyOnDate(minDate, newDeferredIngredients, purchaseStrategy)
             minDate = findLatestRequiredPurchaseDate(newDeferredIngredients, eventEndDate);
-
+            numberOfRuns++;
+            if (numberOfRuns > durationOfEvent) {
+                break;
+            }
         }
 
 
@@ -140,20 +149,34 @@ class DayAssignmentAlgorithm {
         deferredIngredients: Map<LocalDate, List<ShoppingIngredient>>,
         purchaseStrategy: MutableMap<LocalDate, MutableList<ShoppingIngredient>>
     ): MutableMap<LocalDate, MutableList<ShoppingIngredient>> {
-        purchaseStrategy[purchaseDate] = mutableListOf()
+        val purchaseDateIngredients = mutableMapOf<String, ShoppingIngredient>()
         val newDeferredIngredients = mutableMapOf<LocalDate, MutableList<ShoppingIngredient>>()
         for ((date, ingredients) in deferredIngredients) {
             ingredients.forEach { ingredient ->
                 val latestPurchaseDate =
-                    date.minus(kotlinx.datetime.DatePeriod(days = ingredient.ingredient!!.expirationDateInDays!! - 1))
+                    date.minus(kotlinx.datetime.DatePeriod(days = ingredient.ingredient!!.expirationDateInDays!!))
                 if (latestPurchaseDate < purchaseDate) {
-                    purchaseStrategy[purchaseDate]!!.add(ingredient)
+                    putIngredientIntoPurchaseDate(ingredient, purchaseDateIngredients)
                 } else {
                     newDeferredIngredients.getOrPut(date) { mutableListOf() }.add(ingredient)
                 }
             }
         }
+        purchaseStrategy[purchaseDate] = purchaseDateIngredients.values.toMutableList()
         return newDeferredIngredients;
+    }
+
+    private fun putIngredientIntoPurchaseDate(
+        ingredient: ShoppingIngredient,
+        purchaseDateIngredients: MutableMap<String, ShoppingIngredient>
+    ) {
+        val ingredientKey = ingredient.ingredientRef + ingredient.unit
+        val existingIngredient = purchaseDateIngredients[ingredientKey]
+        if (existingIngredient != null) {
+            existingIngredient.amount += ingredient.amount
+        } else {
+            purchaseDateIngredients[ingredientKey] = ingredient
+        }
     }
 
     /**

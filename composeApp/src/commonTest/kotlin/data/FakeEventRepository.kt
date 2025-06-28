@@ -116,9 +116,6 @@ class FakeEventRepository : EventRepository {
         return mealsForEvent
     }
 
-    override suspend fun getShoppingIngredients(eventId: String): List<ShoppingIngredient> {
-        return shoppingIngredients
-    }
 
     override suspend fun createNewMeal(eventId: String, day: Instant): Meal {
         TODO("Not yet implemented")
@@ -142,13 +139,11 @@ class FakeEventRepository : EventRepository {
         }
     }
 
-    override suspend fun saveShoppingList(eventId: String, shoppingList: List<ShoppingIngredient>) {
-        TODO("Not yet implemented")
-    }
 
     override suspend fun getMealsWithRecipeAndIngredients(eventId: String): List<Meal> {
         return mealsForEvent
     }
+
 
     override suspend fun getAllIngredients(): List<Ingredient> {
         TODO("Not yet implemented")
@@ -166,9 +161,6 @@ class FakeEventRepository : EventRepository {
         TODO("Not yet implemented")
     }
 
-    override suspend fun deleteShoppingListItemById(eventId: String, listItemId: String) {
-        TODO("Not yet implemented")
-    }
 
     override suspend fun getAllMaterials(): List<Material> {
         TODO("Not yet implemented")

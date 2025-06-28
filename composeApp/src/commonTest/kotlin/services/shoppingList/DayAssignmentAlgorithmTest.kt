@@ -1,6 +1,8 @@
 package services.shoppingList
 
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import model.DailyShoppingList
 import model.Ingredient
 import model.IngredientUnit
@@ -35,8 +37,7 @@ class DayAssignmentAlgorithmTest {
         val result = algorithm.assignIngredientsToShoppingDaysWithDailyContext(
             eventId = "test",
             eventStartDate = eventStartDate,
-            meals = meals,
-            calculatedIngredients = calculatedIngredients,
+            eventEndDate = eventStartDate.plus(DatePeriod(years = 0, months = 0, days = 3)),
             ingredientsPerDay = ingredientsPerDay
         )
 
@@ -73,8 +74,7 @@ class DayAssignmentAlgorithmTest {
         val result = algorithm.assignIngredientsToShoppingDaysWithDailyContext(
             eventId = "test",
             eventStartDate = eventStartDate,
-            meals = meals,
-            calculatedIngredients = calculatedIngredients,
+            eventEndDate = eventStartDate.plus(DatePeriod(years = 0, months = 0, days = 3)),
             ingredientsPerDay = ingredientsPerDay
         )
 
@@ -126,8 +126,7 @@ class DayAssignmentAlgorithmTest {
         val result = algorithm.assignIngredientsToShoppingDaysWithDailyContext(
             eventId = "test",
             eventStartDate = eventStartDate,
-            meals = meals,
-            calculatedIngredients = calculatedIngredients,
+            eventEndDate = eventStartDate.plus(DatePeriod(years = 0, months = 0, days = 7)),
             ingredientsPerDay = ingredientsPerDay
         )
 
@@ -197,8 +196,7 @@ class DayAssignmentAlgorithmTest {
         val result = algorithm.assignIngredientsToShoppingDaysWithDailyContext(
             eventId = "test",
             eventStartDate = eventStartDate,
-            meals = meals,
-            calculatedIngredients = calculatedIngredients,
+            eventEndDate = eventStartDate.plus(DatePeriod(years = 0, months = 0, days = 3)),
             ingredientsPerDay = ingredientsPerDay
         )
 
@@ -243,8 +241,7 @@ class DayAssignmentAlgorithmTest {
         val result = algorithm.assignIngredientsToShoppingDaysWithDailyContext(
             eventId = "test",
             eventStartDate = eventStartDate,
-            meals = meals,
-            calculatedIngredients = calculatedIngredients,
+            eventEndDate = eventStartDate.plus(DatePeriod(years = 0, months = 0, days = 8)),
             ingredientsPerDay = ingredientsPerDay
         )
 
@@ -282,22 +279,17 @@ class DayAssignmentAlgorithmTest {
         // Lettuce used on days 1 and 6 -> should be bought on day 1 and day 6
         // Apple used on days 1 and 10 -> should be bought on day 1 and day 6 (latest for day 10: 10-5+1=6)
         // Expected: Day 1 (lettuce + apple), Day 6 (lettuce + apple) - trip minimization!
-        
+
         val eventStartDate = LocalDate(2024, 1, 1)
         val lettuce = createIngredient("lettuce", 2) // Expires in 2 days
         val apple = createIngredient("apple", 5) // Expires in 5 days
-        
+
         val meals = listOf(
             createMeal(LocalDate(2024, 1, 1), listOf(lettuce, apple)), // Day 1: both
             createMeal(LocalDate(2024, 1, 6), listOf(lettuce)), // Day 6: lettuce only
             createMeal(LocalDate(2024, 1, 10), listOf(apple)) // Day 10: apple only
         )
-        
-        val calculatedIngredients = mapOf(
-            "lettuce" to createShoppingIngredient("lettuce", 200.0, lettuce),
-            "apple" to createShoppingIngredient("apple", 300.0, apple)
-        )
-        
+
         val ingredientsPerDay = mapOf(
             LocalDate(2024, 1, 1) to mapOf(
                 "lettuce" to createShoppingIngredient("lettuce", 100.0, lettuce),
@@ -315,8 +307,7 @@ class DayAssignmentAlgorithmTest {
         val result = algorithm.assignIngredientsToShoppingDaysWithDailyContext(
             eventId = "test",
             eventStartDate = eventStartDate,
-            meals = meals,
-            calculatedIngredients = calculatedIngredients,
+            eventEndDate = eventStartDate.plus(DatePeriod(years = 0, months = 0, days = 12)),
             ingredientsPerDay = ingredientsPerDay
         )
 
@@ -329,27 +320,31 @@ class DayAssignmentAlgorithmTest {
         // Then: Should have exactly 2 shopping days with trip minimization
         // Day 1: lettuce (100.0) + apple (150.0) 
         // Day 6: lettuce (100.0) + apple (150.0)
-        
+
         assertEquals(2, result.dailyLists.size, "Should have exactly 2 shopping days")
-        
+
         // Verify Day 1 has both ingredients
         assertTrue(result.dailyLists.containsKey(LocalDate(2024, 1, 1)), "Should shop on day 1")
-        val day1Items = result.dailyLists[LocalDate(2024, 1, 1)]?.ingredients?.map { it.ingredient?.name } ?: emptyList()
+        val day1Items =
+            result.dailyLists[LocalDate(2024, 1, 1)]?.ingredients?.map { it.ingredient?.name }
+                ?: emptyList()
         assertTrue(day1Items.contains("lettuce"), "Day 1 should include lettuce")
         assertTrue(day1Items.contains("apple"), "Day 1 should include apple")
-        
+
         // Verify Day 6 has both ingredients
         assertTrue(result.dailyLists.containsKey(LocalDate(2024, 1, 6)), "Should shop on day 6")
-        val day6Items = result.dailyLists[LocalDate(2024, 1, 6)]?.ingredients?.map { it.ingredient?.name } ?: emptyList()
+        val day6Items =
+            result.dailyLists[LocalDate(2024, 1, 6)]?.ingredients?.map { it.ingredient?.name }
+                ?: emptyList()
         assertTrue(day6Items.contains("lettuce"), "Day 6 should include lettuce")
         assertTrue(day6Items.contains("apple"), "Day 6 should include apple")
-        
+
         // Verify total amounts are preserved
         val totalLettuce = result.dailyLists.values.flatMap { it.ingredients }
             .filter { it.ingredient?.name == "lettuce" }
             .sumOf { it.amount }
         assertEquals(200.0, totalLettuce, "Total lettuce amount should be preserved")
-        
+
         val totalApple = result.dailyLists.values.flatMap { it.ingredients }
             .filter { it.ingredient?.name == "apple" }
             .sumOf { it.amount }

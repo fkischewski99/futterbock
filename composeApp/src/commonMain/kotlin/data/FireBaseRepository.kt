@@ -32,7 +32,6 @@ private const val MEALS = "MEALS"
 private const val INGREDIENT = "INGREDIENTS"
 private const val RECIPES = "RECIPE"
 private const val PARTICIPANTS = "PARTICIPANTS"
-private const val SHOPPING_LIST = "SHOPPING_LIST"
 private const val MULTI_DAY_SHOPPING_LIST = "MULTI_DAY_SHOPPING_LIST"
 private const val MATERIAL_LIST = "MATERIAL_LIST"
 private const val MATERIALS = "MATERIALS"
@@ -190,14 +189,6 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             .delete()
     }
 
-    override suspend fun deleteShoppingListItemById(eventId: String, listItemId: String) {
-        firestore.collection(EVENTS)
-            .document(eventId)
-            .collection(SHOPPING_LIST)
-            .document(listItemId)
-            .delete()
-    }
-
     override suspend fun getAllMaterials(): List<Material> {
         return firestore.collection(MATERIALS).get().documents
             .map { material -> material.data { } }
@@ -243,31 +234,6 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         }
 
         return meal
-    }
-
-    override suspend fun getShoppingIngredients(eventId: String): List<ShoppingIngredient> {
-        return firestore.collection(EVENTS).document(eventId)
-            .collection(SHOPPING_LIST)
-            .get().documents.map { querySnapshot ->
-                querySnapshot.data { }
-            }
-    }
-
-    override suspend fun saveShoppingList(eventId: String, shoppingList: List<ShoppingIngredient>) {
-        coroutineScope {
-            shoppingList.map { shoppingIngredient ->
-                async {
-                    if (shoppingIngredient.source == Source.COMPUTED) {
-                        firestore.collection(EVENTS).document(eventId).collection(SHOPPING_LIST)
-                            .document(shoppingIngredient.ingredientRef).set(shoppingIngredient)
-                    }
-                    if (shoppingIngredient.source == Source.ENTERED_BY_USER) {
-                        firestore.collection(EVENTS).document(eventId).collection(SHOPPING_LIST)
-                            .document(shoppingIngredient.uid).set(shoppingIngredient)
-                    }
-                }
-            }
-        }
     }
 
     override suspend fun getParticipantsOfEvent(
@@ -406,19 +372,19 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             .get()
             .data<Recipe> {
             }
-        
+
         // Batch load all ingredients in a single request instead of individual requests
         val ingredientRefs = recipe.shoppingIngredients.map { it.ingredientRef }.distinct()
         if (ingredientRefs.isNotEmpty()) {
             val ingredients = getBatchIngredients(ingredientRefs)
             val ingredientMap = ingredients.associateBy { it.uid }
-            
+
             // Map ingredients to shopping ingredients
             recipe.shoppingIngredients.forEach { shoppingIngredient ->
                 shoppingIngredient.ingredient = ingredientMap[shoppingIngredient.ingredientRef]
             }
         }
-        
+
         return recipe
     }
 
@@ -561,7 +527,7 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
                 .collection(MULTI_DAY_SHOPPING_LIST)
                 .document("multiDayList")
                 .get()
-            
+
             if (snapshot.exists) {
                 snapshot.data<MultiDayShoppingList>()
             } else {
@@ -572,16 +538,22 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             null
         }
     }
-    
-    override suspend fun saveMultiDayShoppingList(eventId: String, multiDayShoppingList: MultiDayShoppingList) {
+
+    override suspend fun saveMultiDayShoppingList(
+        eventId: String,
+        multiDayShoppingList: MultiDayShoppingList
+    ) {
         firestore.collection(EVENTS)
             .document(eventId)
             .collection(MULTI_DAY_SHOPPING_LIST)
             .document("multiDayList")
             .set(multiDayShoppingList)
     }
-    
-    override suspend fun getDailyShoppingList(eventId: String, date: LocalDate): DailyShoppingList? {
+
+    override suspend fun getDailyShoppingList(
+        eventId: String,
+        date: LocalDate
+    ): DailyShoppingList? {
         return try {
             val multiDayList = getMultiDayShoppingList(eventId)
             multiDayList?.dailyLists?.get(date)
@@ -590,8 +562,12 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             null
         }
     }
-    
-    override suspend fun saveDailyShoppingList(eventId: String, date: LocalDate, dailyShoppingList: DailyShoppingList) {
+
+    override suspend fun saveDailyShoppingList(
+        eventId: String,
+        date: LocalDate,
+        dailyShoppingList: DailyShoppingList
+    ) {
         val multiDayList = getMultiDayShoppingList(eventId)
         if (multiDayList != null) {
             val updatedDailyLists = multiDayList.dailyLists.toMutableMap()
@@ -600,8 +576,13 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             saveMultiDayShoppingList(eventId, updatedMultiDayList)
         }
     }
-    
-    override suspend fun updateShoppingIngredientStatus(eventId: String, date: LocalDate, ingredientId: String, completed: Boolean) {
+
+    override suspend fun updateShoppingIngredientStatus(
+        eventId: String,
+        date: LocalDate,
+        ingredientId: String,
+        completed: Boolean
+    ) {
         val dailyList = getDailyShoppingList(eventId, date)
         if (dailyList != null) {
             val updatedIngredients = dailyList.ingredients.map { ingredient ->
@@ -615,7 +596,7 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             saveDailyShoppingList(eventId, date, updatedDailyList)
         }
     }
-    
+
     override suspend fun deleteShoppingListForDate(eventId: String, date: LocalDate) {
         val multiDayList = getMultiDayShoppingList(eventId)
         if (multiDayList != null) {

@@ -45,7 +45,6 @@ interface EventRepository {
     suspend fun getRecipeById(recipeId: String): Recipe
 
     suspend fun getAllMealsOfEvent(eventId: String): List<Meal>
-    suspend fun getShoppingIngredients(eventId: String): List<ShoppingIngredient>
     suspend fun createNewMeal(eventId: String, day: Instant): Meal
     suspend fun deleteMeal(eventId: String, mealId: String)
     suspend fun updateMeal(eventId: String, meal: Meal)
@@ -56,21 +55,34 @@ interface EventRepository {
     )
 
     suspend fun getIngredientById(ingredientId: String): Ingredient
-    suspend fun saveShoppingList(eventId: String, shoppingList: List<ShoppingIngredient>)
     suspend fun getMealsWithRecipeAndIngredients(eventId: String): List<Meal>
 
     // Multi-day shopping list methods
     suspend fun getMultiDayShoppingList(eventId: String): MultiDayShoppingList?
-    suspend fun saveMultiDayShoppingList(eventId: String, multiDayShoppingList: MultiDayShoppingList)
+    suspend fun saveMultiDayShoppingList(
+        eventId: String,
+        multiDayShoppingList: MultiDayShoppingList
+    )
+
     suspend fun getDailyShoppingList(eventId: String, date: LocalDate): DailyShoppingList?
-    suspend fun saveDailyShoppingList(eventId: String, date: LocalDate, dailyShoppingList: DailyShoppingList)
-    suspend fun updateShoppingIngredientStatus(eventId: String, date: LocalDate, ingredientId: String, completed: Boolean)
+    suspend fun saveDailyShoppingList(
+        eventId: String,
+        date: LocalDate,
+        dailyShoppingList: DailyShoppingList
+    )
+
+    suspend fun updateShoppingIngredientStatus(
+        eventId: String,
+        date: LocalDate,
+        ingredientId: String,
+        completed: Boolean
+    )
+
     suspend fun deleteShoppingListForDate(eventId: String, date: LocalDate)
 
     suspend fun getAllIngredients(): List<Ingredient>
     suspend fun saveMaterialList(eventId: String, materialList: List<Material>)
     suspend fun getMaterialListOfEvent(eventId: String): List<Material>
     suspend fun deleteMaterialById(eventId: String, materialId: String)
-    suspend fun deleteShoppingListItemById(eventId: String, listItemId: String)
-    abstract suspend fun getAllMaterials(): List<Material>
+    suspend fun getAllMaterials(): List<Material>
 }

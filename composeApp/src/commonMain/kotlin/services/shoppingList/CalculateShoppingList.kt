@@ -23,12 +23,13 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
     private val dayAssignmentAlgorithm = DayAssignmentAlgorithm()
 
     suspend fun calculate(eventId: String): List<ShoppingIngredient> {
-        val shoppingIngredients = eventRepository.getShoppingIngredients(eventId)
-        val map = addExistingIngredients(shoppingIngredients)
+        // Get existing ingredients from multiday shopping list
+        val existingMultiDayList = eventRepository.getMultiDayShoppingList(eventId)
+        val existingMap = addExistingIngredientsFromMultiDay(existingMultiDayList)
 
         // ✅ OPTIMIZED: Fetch all participants once for the entire calculation
         allParticipants = fetchAllParticipantsForEvent(eventId)
-        val finalMap = addAllAmounts(eventId, map)
+        val finalMap = addAllAmounts(eventId, existingMap.toMutableMap())
 
         return finalMap.values.toList().sortedBy { it.ingredient?.name }
     }
@@ -56,8 +57,8 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
 
             val eventStartDate = HelperFunctions.getLocalDate(event.from)
 
-            val existingShoppingIngredients = eventRepository.getShoppingIngredients(eventId)
-            val existingMap = addExistingIngredients(existingShoppingIngredients)
+            val existingMultiDayList = eventRepository.getMultiDayShoppingList(eventId)
+            val existingMap = addExistingIngredientsFromMultiDay(existingMultiDayList)
 
             // Fetch all participants once for the entire calculation
             allParticipants = fetchAllParticipantsForEvent(eventId)
@@ -165,7 +166,7 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
                 if (recipeSelection.recipe == null) continue
 
                 val calculatedMap = calculateAmountsForRecipe(
-                    emptyMap(),
+                    existingMap,
                     recipeSelection,
                     eventId = eventId
                 ).toMutableMap()
@@ -364,7 +365,7 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
         val newMap = HashMap<String, ShoppingIngredient>()
         for (shopIngredient in listOfShoppingIngredients) {
             val ingredientKey =
-                if (shopIngredient.nameEnteredByUser != "") shopIngredient.nameEnteredByUser else shopIngredient.ingredientRef
+                if (shopIngredient.nameEnteredByUser != "") shopIngredient.nameEnteredByUser else shopIngredient.ingredientRef + shopIngredient.unit
             val newShoppingIngredient = ShoppingIngredient().apply {
                 uid = shopIngredient.uid
                 ingredient = shopIngredient.ingredient
@@ -378,6 +379,37 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
             newMap[ingredientKey] = newShoppingIngredient
         }
         return newMap;
+    }
+
+    // Adds existing ingredients from multiday shopping list with amount of 0, to not lose the description
+    private fun addExistingIngredientsFromMultiDay(
+        multiDayShoppingList: MultiDayShoppingList?
+    ): HashMap<String, ShoppingIngredient> {
+        val newMap = HashMap<String, ShoppingIngredient>()
+
+        multiDayShoppingList?.dailyLists?.forEach { (_, dailyList) ->
+            dailyList.ingredients.forEach { shopIngredient ->
+                val ingredientKey =
+                    if (shopIngredient.nameEnteredByUser != "") shopIngredient.nameEnteredByUser else shopIngredient.ingredientRef + shopIngredient.unit
+
+                // Only add if not already present (avoid duplicates across days)
+                if (!newMap.containsKey(ingredientKey)) {
+                    val newShoppingIngredient = ShoppingIngredient().apply {
+                        uid = shopIngredient.uid
+                        ingredient = shopIngredient.ingredient
+                        ingredientRef = shopIngredient.ingredientRef
+                        unit = shopIngredient.unit
+                        shoppingDone = shopIngredient.shoppingDone
+                        nameEnteredByUser = shopIngredient.nameEnteredByUser
+                        note = shopIngredient.note
+                        amount = 0.0 // Set to 0 to avoid double counting
+                    }
+                    newMap[ingredientKey] = newShoppingIngredient
+                }
+            }
+        }
+
+        return newMap
     }
 
 }

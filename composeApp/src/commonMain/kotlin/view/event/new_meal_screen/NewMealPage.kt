@@ -284,6 +284,7 @@ fun SearchBarComponent(
                         onNavigateBack = {
                             onAction(EditMealActions.SaveMeal)
                             onAction(NavigationActions.GoBack)
+
                         }
                     )
                 },
@@ -421,7 +422,6 @@ fun ActionButtons(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.End
     ) {
-        // Rezept hinzufügen button
         ExtendedFloatingActionButton(
             onClick = onOpenSearch,
             modifier = Modifier
@@ -443,19 +443,13 @@ fun ActionButtons(
             }
         }
 
-        // Weitere Mahlzeit anlegen button
         ExtendedFloatingActionButton(
             onClick = {
                 onAction(
-                    if (state.selectedMeal.recipeSelections.isEmpty()) {
-                        return@ExtendedFloatingActionButton
-                    } else {
-                        EditEventActions.AddNewMeal(
-                            HelperFunctions.getLocalDate(state.selectedMeal.day)
-                        )
-                    }
+                    EditEventActions.AddNewMeal(
+                        HelperFunctions.getLocalDate(state.selectedMeal.day)
+                    )
                 )
-                HelperFunctions.getLocalDate(state.selectedMeal.day)
             },
             modifier = Modifier
                 .width(400.dp)

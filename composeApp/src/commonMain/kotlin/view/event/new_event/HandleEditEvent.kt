@@ -125,12 +125,16 @@ class HandleEditEvent(
         day: LocalDate,
         oldState: EventState
     ): ResultState.Success<EventState> {
+        // First, save the current meal to ensure any changes are persisted
+        eventRepository.updateMeal(eventId = oldState.event.uid, oldState.selectedMeal)
+        
         val newMealList = oldState.mealList.toMutableList()
         val meal =
             eventRepository.createNewMeal(
                 oldState.event.uid, HelperFunctions.getInstant(day)
             )
         newMealList.add(meal)
+        Logger.i("new meal created")
         return ResultState.Success(
             oldState.copy(
                 mealList = newMealList,

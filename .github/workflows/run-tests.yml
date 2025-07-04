@@ -17,9 +17,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Write google-services.json from secret
+      - name: Write google-services.json from secret or fallback
         run: |
-          echo '${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON }}' > composeApp/google-services.json
+          content="${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON || vars.FAKE_FIREBASE_JSON }}"
+          echo "$content" > composeApp/google-services.json
 
       - name: Set up JDK
         uses: actions/setup-java@v4

@@ -30,7 +30,7 @@ gitlive = "2.1.0"
 junitJupiter = "5.8.1"
 buildkonfig = "0.16.0"
 compose-hot-reload = "1.0.0-alpha03"
-resolver = "0.9.0"
+resolver = "1.0.0"
 ktor = "3.0.3"
 
 [libraries]

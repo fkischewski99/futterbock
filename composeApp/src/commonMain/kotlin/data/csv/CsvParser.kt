@@ -129,6 +129,7 @@ data class ParticipantImportData(
     val lastName: String,
     val birthDate: Instant? = null,
     val eatingHabit: EatingHabit = EatingHabit.OMNIVORE,
+    val cookingGroup: String = "",
     val rowIndex: Int
 )
 
@@ -151,7 +152,8 @@ class ParticipantCsvValidator {
         firstNameColumn: Int,
         lastNameColumn: Int,
         birthDateColumn: Int? = null,
-        eatingHabitColumn: Int? = null
+        eatingHabitColumn: Int? = null,
+        cookingGroupColumn: Int? = null
     ): ValidationResult {
         val validParticipants = mutableListOf<ParticipantImportData>()
         val errors = mutableListOf<ValidationError>()
@@ -212,11 +214,21 @@ class ParticipantCsvValidator {
                 }
             }
             
+            // Parse cooking group if column is provided
+            var cookingGroup = ""
+            if (cookingGroupColumn != null && cookingGroupColumn < row.size) {
+                val cookingGroupStr = row[cookingGroupColumn].trim()
+                if (cookingGroupStr.isNotEmpty()) {
+                    cookingGroup = cookingGroupStr
+                }
+            }
+            
             val participant = ParticipantImportData(
                 firstName = firstName,
                 lastName = lastName,
                 birthDate = birthDate,
                 eatingHabit = eatingHabit,
+                cookingGroup = cookingGroup,
                 rowIndex = rowNumber
             )
             

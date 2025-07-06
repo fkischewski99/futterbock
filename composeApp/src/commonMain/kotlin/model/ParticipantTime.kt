@@ -13,7 +13,8 @@ class ParticipantTime(
     var participant: Participant? = null,
     var from: Instant,
     var to: Instant,
-    val participantRef: String
+    val participantRef: String,
+    var cookingGroup: String = ""
 ) :
     ListItem<ParticipantTime> {
 

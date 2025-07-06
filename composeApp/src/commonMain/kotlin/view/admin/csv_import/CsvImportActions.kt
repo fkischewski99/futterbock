@@ -9,7 +9,8 @@ sealed class CsvImportActions : BaseAction {
         val firstNameColumn: Int?,
         val lastNameColumn: Int?,
         val birthDateColumn: Int?,
-        val eatingHabitColumn: Int?
+        val eatingHabitColumn: Int?,
+        val cookingGroupColumn: Int?
     ) : CsvImportActions()
 
     data object StartValidation : CsvImportActions()

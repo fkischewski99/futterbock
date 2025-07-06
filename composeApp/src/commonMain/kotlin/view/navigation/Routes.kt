@@ -50,4 +50,7 @@ interface Routes {
 
     @Serializable
     data class EventCsvImport(val eventId: String) : Routes
+
+    @Serializable
+    object CookingGroups : Routes
 }

@@ -32,6 +32,7 @@ data class ImportWizardState(
     val lastNameColumn: Int? = null,
     val birthDateColumn: Int? = null,
     val eatingHabitColumn: Int? = null,
+    val cookingGroupColumn: Int? = null,
     val validationResult: ValidationResult? = null,
     val importProgress: Float = 0f,
     val importComplete: Boolean = false,
@@ -49,7 +50,7 @@ data class ImportWizardState(
 fun CsvImportWizard(
     state: ImportWizardState,
     onFileSelected: (FilePickerResult) -> Unit,
-    onColumnMappingChanged: (Int?, Int?, Int?, Int?) -> Unit,
+    onColumnMappingChanged: (Int?, Int?, Int?, Int?, Int?) -> Unit,
     onStartValidation: () -> Unit,
     onStartImport: () -> Unit,
     onCancelImport: () -> Unit,
@@ -97,6 +98,7 @@ fun CsvImportWizard(
                         lastNameColumn = state.lastNameColumn,
                         birthDateColumn = state.birthDateColumn,
                         eatingHabitColumn = state.eatingHabitColumn,
+                        cookingGroupColumn = state.cookingGroupColumn,
                         onColumnMappingChanged = onColumnMappingChanged,
                         onNext = onStartValidation,
                         onCancel = onCancelImport,
@@ -323,7 +325,8 @@ private fun PreviewAndMappingStep(
     lastNameColumn: Int?,
     birthDateColumn: Int?,
     eatingHabitColumn: Int?,
-    onColumnMappingChanged: (Int?, Int?, Int?, Int?) -> Unit,
+    cookingGroupColumn: Int?,
+    onColumnMappingChanged: (Int?, Int?, Int?, Int?, Int?) -> Unit,
     onNext: () -> Unit,
     onCancel: () -> Unit,
     onBack: () -> Unit
@@ -348,12 +351,14 @@ private fun PreviewAndMappingStep(
             lastNameColumn = lastNameColumn,
             birthDateColumn = birthDateColumn,
             eatingHabitColumn = eatingHabitColumn,
+            cookingGroupColumn = cookingGroupColumn,
             onFirstNameColumnChange = { firstName ->
                 onColumnMappingChanged(
                     firstName,
                     lastNameColumn,
                     birthDateColumn,
-                    eatingHabitColumn
+                    eatingHabitColumn,
+                    cookingGroupColumn
                 )
             },
             onLastNameColumnChange = { lastName ->
@@ -361,7 +366,8 @@ private fun PreviewAndMappingStep(
                     firstNameColumn,
                     lastName,
                     birthDateColumn,
-                    eatingHabitColumn
+                    eatingHabitColumn,
+                    cookingGroupColumn
                 )
             },
             onBirthDateColumnChange = { birthDate ->
@@ -369,7 +375,8 @@ private fun PreviewAndMappingStep(
                     firstNameColumn,
                     lastNameColumn,
                     birthDate,
-                    eatingHabitColumn
+                    eatingHabitColumn,
+                    cookingGroupColumn
                 )
             },
             onEatingHabitColumnChange = { eatingHabit ->
@@ -377,7 +384,17 @@ private fun PreviewAndMappingStep(
                     firstNameColumn,
                     lastNameColumn,
                     birthDateColumn,
-                    eatingHabit
+                    eatingHabit,
+                    cookingGroupColumn
+                )
+            },
+            onCookingGroupColumnChange = { cookingGroup ->
+                onColumnMappingChanged(
+                    firstNameColumn,
+                    lastNameColumn,
+                    birthDateColumn,
+                    eatingHabitColumn,
+                    cookingGroup
                 )
             },
             modifier = Modifier.padding(bottom = 24.dp)

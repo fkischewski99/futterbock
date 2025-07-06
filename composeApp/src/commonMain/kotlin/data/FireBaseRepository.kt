@@ -509,7 +509,8 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             from = event.from,
             to = event.to,
             uid = participantId,
-            participantRef = newParticipant.uid
+            participantRef = newParticipant.uid,
+            cookingGroup = newParticipant.selectedGroup.takeIf { it.isNotBlank() } ?: ""
         )
         firestore.collection(EVENTS)
             .document(event.uid)

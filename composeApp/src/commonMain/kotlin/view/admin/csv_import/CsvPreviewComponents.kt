@@ -118,10 +118,12 @@ fun ColumnMappingCard(
     lastNameColumn: Int?,
     birthDateColumn: Int?,
     eatingHabitColumn: Int?,
+    cookingGroupColumn: Int?,
     onFirstNameColumnChange: (Int?) -> Unit,
     onLastNameColumnChange: (Int?) -> Unit,
     onBirthDateColumnChange: (Int?) -> Unit,
     onEatingHabitColumnChange: (Int?) -> Unit,
+    onCookingGroupColumnChange: (Int?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -171,13 +173,25 @@ fun ColumnMappingCard(
             )
 
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // Eating Habit Column
             ColumnSelector(
                 label = "Essgewohnheit (optional)",
                 selectedColumn = eatingHabitColumn,
                 options = csvData.headers,
                 onSelectionChange = onEatingHabitColumnChange,
+                required = false,
+                allowNone = true
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Cooking Group Column
+            ColumnSelector(
+                label = "Kochgruppe/Stamm (optional)",
+                selectedColumn = cookingGroupColumn,
+                options = csvData.headers,
+                onSelectionChange = onCookingGroupColumnChange,
                 required = false,
                 allowNone = true
             )

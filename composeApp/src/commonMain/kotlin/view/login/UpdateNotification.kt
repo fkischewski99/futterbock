@@ -1,6 +1,5 @@
-package view.shared
+package view.login
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,7 +31,7 @@ fun UpdateNotificationBanner() {
     var isVisible by remember { mutableStateOf(true) }
     var isChecking by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    
+
     // Check for cached update info first
     LaunchedEffect(Unit) {
         val cached = updateChecker.getCachedUpdateInfo()
@@ -53,7 +52,7 @@ fun UpdateNotificationBanner() {
             }
         }
     }
-    
+
     // Show notification if update is available and user hasn't dismissed it
     if (isVisible && updateInfo != null) {
         UpdateNotificationCard(
@@ -70,7 +69,7 @@ private fun UpdateNotificationCard(
     onDismiss: () -> Unit
 ) {
     val uriHandler = LocalUriHandler.current
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -93,9 +92,9 @@ private fun UpdateNotificationCard(
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.size(24.dp)
             )
-            
+
             Spacer(modifier = Modifier.width(12.dp))
-            
+
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -105,22 +104,22 @@ private fun UpdateNotificationCard(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
-                
+
                 Text(
                     text = "Bitte laden Sie die neue App Version herunter.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                 )
-                
+
                 Text(
                     text = "Version ${updateInfo.version}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             // Download button
             Button(
                 onClick = {
@@ -138,7 +137,7 @@ private fun UpdateNotificationCard(
             ) {
                 Text("Download", color = MaterialTheme.colorScheme.onPrimary)
             }
-            
+
             // Dismiss button
             IconButton(
                 onClick = onDismiss,
@@ -165,7 +164,7 @@ fun CompactUpdateNotification() {
     var isVisible by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
-    
+
     LaunchedEffect(Unit) {
         val cached = updateChecker.getCachedUpdateInfo()
         if (cached != null) {
@@ -181,7 +180,7 @@ fun CompactUpdateNotification() {
             }
         }
     }
-    
+
     if (isVisible && updateInfo != null) {
         Surface(
             modifier = Modifier
@@ -207,9 +206,9 @@ fun CompactUpdateNotification() {
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.size(16.dp)
                 )
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 Text(
                     text = "Update verfügbar - Jetzt herunterladen",
                     style = MaterialTheme.typography.bodySmall,
@@ -218,7 +217,7 @@ fun CompactUpdateNotification() {
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 IconButton(
                     onClick = { isVisible = false },
                     modifier = Modifier.size(20.dp)

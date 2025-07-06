@@ -351,7 +351,7 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         }
     }
 
-    override suspend fun getParticipantById(participantId: String): Participant {
+    override suspend fun getParticipantById(participantId: String): Participant? {
         return firestore.collection(PARTICIPANTS).document(participantId).get().data { }
     }
 
@@ -487,6 +487,7 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         firestore.collection(PARTICIPANTS).document(participant.uid).set(participant)
     }
 
+    // TODO delete from all Meals
     override suspend fun deleteParticipant(participantId: String) {
         firestore.collection(PARTICIPANTS).document(participantId).delete()
     }

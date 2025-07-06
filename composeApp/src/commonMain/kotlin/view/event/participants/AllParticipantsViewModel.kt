@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import data.EventRepository
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import model.Participant
@@ -70,11 +69,13 @@ class AllParticipantsViewModel(
 
     fun onAction(action: ActionsNewParticipant) {
         when (action) {
-            is ActionsNewParticipant.DeleteParticipant -> deleteParticipant(action.participantId)
+            is ActionsNewParticipant.DeleteParticipant -> deleteParticipantFromViewModelToReflectUiChange(
+                action.participantId
+            )
         }
     }
 
-    private fun deleteParticipant(participantId: String) {
+    private fun deleteParticipantFromViewModelToReflectUiChange(participantId: String) {
         Logger.i("Deleted participant with ID: $participantId")
         val state = state.value.getSuccessData() ?: return;
         val updatedParticipants =

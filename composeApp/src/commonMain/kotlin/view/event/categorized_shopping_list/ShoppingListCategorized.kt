@@ -76,7 +76,7 @@ fun ShoppingListScreen(navController: NavHostController) {
     ShoppingListCategorized(
         onAction = { action ->
             when (action) {
-
+                is NavigationActions -> handleNavigation(navController, action)
                 is EditShoppingListActions -> viewModelShoppingList.onAction(action)
             }
         },

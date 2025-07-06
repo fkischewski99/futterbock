@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.DragIndicator
 import androidx.compose.material.icons.filled.Merge
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,13 +29,17 @@ import androidx.navigation.NavHostController
 import model.ParticipantTime
 import org.koin.compose.koinInject
 import view.event.SharedEventViewModel
+import view.event.actions.BaseAction
 import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
+import view.event.cooking_groups.ingredients.CookingGroupIngredientActions
+import view.event.cooking_groups.ingredients.CookingGroupIngredientsViewModel
 import view.login.ErrorField
 import view.shared.EditTextDialog
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
+import view.navigation.Routes
 
 data class CookingGroup(
     val name: String,
@@ -46,6 +51,7 @@ fun CookingGroupsScreen(
     navController: NavHostController
 ) {
     val sharedEventViewModel: SharedEventViewModel = koinInject()
+    val cookingGroupIngredientsViewModel = koinInject<CookingGroupIngredientsViewModel>()
     val state = sharedEventViewModel.eventState.collectAsStateWithLifecycle()
 
     CookingGroupsContent(
@@ -54,6 +60,7 @@ fun CookingGroupsScreen(
             when (action) {
                 is NavigationActions -> handleNavigation(navController, action)
                 is CookingGroupActions -> sharedEventViewModel.onAction(action)
+                is CookingGroupIngredientActions -> cookingGroupIngredientsViewModel.onAction(action)
             }
         }
     )
@@ -63,7 +70,7 @@ fun CookingGroupsScreen(
 @Composable
 fun CookingGroupsContent(
     state: ResultState<view.event.EventState>,
-    onAction: (Any) -> Unit
+    onAction: (BaseAction) -> Unit
 ) {
     var expandedGroups by remember { mutableStateOf(setOf<String>()) }
     var showRenameDialog by remember { mutableStateOf(false) }
@@ -71,7 +78,7 @@ fun CookingGroupsContent(
     var dropTargetGroup by remember { mutableStateOf<String?>(null) }
     var showCreateDialog by remember { mutableStateOf(false) }
     var additionalGroups by remember { mutableStateOf(listOf<CookingGroup>()) }
-    
+
     // Optimistic updates for immediate UI feedback
     var optimisticParticipantMoves by remember { mutableStateOf(mapOf<String, String>()) }
 
@@ -81,6 +88,19 @@ fun CookingGroupsContent(
                 title = { Text("Kochgruppen") },
                 navigationIcon = {
                     NavigationIconButton(onLeave = { onAction(NavigationActions.GoBack) })
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            onAction(CookingGroupIngredientActions.Initilize)
+                            onAction(NavigationActions.GoToRoute(Routes.CookingGroupIngredients))
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Restaurant,
+                            contentDescription = "Zutatenverteilung anzeigen"
+                        )
+                    }
                 }
             )
         },
@@ -106,7 +126,7 @@ fun CookingGroupsContent(
                         participant.apply { cookingGroup = newGroup }
                     } ?: participant
                 }
-                
+
                 val participantGroups = groupParticipantsByCookingGroup(updatedParticipantList)
                 val allGroups = (participantGroups + additionalGroups).distinctBy { it.name }
 
@@ -158,13 +178,17 @@ fun CookingGroupsContent(
                                 },
                                 onMoveParticipant = { participant, targetGroup ->
                                     // Optimistic update - immediately update UI
-                                    optimisticParticipantMoves = optimisticParticipantMoves + (participant.uid to targetGroup)
-                                    
+                                    optimisticParticipantMoves =
+                                        optimisticParticipantMoves + (participant.uid to targetGroup)
+
                                     // Ensure target group exists in additional groups if not in participant groups
                                     if (additionalGroups.none { it.name == targetGroup } && participantGroups.none { it.name == targetGroup }) {
-                                        additionalGroups = additionalGroups + CookingGroup(name = targetGroup, participants = emptyList())
+                                        additionalGroups = additionalGroups + CookingGroup(
+                                            name = targetGroup,
+                                            participants = emptyList()
+                                        )
                                     }
-                                    
+
                                     // Dispatch backend action
                                     onAction(
                                         CookingGroupActions.MoveBetweenGroups(

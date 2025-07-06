@@ -22,10 +22,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import kotlinx.datetime.Month
 import model.ParticipantTime
 import org.koin.compose.koinInject
 import view.event.SharedEventViewModel
@@ -91,15 +93,19 @@ fun CookingGroupsContent(
                 },
                 actions = {
                     IconButton(
+                        modifier = Modifier.clip(shape = RoundedCornerShape(75))
+                            .background(MaterialTheme.colorScheme.primary),
                         onClick = {
                             onAction(CookingGroupIngredientActions.Initilize)
                             onAction(NavigationActions.GoToRoute(Routes.CookingGroupIngredients))
-                        }
+                        },
                     ) {
                         Icon(
                             imageVector = Icons.Default.Restaurant,
-                            contentDescription = "Zutatenverteilung anzeigen"
+                            contentDescription = "Zutatenverteilung anzeigen",
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
+
                     }
                 }
             )
@@ -326,12 +332,6 @@ private fun CookingGroupCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.DragIndicator,
-                        contentDescription = "Drag handle",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
                         imageVector = Icons.Default.Group,

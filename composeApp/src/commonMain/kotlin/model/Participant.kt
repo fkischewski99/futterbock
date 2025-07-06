@@ -10,7 +10,11 @@ class Participant : ListItem<Participant> {
     var uid: String = "";
     var allergies: List<String> = emptyList();
     var intolerances: List<FoodIntolerance> = emptyList();
+
+    // group used to select which participants can be seen for this user (automatically set)
     var group: String = ""
+    // group selected by user for organizing participants
+    var selectedGroup: String = ""
     var birthdate: Instant? = null;
     var eatingHabit: EatingHabit = EatingHabit.OMNIVORE
     var firstName: String = "";

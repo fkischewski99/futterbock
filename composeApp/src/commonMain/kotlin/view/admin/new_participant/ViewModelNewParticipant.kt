@@ -24,6 +24,7 @@ data class NewParticipantState(
     val foodIntolerance: List<FoodIntolerance> = emptyList(),
     val isNewParticipant: Boolean = true,
     val allergies: List<String> = emptyList(),
+    val selectedGroup: String = "",
 )
 
 class ViewModelNewParticipant(
@@ -40,6 +41,7 @@ class ViewModelNewParticipant(
             is ActionsNewParticipant.ChangeFirstName -> changeFirstName(actionsNewParticipant.firstName)
             is ActionsNewParticipant.SelectBirthDate -> selectDate(actionsNewParticipant.millis)
             is ActionsNewParticipant.SelectEatingHabit -> selectEatingHabit(actionsNewParticipant.item)
+            is ActionsNewParticipant.SelectGroup -> selectGroup(actionsNewParticipant.group)
             is ActionsNewParticipant.Save -> saveParticipant()
             is ActionsNewParticipant.InitWithoutParticipant -> initializeScreenWithNewParticipant()
             is ActionsNewParticipant.InitWithParticipant -> initializeWithParticipant(
@@ -108,6 +110,7 @@ class ViewModelNewParticipant(
             birthdate = data.birthDate
             intolerances = data.foodIntolerance.toMutableList()
             allergies = data.allergies
+            selectedGroup = data.selectedGroup
         }
         viewModelScope.launch {
             try {
@@ -115,7 +118,8 @@ class ViewModelNewParticipant(
                     Logger.i("Create new Participant with name ${participant.firstName} ${participant.lastName}")
                     val success = eventRepository.createNewParticipant(participant)
                     if (success == null) {
-                        _state.value = ResultState.Error("Teilnehmer konnte nicht erstellt werden")
+                        _state.value =
+                            ResultState.Error("Teilnehmer konnte nicht erstellt werden: Teilnehmer mit dem Namen existiert bereits")
                         return@launch
                     }
                 } else {
@@ -140,6 +144,7 @@ class ViewModelNewParticipant(
                 birthDate = participant.birthdate,
                 foodIntolerance = participant.intolerances,
                 allergies = participant.allergies,
+                selectedGroup = participant.selectedGroup,
                 isNewParticipant = false
             )
         )
@@ -201,6 +206,15 @@ class ViewModelNewParticipant(
         _state.value = ResultState.Success(
             data.copy(
                 selectedHabit = eatingHabit
+            )
+        )
+    }
+
+    private fun selectGroup(group: String) {
+        val data = state.value.getSuccessData() ?: return
+        _state.value = ResultState.Success(
+            data.copy(
+                selectedGroup = group
             )
         )
     }

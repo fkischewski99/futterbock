@@ -122,10 +122,10 @@ fun ParticipantPage(
                                 Text("CSV Import")
                             }
                         }
-                        
+
                         CardWithList(
                             title = "Teilnehmende",
-                            listItems = state.data.participantList,
+                            listItems = state.data.participantList.sortedBy { it.participant?.firstName },
                             onListItemClick = { item ->
                                 showDatePicker = true
                                 selectedParticipant = item.getItem()
@@ -135,7 +135,8 @@ fun ParticipantPage(
                             },
                             onDeleteClick = { participant ->
                                 onAction(EditParticipantActions.DeleteParticipant(participant.getItem()))
-                            }
+                            },
+                            addItemToListAtTop = true
 
                         )
                     }

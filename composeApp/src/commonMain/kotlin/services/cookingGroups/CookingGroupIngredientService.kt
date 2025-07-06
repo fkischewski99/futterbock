@@ -204,7 +204,7 @@ class CookingGroupIngredientService(
         val cookingGroupName: String,
         val participantCount: Int,
         val guestCount: Int,
-        val ingredients: List<ShoppingIngredient>
+        var ingredients: List<ShoppingIngredient>
     )
 
     /**

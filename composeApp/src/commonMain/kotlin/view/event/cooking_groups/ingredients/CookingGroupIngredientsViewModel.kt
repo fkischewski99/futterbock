@@ -29,6 +29,7 @@ class CookingGroupIngredientsViewModel(
     private val calculateShoppingList: CalculateShoppingList
 ) : ViewModel(), KoinComponent {
 
+
     private val sharedEventViewModel: SharedEventViewModel by inject()
     private val cookingGroupService = CookingGroupIngredientService(calculateShoppingList)
 
@@ -181,6 +182,16 @@ class CookingGroupIngredientsViewModel(
                 participants = participants.filter { it.participant != null }
 
             )
+            // Filter out ingredients that are not needed
+            val ingredientsToFilter = listOf("salz", "pfeffer", "wasser")
+            cookingGroupIngredients.forEach { cookingGroupIngredients ->
+                cookingGroupIngredients.ingredients =
+                    cookingGroupIngredients.ingredients.filter { ingredient ->
+                        !ingredientsToFilter.contains(
+                            ingredient.ingredient?.name?.lowercase() ?: ""
+                        )
+                    }
+            }
 
             // Update state with results
             updateState { currentState ->

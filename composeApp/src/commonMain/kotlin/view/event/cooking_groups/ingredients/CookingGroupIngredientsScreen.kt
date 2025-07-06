@@ -324,10 +324,11 @@ private fun CookingGroupCard(
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold
                             )
-                            HorizontalDivider(thickness = 1.dp)
+                            HorizontalDivider(thickness = 3.dp)
                             ingredientsByGroup.value.sortedBy { it.ingredient?.name }
                                 .forEach { ingredient ->
                                     IngredientRow(ingredient = ingredient)
+                                    HorizontalDivider(thickness = 1.dp)
                                 }
                         }
                 }

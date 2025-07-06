@@ -28,7 +28,7 @@ fun main() = application {
                 storage.remove(key)
             }
 
-            override fun log(msg: String) = println(msg)
+            override fun log(msg: String) = Unit
 
             override fun retrieve(key: String) = storage[key]
 

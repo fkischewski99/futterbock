@@ -19,7 +19,6 @@ class FirebaseLoginAndRegister : LoginAndRegister {
         val userId = Firebase.auth.currentUser!!.uid
         val userDocRef = Firebase.firestore.collection(USER_COLLECTION).document(userId)
         val stamm = userDocRef.get().get<String>(STAMM)
-        Logger.i("Stamm of User $userId: $stamm")
         return stamm
     }
 

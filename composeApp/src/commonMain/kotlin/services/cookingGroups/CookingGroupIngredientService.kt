@@ -90,7 +90,6 @@ class CookingGroupIngredientService(
                 result[GUESTS_GROUP_NAME] = dailyShoppingList[date]?.values?.toList() ?: emptyList()
                 Logger.d("Calculated ${result[GUESTS_GROUP_NAME]?.size} ingredients for guests")
             } else {
-                result[GUESTS_GROUP_NAME] = emptyList()
                 Logger.d("No guest meals found")
             }
 

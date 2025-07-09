@@ -191,7 +191,7 @@ private fun CookingGroupIngredientsContent(
                 items(state.cookingGroupIngredients) { cookingGroupData ->
                     CookingGroupCard(cookingGroupData = cookingGroupData)
                 }
-                
+
                 // Total ingredients summary at the bottom
                 item {
                     TotalIngredientsSummaryCard(
@@ -452,12 +452,12 @@ private fun TotalIngredientsSummaryCard(
 ) {
     // Calculate total ingredients across all cooking groups
     val totalIngredients = mutableMapOf<String, ShoppingIngredient>()
-    
+
     cookingGroupIngredients.forEach { cookingGroup ->
         cookingGroup.ingredients.forEach { ingredient ->
             val key = ingredient.ingredientRef + ingredient.unit
             val existing = totalIngredients[key]
-            
+
             if (existing != null) {
                 existing.amount += ingredient.amount
             } else {
@@ -472,10 +472,10 @@ private fun TotalIngredientsSummaryCard(
             }
         }
     }
-    
+
     val totalCount = cookingGroupIngredients.sumOf { it.participantCount + it.guestCount }
     val subtitle = "Gesamtübersicht für $totalCount Personen"
-    
+
     IngredientsCard(
         icon = Icons.Default.ShoppingCart,
         title = "Gesamte Zutaten",

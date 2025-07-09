@@ -48,18 +48,24 @@ class FakeEventRepository : EventRepository {
         TODO("Not yet implemented")
     }
 
+    var participantTimes: List<ParticipantTime> = emptyList()
+    
     override suspend fun getParticipantsOfEvent(
         eventId: String,
         withParticipant: Boolean
     ): List<ParticipantTime> {
-        return participants.map { (id, participant) ->
-            ParticipantTime(
-                uid = id,
-                from = Clock.System.now(),
-                to = Clock.System.now(),
-                participant = if (withParticipant) participant else null,
-                participantRef = participant.uid
-            )
+        return if (participantTimes.isNotEmpty()) {
+            participantTimes
+        } else {
+            participants.map { (id, participant) ->
+                ParticipantTime(
+                    uid = id,
+                    from = Clock.System.now(),
+                    to = Clock.System.now(),
+                    participant = if (withParticipant) participant else null,
+                    participantRef = participant.uid
+                )
+            }
         }
     }
 

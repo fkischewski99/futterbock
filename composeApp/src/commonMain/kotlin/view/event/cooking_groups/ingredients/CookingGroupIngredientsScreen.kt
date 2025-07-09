@@ -7,7 +7,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -153,6 +155,7 @@ private fun CookingGroupIngredientsContent(
             onNextDay = onNextDay
         )
 
+
         // Loading indicator for data refresh
         if (state.isLoading) {
             Box(
@@ -187,6 +190,14 @@ private fun CookingGroupIngredientsContent(
             ) {
                 items(state.cookingGroupIngredients) { cookingGroupData ->
                     CookingGroupCard(cookingGroupData = cookingGroupData)
+                }
+                
+                // Total ingredients summary at the bottom
+                item {
+                    TotalIngredientsSummaryCard(
+                        cookingGroupIngredients = state.cookingGroupIngredients,
+                        currentDate = state.currentDate
+                    )
                 }
             }
         }
@@ -254,6 +265,29 @@ private fun DayNavigationCard(
 private fun CookingGroupCard(
     cookingGroupData: CookingGroupIngredients
 ) {
+    IngredientsCard(
+        icon = Icons.Default.Group,
+        title = cookingGroupData.cookingGroupName,
+        subtitle = buildString {
+            if (cookingGroupData.participantCount > 0) {
+                append("${cookingGroupData.participantCount} Teilnehmer")
+            }
+            if (cookingGroupData.guestCount > 0) {
+                if (cookingGroupData.participantCount > 0) append(" • ")
+                append("${cookingGroupData.guestCount} Gäste")
+            }
+        },
+        ingredients = cookingGroupData.ingredients
+    )
+}
+
+@Composable
+private fun IngredientsCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String = "",
+    ingredients: List<ShoppingIngredient>
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -262,7 +296,7 @@ private fun CookingGroupCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Cooking Group Header
+            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -273,39 +307,28 @@ private fun CookingGroupCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Group,
+                        imageVector = icon,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = cookingGroupData.cookingGroupName,
+                        text = title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 }
 
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
-                    if (cookingGroupData.participantCount > 0) {
-                        Text(
-                            text = "${cookingGroupData.participantCount} Teilnehmer",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    if (cookingGroupData.guestCount > 0) {
-                        Text(
-                            text = "${cookingGroupData.guestCount} Gäste",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                if (subtitle.isNotBlank()) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
             // Ingredients List
-            if (cookingGroupData.ingredients.isEmpty()) {
+            if (ingredients.isEmpty()) {
                 Text(
                     text = "Keine Zutaten für diesen Tag",
                     style = MaterialTheme.typography.bodyMedium,
@@ -316,7 +339,7 @@ private fun CookingGroupCard(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    cookingGroupData.ingredients.groupBy { it.ingredient?.category ?: "Andere" }
+                    ingredients.groupBy { it.ingredient?.category ?: "Andere" }
                         .forEach { ingredientsByGroup ->
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
@@ -421,4 +444,44 @@ private fun formatWeekday(date: LocalDate): String {
     // LocalDate.dayOfWeek returns 1-7 (Monday=1, Sunday=7)
     return weekdays[date.dayOfWeek.ordinal]
 }
+
+@Composable
+private fun TotalIngredientsSummaryCard(
+    cookingGroupIngredients: List<CookingGroupIngredients>,
+    currentDate: LocalDate
+) {
+    // Calculate total ingredients across all cooking groups
+    val totalIngredients = mutableMapOf<String, ShoppingIngredient>()
+    
+    cookingGroupIngredients.forEach { cookingGroup ->
+        cookingGroup.ingredients.forEach { ingredient ->
+            val key = ingredient.ingredientRef + ingredient.unit
+            val existing = totalIngredients[key]
+            
+            if (existing != null) {
+                existing.amount += ingredient.amount
+            } else {
+                totalIngredients[key] = ShoppingIngredient().apply {
+                    this.ingredient = ingredient.ingredient
+                    this.ingredientRef = ingredient.ingredientRef
+                    this.unit = ingredient.unit
+                    this.amount = ingredient.amount
+                    this.nameEnteredByUser = ingredient.nameEnteredByUser
+                    this.note = ingredient.note
+                }
+            }
+        }
+    }
+    
+    val totalCount = cookingGroupIngredients.sumOf { it.participantCount + it.guestCount }
+    val subtitle = "Gesamtübersicht für $totalCount Personen"
+    
+    IngredientsCard(
+        icon = Icons.Default.ShoppingCart,
+        title = "Gesamte Zutaten",
+        subtitle = subtitle,
+        ingredients = totalIngredients.values.toList()
+    )
+}
+
 

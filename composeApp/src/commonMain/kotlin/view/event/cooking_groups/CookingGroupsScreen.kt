@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.DragIndicator
 import androidx.compose.material.icons.filled.Merge
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -92,20 +93,29 @@ fun CookingGroupsContent(
                     NavigationIconButton(onLeave = { onAction(NavigationActions.GoBack) })
                 },
                 actions = {
-                    IconButton(
-                        modifier = Modifier.clip(shape = RoundedCornerShape(75))
-                            .background(MaterialTheme.colorScheme.primary),
-                        onClick = {
-                            onAction(CookingGroupIngredientActions.Initilize)
-                            onAction(NavigationActions.GoToRoute(Routes.CookingGroupIngredients))
-                        },
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .clip(shape = RoundedCornerShape(75))
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable {
+                                onAction(CookingGroupIngredientActions.Initilize)
+                                onAction(NavigationActions.GoToRoute(Routes.CookingGroupIngredients))
+                            }
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Restaurant,
-                            contentDescription = "Zutatenverteilung anzeigen",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            contentDescription = "Zur Kochboxenübersicht",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(20.dp)
                         )
-
+                        Text(
+                            text = "Zur Kochboxenübersicht",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 }
             )
@@ -143,6 +153,10 @@ fun CookingGroupsContent(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    item {
+                        InfoCard()
+                    }
+                    
                     if (allGroups.isEmpty()) {
                         item {
                             Card(modifier = Modifier.fillMaxWidth()) {
@@ -619,6 +633,47 @@ private fun MergeGroupsDialog(
             }
         }
     )
+}
+
+@Composable
+private fun InfoCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(20.dp)
+            )
+            
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "Hinweis",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = "Diese Funktion ist für Großveranstaltungen und die Planung von Kochboxen gedacht. Für kleinere Lager kann diese Funktion ignoriert werden.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+    }
 }
 
 private fun groupParticipantsByCookingGroup(participants: List<ParticipantTime>): List<CookingGroup> {

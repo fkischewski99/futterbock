@@ -16,6 +16,7 @@ interface ActionsNewParticipant : BaseAction {
     data class ChangeLastName(val lastName: String) : ActionsNewParticipant
     data class SelectBirthDate(val millis: Long) : ActionsNewParticipant
     data class SelectEatingHabit(val item: EatingHabit) : ActionsNewParticipant
+    data class SelectGroup(val group: String) : ActionsNewParticipant
     data class AddOrRemoveIntolerance(val foodIntolerance: FoodIntolerance) :
         ActionsNewParticipant {
     }

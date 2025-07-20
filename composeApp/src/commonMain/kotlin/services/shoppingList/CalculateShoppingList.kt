@@ -95,25 +95,7 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
 
         } catch (e: Exception) {
             Logger.e("Error calculating multi-day shopping list: ${e.message}")
-            // Fallback to single-day list
-            val legacyList = calculate(eventId)
-            val eventStartDate = try {
-                val event = eventRepository.getEventById(eventId)
-                event?.let { HelperFunctions.getLocalDate(it.from) }
-                    ?: HelperFunctions.getCurrentLocalDate()
-            } catch (ex: Exception) {
-                HelperFunctions.getCurrentLocalDate()
-            }
-
-            return MultiDayShoppingList(
-                eventId = eventId,
-                dailyLists = mapOf(
-                    eventStartDate to model.DailyShoppingList(
-                        purchaseDate = eventStartDate,
-                        ingredients = legacyList
-                    )
-                )
-            )
+            throw e;
         }
     }
 
@@ -151,10 +133,10 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
     /**
      * Calculate ingredients needed per day - maintains day-by-day context
      */
-    private suspend fun calculateIngredientsPerDay(
+    suspend fun calculateIngredientsPerDay(
         eventId: String,
         meals: List<model.Meal>,
-        existingMap: MutableMap<String, ShoppingIngredient>
+        existingMap: MutableMap<String, ShoppingIngredient> = mutableMapOf()
     ): Map<LocalDate, Map<String, ShoppingIngredient>> {
         val ingredientsPerDay = mutableMapOf<LocalDate, MutableMap<String, ShoppingIngredient>>()
 
@@ -331,7 +313,10 @@ class CalculateShoppingList(private val eventRepository: EventRepository) {
         if (participant == null) {
             participant =
                 eventRepository.getParticipantById(participantId)
-            allParticipants[participantId] = participant!!
+            if (participant == null) {
+                return 0.0
+            }
+            allParticipants[participantId] = participant
         }
         if (participant.birthdate == null) {
             return 1.0

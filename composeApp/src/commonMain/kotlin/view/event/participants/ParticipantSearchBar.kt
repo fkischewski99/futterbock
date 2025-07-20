@@ -92,6 +92,7 @@ fun ParticipantSearchBar(
 ) {
     var searchText by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(true) }
+    var participantsAddedInThisStep by remember { mutableStateOf(listOf<model.Participant>()) }
 
 
     Scaffold(
@@ -149,7 +150,7 @@ fun ParticipantSearchBar(
                             modifier = Modifier
                                 .padding(1.dp),
                         ) {
-                            state.data.participantList.forEach {
+                            participantsAddedInThisStep.forEach {
                                 InputChip(
                                     label = {
                                         Box(contentAlignment = Alignment.CenterStart) {
@@ -157,11 +158,16 @@ fun ParticipantSearchBar(
                                         }
                                     },
                                     onClick = {
-                                        onAction(
-                                            EditParticipantActions.DeleteParticipant(
-                                                it
+                                        participantsAddedInThisStep = participantsAddedInThisStep.filter { p -> p.uid != it.uid }
+                                        // Find matching ParticipantTime in event state
+                                        val participantTime = (state as? ResultState.Success)?.data?.participantList?.find { pt -> pt.participantRef == it.uid }
+                                        if (participantTime != null) {
+                                            onAction(
+                                                EditParticipantActions.DeleteParticipant(
+                                                    participantTime
+                                                )
                                             )
-                                        )
+                                        }
                                     },
                                     selected = true,
                                     modifier = Modifier.padding(start = 4.dp),
@@ -172,11 +178,16 @@ fun ParticipantSearchBar(
                                             modifier = Modifier
                                                 .padding(start = 4.dp)
                                                 .clickable {
-                                                    onAction(
-                                                        EditParticipantActions.DeleteParticipant(
-                                                            it
+                                                    participantsAddedInThisStep = participantsAddedInThisStep.filter { p -> p.uid != it.uid }
+                                                    // Find matching ParticipantTime in event state
+                                                    val participantTime = (state as? ResultState.Success)?.data?.participantList?.find { pt -> pt.participantRef == it.uid }
+                                                    if (participantTime != null) {
+                                                        onAction(
+                                                            EditParticipantActions.DeleteParticipant(
+                                                                participantTime
+                                                            )
                                                         )
-                                                    )
+                                                    }
                                                 }
                                         )
                                     }
@@ -196,10 +207,11 @@ fun ParticipantSearchBar(
                                             (it.firstName.lowercase() + " " + it.lastName.lowercase()).contains(
                                                 searchText.lowercase()
                                             )
-                                }.forEach {
+                                }.sortedBy { it.firstName }.forEach {
                                     Row(
                                         modifier = Modifier.padding(16.dp).clickable {
                                             searchText = ""
+                                            participantsAddedInThisStep = participantsAddedInThisStep + it
                                             onAction(EditParticipantActions.AddParticipant(it))
                                         }
 

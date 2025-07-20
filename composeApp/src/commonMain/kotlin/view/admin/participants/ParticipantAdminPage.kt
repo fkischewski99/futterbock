@@ -57,8 +57,12 @@ fun ParticipantAdminScreen(
         state = state.value,
         onAction = { action ->
             when (action) {
+
                 is NavigationActions -> handleNavigation(navController, action)
-                is ActionsNewParticipant -> viewModelNewParticipant.onAction(action)
+                is ActionsNewParticipant -> {
+                    allParticipantsViewModel.onAction(action)
+                    viewModelNewParticipant.onAction(action)
+                }
             }
         }
     )
@@ -119,10 +123,10 @@ fun ParticipantPage(
                                 Text("CSV Import")
                             }
                         }
-                        
+
                         CardWithList(
                             title = "Teilnehmende",
-                            listItems = state.data.allParticipants,
+                            listItems = state.data.allParticipants.sortedBy { it.firstName.lowercase() },
                             onListItemClick = { item ->
                                 onAction(ActionsNewParticipant.InitWithParticipant(item.getItem()))
                                 onAction(NavigationActions.GoToRoute(Routes.CreateOrEditParticipant))
@@ -133,7 +137,8 @@ fun ParticipantPage(
                             },
                             onDeleteClick = { participant ->
                                 onAction(ActionsNewParticipant.DeleteParticipant(participant.getItem().uid))
-                            }
+                            },
+                            addItemToListAtTop = true
 
                         )
                     }

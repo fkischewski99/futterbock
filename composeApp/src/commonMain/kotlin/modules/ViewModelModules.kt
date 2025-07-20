@@ -13,6 +13,7 @@ import view.event.categorized_shopping_list.IngredientViewModel
 import view.event.homescreen.ViewModelEventOverview
 import view.event.new_meal_screen.AllParticipantsViewModel
 import view.event.recepie_overview_screen.RecipeOverviewViewModel
+import view.event.cooking_groups.ingredients.CookingGroupIngredientsViewModel
 
 val viewModelModules = module {
     single { ViewModelEventOverview(get(), get()) }
@@ -25,4 +26,5 @@ val viewModelModules = module {
     single { RecipeOverviewViewModel(get(), get()) }
     single { MaterialListViewModel(get(), get()) }
     single { CsvImportViewModel(get(), get()) }
+    single { CookingGroupIngredientsViewModel(get()) }
 }

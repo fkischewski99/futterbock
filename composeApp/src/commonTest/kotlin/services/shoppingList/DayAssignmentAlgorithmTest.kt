@@ -28,7 +28,6 @@ class DayAssignmentAlgorithmTest {
         val meals = listOf(
             createMeal(LocalDate(2024, 1, 3), listOf(rice)) // Used on day 3
         )
-        val calculatedIngredients = mapOf("rice" to createShoppingIngredient("rice", 500.0, rice))
         val ingredientsPerDay = mapOf(
             LocalDate(2024, 1, 3) to mapOf("rice" to createShoppingIngredient("rice", 500.0, rice))
         )
@@ -55,11 +54,6 @@ class DayAssignmentAlgorithmTest {
         // Given: Ingredient with long expiration (7 days) used on day 3
         val eventStartDate = LocalDate(2024, 1, 1)
         val pasta = createIngredient("pasta", 7) // Expires in 7 days
-        val meals = listOf(
-            createMeal(LocalDate(2024, 1, 3), listOf(pasta)) // Used on day 3
-        )
-        val calculatedIngredients =
-            mapOf("pasta" to createShoppingIngredient("pasta", 300.0, pasta))
         val ingredientsPerDay = mapOf(
             LocalDate(2024, 1, 3) to mapOf(
                 "pasta" to createShoppingIngredient(
@@ -91,13 +85,6 @@ class DayAssignmentAlgorithmTest {
         // Given: Lettuce expires in 3 days, used on days 4, 5, 6
         val eventStartDate = LocalDate(2024, 1, 1)
         val lettuce = createIngredient("lettuce", 3) // Expires in 3 days
-        val meals = listOf(
-            createMeal(LocalDate(2024, 1, 4), listOf(lettuce)), // Day 4
-            createMeal(LocalDate(2024, 1, 5), listOf(lettuce)), // Day 5
-            createMeal(LocalDate(2024, 1, 6), listOf(lettuce))  // Day 6
-        )
-        val calculatedIngredients =
-            mapOf("lettuce" to createShoppingIngredient("lettuce", 300.0, lettuce))
         val ingredientsPerDay = mapOf(
             LocalDate(2024, 1, 4) to mapOf(
                 "lettuce" to createShoppingIngredient(

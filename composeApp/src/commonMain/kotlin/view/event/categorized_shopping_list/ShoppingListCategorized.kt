@@ -51,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import kotlinx.datetime.LocalDate
 import model.Ingredient
+import model.MultiDayShoppingList
 import model.ShoppingIngredient
 import view.shared.HelperFunctions
 import org.koin.compose.koinInject
@@ -60,6 +61,7 @@ import view.event.actions.handleNavigation
 import view.event.categorized_shopping_list.BottomSheetWithSearchBar
 import services.shoppingList.shoppingDone
 import view.login.ErrorField
+import view.shared.EditTextDialog
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
@@ -167,7 +169,7 @@ fun ShoppingList(
 ) {
     var categoryExpanded by remember { mutableStateOf(true) }
     Spacer(modifier = Modifier.height(16.dp))
-    
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -278,12 +280,16 @@ fun ShoppingItem2(
         }
 
         if (showDialog) {
-            EditNoteDialog(
-                note = ingredient.note,
+            EditTextDialog(
+                title = ingredient.note,
                 onConfirm = {
                     ingredient.note = it
                     showDialog = false
-                }, onDismiss = { showDialog = false })
+                },
+                onDismiss = { showDialog = false },
+                label = "Notiz anpassen",
+                initialValue = ingredient.note,
+            )
         }
         if (showDeleteDialog) {
             ConfirmDialog(
@@ -296,13 +302,13 @@ fun ShoppingItem2(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MultiDayNavigationBar(
-    multiDayShoppingList: model.MultiDayShoppingList,
+    multiDayShoppingList: MultiDayShoppingList,
     selectedDate: LocalDate?,
     currentState: ShoppingListState,
     onDateSelected: (LocalDate) -> Unit
 ) {
     val shoppingDays = multiDayShoppingList.getShoppingDaysInOrder()
-    
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
@@ -315,7 +321,7 @@ fun MultiDayNavigationBar(
             ) {
                 shoppingDays.forEach { date ->
                     val isSelected = date == selectedDate
-                    
+
                     // Calculate completion from current state when this day is selected
                     val (completedCount, totalCount) = if (isSelected) {
                         val completed = currentState.ingredientsByCategory[shoppingDone]?.size ?: 0
@@ -328,7 +334,7 @@ fun MultiDayNavigationBar(
                         val total = dailyList?.ingredients?.size ?: 0
                         completed to total
                     }
-                    
+
                     Surface(
                         modifier = Modifier
                             .clickable { onDateSelected(date) }
@@ -354,7 +360,7 @@ fun MultiDayNavigationBar(
                                     MaterialTheme.colorScheme.onSurfaceVariant
                                 }
                             )
-                            
+
                             if (totalCount > 0) {
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(

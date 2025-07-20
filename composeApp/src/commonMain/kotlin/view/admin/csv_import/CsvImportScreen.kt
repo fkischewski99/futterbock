@@ -31,9 +31,9 @@ fun CsvImportScreen(
                 onFileSelected = { result ->
                     viewModel.onAction(CsvImportActions.FileSelected(result))
                 },
-                onColumnMappingChanged = { firstName, lastName, birthDate, eatingHabit ->
+                onColumnMappingChanged = { firstName, lastName, birthDate, eatingHabit, cookingGroup ->
                     viewModel.onAction(
-                        CsvImportActions.SetColumnMapping(firstName, lastName, birthDate, eatingHabit)
+                        CsvImportActions.SetColumnMapping(firstName, lastName, birthDate, eatingHabit, cookingGroup)
                     )
                 },
                 onStartValidation = {
@@ -62,7 +62,7 @@ fun CsvImportScreen(
             CsvImportWizard(
                 state = ImportWizardState(),
                 onFileSelected = { },
-                onColumnMappingChanged = { _, _, _, _ -> },
+                onColumnMappingChanged = { _, _, _, _, _ -> },
                 onStartValidation = { },
                 onStartImport = { },
                 onCancelImport = { },

@@ -26,6 +26,8 @@ import view.event.new_meal_screen.HandleEditMealActions
 import view.event.new_meal_screen.generateDateRange
 import view.event.participants.EditParticipantActions
 import view.event.participants.HandleParticipantsActions
+import view.event.cooking_groups.CookingGroupActions
+import view.event.cooking_groups.HandleCookingGroupActions
 import view.shared.ResultState
 
 data class EventState(
@@ -60,6 +62,10 @@ class SharedEventViewModel(
         HandleParticipantsActions(
             eventRepository = eventRepository,
         )
+    private val handleCookingGroups =
+        HandleCookingGroupActions(
+            eventRepository = eventRepository
+        )
 
 
     fun onAction(editEventActions: BaseAction) {
@@ -67,6 +73,7 @@ class SharedEventViewModel(
             is EditMealActions -> handleEditMealActions(editEventActions)
             is EditEventActions -> handleEventActions(editEventActions)
             is EditParticipantActions -> handleEditParticipantActions(editEventActions)
+            is CookingGroupActions -> handleCookingGroupActions(editEventActions)
         }
     }
 
@@ -95,6 +102,14 @@ class SharedEventViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             _eventState.value =
                 handleEditParticipant.handleAction(currentState, editEventActions)
+        }
+    }
+
+    private fun handleCookingGroupActions(action: CookingGroupActions) {
+        val currentState = eventState.value.getSuccessData() ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            _eventState.value =
+                handleCookingGroups.handleAction(currentState, action)
         }
     }
 

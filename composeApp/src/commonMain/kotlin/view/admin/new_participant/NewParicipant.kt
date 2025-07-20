@@ -44,11 +44,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import co.touchlab.kermit.Logger
 import model.EatingHabit
 import model.FoodIntolerance
 import model.Ingredient
 import org.koin.compose.koinInject
 import view.event.categorized_shopping_list.IngredientViewModel
+import view.event.new_meal_screen.AllParticipantsViewModel
+import view.admin.new_participant.IngredientPickerDialog
+import view.login.ErrorField
+import view.shared.GroupSelector
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
@@ -63,11 +68,15 @@ fun NewParticipantScreen(
     val viewModelNewParticipant: ViewModelNewParticipant = koinInject()
     val state = viewModelNewParticipant.state.collectAsStateWithLifecycle()
     val ingredientViewModel: IngredientViewModel = koinInject();
-    val allIngredientList: List<Ingredient> = ingredientViewModel.state.collectAsState().value;
+    val allIngredientList: List<Ingredient> =
+        ingredientViewModel.state.collectAsStateWithLifecycle().value;
+    val allParticipantsViewModel: AllParticipantsViewModel = koinInject()
+    val allParticipantsState = allParticipantsViewModel.state.collectAsStateWithLifecycle()
 
     NewParicipant(
         state = state.value,
         ingredientList = allIngredientList,
+        availableGroups = allParticipantsState.value.getSuccessData()?.availableGroups ?: setOf(),
         onAction = { action ->
             when (action) {
                 is ActionsNewParticipant.GoBack -> {
@@ -90,7 +99,8 @@ fun NewParticipantScreen(
 fun NewParicipant(
     state: ResultState<NewParticipantState>,
     onAction: (ActionsNewParticipant) -> Unit,
-    ingredientList: List<Ingredient>
+    ingredientList: List<Ingredient>,
+    availableGroups: Set<String>
 ) {
 
     AppTheme {
@@ -119,7 +129,7 @@ fun NewParicipant(
                                     onAction(ActionsNewParticipant.ChangeFirstName(it))
                                 },
                                 label = { Text("Vorname:") },
-                                modifier = Modifier.padding(8.dp).fillMaxWidth()
+                                modifier = Modifier.padding(8.dp)
                             )
                         }
 
@@ -128,12 +138,21 @@ fun NewParicipant(
                                 value = state.data.lastName,
                                 onValueChange = { onAction(ActionsNewParticipant.ChangeLastName(it)) },
                                 label = { Text("Nachname:") },
-                                modifier = Modifier.padding(8.dp).fillMaxWidth()
+                                modifier = Modifier.padding(8.dp)
                             )
                         }
                         Row {
                             DropDownEatingHabit(
                                 state = state.data, onAction = onAction
+                            )
+                        }
+                        Row {
+                            GroupSelector(
+                                selectedGroup = state.data.selectedGroup,
+                                availableGroups = availableGroups,
+                                onGroupSelected = { group ->
+                                    onAction(ActionsNewParticipant.SelectGroup(group))
+                                }
                             )
                         }
                         Row {
@@ -177,7 +196,7 @@ fun NewParicipant(
                         }
                     }
 
-                    is ResultState.Error -> TODO()
+                    is ResultState.Error -> ErrorField(errorMessage = state.message)
                     ResultState.Loading -> MGCircularProgressIndicator()
                 }
             }
@@ -328,7 +347,7 @@ fun DropDownEatingHabit(
                 onValueChange = {},
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable, true).fillMaxWidth()
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable, true)
                     .background(color = Color.Transparent)
             )
 

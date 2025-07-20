@@ -69,6 +69,7 @@ class EventParticipantImportService(
                         lastName = importData.lastName
                         birthdate = importData.birthDate
                         eatingHabit = importData.eatingHabit
+                        selectedGroup = importData.cookingGroup
                     }
                     createdParticipants.add(participant)
                     participant = eventRepository.createNewParticipant(participant)

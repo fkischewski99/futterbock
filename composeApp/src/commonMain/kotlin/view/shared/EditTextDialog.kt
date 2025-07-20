@@ -1,4 +1,4 @@
-package view.event.categorized_shopping_list
+package view.shared
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,12 +22,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun EditNoteDialog(
+fun EditTextDialog(
+    title: String,
+    label: String,
+    initialValue: String = "",
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
-    note: String = ""
+    confirmButtonText: String = "Speichern",
+    cancelButtonText: String = "Abbrechen"
 ) {
-    var noteText by remember { mutableStateOf(note) }
+    var textValue by remember { mutableStateOf(initialValue) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -40,14 +44,14 @@ fun EditNoteDialog(
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = "Notiz hinzufügen",
+                    text = title,
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 TextField(
-                    value = "" + noteText,
-                    onValueChange = { noteText = it },
-                    label = { Text("Notiz") },
+                    value = textValue,
+                    onValueChange = { textValue = it },
+                    label = { Text(label) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
@@ -58,16 +62,16 @@ fun EditNoteDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Abbrechen")
+                        Text(cancelButtonText)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(
                         onClick = {
-                            onConfirm(noteText)
+                            onConfirm(textValue)
                         },
-                        enabled = noteText.isNotBlank()
+                        enabled = textValue.isNotBlank()
                     ) {
-                        Text("Speichern")
+                        Text(confirmButtonText)
                     }
                 }
             }

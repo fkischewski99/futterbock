@@ -42,13 +42,11 @@ import androidx.compose.ui.platform.LocalAutofillTree
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import com.andreasgift.kmpweatherapp.BuildKonfig
 import futterbock_app.composeapp.generated.resources.Res
 import futterbock_app.composeapp.generated.resources.login_submit
 import futterbock_app.composeapp.generated.resources.register_link
 import futterbock_app.composeapp.generated.resources.register_prefix
 import futterbock_app.composeapp.generated.resources.startPage
-import getPlatformName
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -56,7 +54,6 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import services.login.LoginAndRegister
 import view.shared.MGCircularProgressIndicator
-import view.shared.UpdateNotificationBanner
 
 
 @Composable
@@ -204,7 +201,8 @@ fun RegisterLink(
     ) {
         // Two text fields displaed in a row
         Text(text = stringResource(resource = Res.string.register_prefix) + " ")
-        Text(text = stringResource(resource = Res.string.register_link),
+        Text(
+            text = stringResource(resource = Res.string.register_link),
             color = MaterialTheme.colorScheme.primary,
             textDecoration = TextDecoration.Underline,
             modifier = Modifier.clickable { onNavigateToRegister() })

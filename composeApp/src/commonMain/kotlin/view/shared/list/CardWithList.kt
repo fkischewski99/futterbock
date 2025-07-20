@@ -37,7 +37,8 @@ fun <T> CardWithList(
     listItems: List<ListItem<T>>,
     addItemToList: (() -> Unit)? = null,
     onDeleteClick: ((ListItem<T>) -> Unit)? = null,
-    onListItemClick: ((ListItem<T>) -> Unit)? = null
+    onListItemClick: ((ListItem<T>) -> Unit)? = null,
+    addItemToListAtTop: Boolean = false
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
@@ -53,6 +54,9 @@ fun <T> CardWithList(
                 style = MaterialTheme.typography.titleMedium
             )
         }
+        if (addItemToListAtTop) {
+            AddItemToListComponent(addItemToList)
+        }
 
         listItems.forEach { listItem ->
             ListItemComponent(
@@ -65,20 +69,27 @@ fun <T> CardWithList(
             Spacer(Modifier.height(16.dp))
         }
 
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth().padding(8.dp)
-        ) {
-            addItemToList?.let {
-                FloatingActionButton(
-                    onClick = { addItemToList.invoke() },
-                    modifier = Modifier.clip(shape = RoundedCornerShape(50)),
-                    containerColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add, contentDescription = "Add Icon"
-                    )
-                }
+        if (!addItemToListAtTop) {
+            AddItemToListComponent(addItemToList)
+        }
+    }
+}
+
+@Composable
+private fun AddItemToListComponent(addItemToList: (() -> Unit)?) {
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxWidth().padding(8.dp)
+    ) {
+        addItemToList?.let {
+            FloatingActionButton(
+                onClick = { addItemToList.invoke() },
+                modifier = Modifier.clip(shape = RoundedCornerShape(50)),
+                containerColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add, contentDescription = "Add Icon"
+                )
             }
         }
     }

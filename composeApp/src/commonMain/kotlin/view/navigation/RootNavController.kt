@@ -20,6 +20,8 @@ import view.event.new_event.NewEventScreen
 import view.event.new_meal_screen.EditMealScreen
 import view.event.participants.ParticipantScreen
 import view.event.participants.ParticipantSearchBarScreen
+import view.event.cooking_groups.CookingGroupsScreen
+import view.event.cooking_groups.ingredients.CookingGroupIngredientScreen
 import view.event.recepie_overview_screen.RecipeOverviewScreen
 import view.login.LoginScreen
 import view.login.Register
@@ -97,6 +99,12 @@ fun RootNavController(
             }
             composable<Routes.MaterialList> {
                 MaterialListScreen(navController)
+            }
+            composable<Routes.CookingGroups> {
+                CookingGroupsScreen(navController)
+            }
+            composable<Routes.CookingGroupIngredients> {
+                CookingGroupIngredientScreen(navController)
             }
         }
     }

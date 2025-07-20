@@ -351,7 +351,7 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         }
     }
 
-    override suspend fun getParticipantById(participantId: String): Participant {
+    override suspend fun getParticipantById(participantId: String): Participant? {
         return firestore.collection(PARTICIPANTS).document(participantId).get().data { }
     }
 
@@ -488,6 +488,106 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
     }
 
     override suspend fun deleteParticipant(participantId: String) {
+        // Delete participant from all meals and participant schedules across all events in user's group
+        coroutineScope {
+            try {
+                val userGroup = loginAndRegister.getCustomUserGroup()
+
+                // Get events from user's group only
+                val events = firestore.collection(EVENTS)
+                    .where { "group" equalTo userGroup }
+                    .get()
+                    .documents
+
+                // Only process events where the participant is in the participant schedule
+                val eventsWithParticipant = events.mapNotNull { eventDoc ->
+                    async {
+                        val eventId = eventDoc.id
+                        
+                        // Check if participant exists in participant schedule for this event
+                        val participantScheduleExists = try {
+                            firestore.collection(EVENTS)
+                                .document(eventId)
+                                .collection(PARTICIPANT_SCHEDULE)
+                                .document(participantId)
+                                .get()
+                                .exists
+                        } catch (e: Exception) {
+                            Logger.w("Error checking participant schedule existence for participant $participantId in event $eventId: ${e.message}")
+                            false
+                        }
+
+                        if (participantScheduleExists) eventId else null
+                    }
+                }.awaitAll().filterNotNull()
+
+                // Batch process meals only for events where participant is scheduled
+                val batchUpdates = eventsWithParticipant.map { eventId ->
+                    async {
+                        // Get all meals for this event in one query
+                        val meals = firestore.collection(EVENTS)
+                            .document(eventId)
+                            .collection(MEALS)
+                            .get()
+                            .documents
+                            .map { it.data<Meal>() }
+
+                        // Filter and update only meals that contain the participant
+                        meals.mapNotNull { meal ->
+                            var mealUpdated = false
+
+                            // Remove participant from all recipe selections
+                            meal.recipeSelections.forEach { recipeSelection ->
+                                if (recipeSelection.eaterIds.contains(participantId)) {
+                                    recipeSelection.eaterIds.remove(participantId)
+                                    mealUpdated = true
+                                }
+                            }
+
+                            // Return meal for batch update if modified
+                            if (mealUpdated) {
+                                eventId to meal
+                            } else {
+                                null
+                            }
+                        }
+                    }
+                }.awaitAll().flatten()
+
+                // Perform batch updates for meals
+                batchUpdates.map { (eventId, meal) ->
+                    async {
+                        firestore.collection(EVENTS)
+                            .document(eventId)
+                            .collection(MEALS)
+                            .document(meal.uid)
+                            .set(meal)
+
+                        Logger.d("Removed participant $participantId from meal ${meal.uid} in event $eventId")
+                    }
+                }.awaitAll()
+
+                // Remove participant from participant schedules
+                eventsWithParticipant.map { eventId ->
+                    async {
+                        firestore.collection(EVENTS)
+                            .document(eventId)
+                            .collection(PARTICIPANT_SCHEDULE)
+                            .document(participantId)
+                            .delete()
+
+                        Logger.d("Removed participant $participantId from participant schedule in event $eventId")
+                    }
+                }.awaitAll()
+
+                Logger.i("Successfully removed participant $participantId from ${batchUpdates.size} meals and ${eventsWithParticipant.size} participant schedules in user group")
+
+            } catch (e: Exception) {
+                Logger.e("Error removing participant $participantId from meals and schedules: ${e.message}")
+            }
+        }
+
+        // Delete the participant document
         firestore.collection(PARTICIPANTS).document(participantId).delete()
     }
 
@@ -509,7 +609,8 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             from = event.from,
             to = event.to,
             uid = participantId,
-            participantRef = newParticipant.uid
+            participantRef = newParticipant.uid,
+            cookingGroup = newParticipant.selectedGroup.takeIf { it.isNotBlank() } ?: ""
         )
         firestore.collection(EVENTS)
             .document(event.uid)

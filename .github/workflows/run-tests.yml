@@ -40,6 +40,9 @@ jobs:
         run: ./gradlew test --no-daemon
         continue-on-error: false
 
+      - name: Test Desktop Run Command
+        run: timeout 60s ./gradlew :composeApp:desktopRun -PmainClass=MainKt || true
+
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.RestaurantMenu
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -136,9 +137,13 @@ fun NewEventPage(
                             )
                         }
                         Row(
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+
                         ) {
                             ParticipantNumberTextField(sharedState, onAction)
+                            CookingGroupsButton(onAction)
                         }
                         SimpleDateRangePickerInDatePickerDialog(
                             from = sharedState.data.event.from,
@@ -240,6 +245,25 @@ private fun ParticipantNumberTextField(
             )
         }
     )
+}
+
+@Composable
+private fun CookingGroupsButton(
+    onAction: (BaseAction) -> Unit
+) {
+    Button(
+        onClick = {
+            onAction(NavigationActions.GoToRoute(Routes.CookingGroups))
+        },
+        modifier = Modifier.padding(8.dp).height(IntrinsicSize.Min),
+    ) {
+        Icon(
+            imageVector = Icons.Default.Group,
+            contentDescription = "Kochgruppen",
+            modifier = Modifier.padding(end = 8.dp)
+        )
+        Text("Kochgruppen")
+    }
 }
 
 @Composable

@@ -41,7 +41,8 @@ class CsvImportViewModel(
                 action.firstNameColumn,
                 action.lastNameColumn,
                 action.birthDateColumn,
-                action.eatingHabitColumn
+                action.eatingHabitColumn,
+                action.cookingGroupColumn
             )
 
             is CsvImportActions.StartValidation -> startValidation()
@@ -82,7 +83,10 @@ class CsvImportViewModel(
                         // Auto-detect common column names
                         firstNameColumn = detectColumn(
                             parseResult.data.headers,
-                            listOf("vorname", "first", "firstname", "first_name")
+                            listOf(
+                                "" +
+                                        "vorname", "first", "firstname", "first_name"
+                            )
                         ),
                         lastNameColumn = detectColumn(
                             parseResult.data.headers,
@@ -101,6 +105,17 @@ class CsvImportViewModel(
                                 "diaet",
                                 "diet",
                                 "habit"
+                            )
+                        ),
+                        cookingGroupColumn = detectColumn(
+                            parseResult.data.headers,
+                            listOf(
+                                "kochgruppe",
+                                "cooking_group",
+                                "cookinggroup",
+                                "gruppe",
+                                "group",
+                                "stamm"
                             )
                         )
                     )
@@ -127,14 +142,16 @@ class CsvImportViewModel(
         firstNameColumn: Int?,
         lastNameColumn: Int?,
         birthDateColumn: Int?,
-        eatingHabitColumn: Int?
+        eatingHabitColumn: Int?,
+        cookingGroupColumn: Int?
     ) {
         updateState { currentState ->
             currentState.copy(
                 firstNameColumn = firstNameColumn,
                 lastNameColumn = lastNameColumn,
                 birthDateColumn = birthDateColumn,
-                eatingHabitColumn = eatingHabitColumn
+                eatingHabitColumn = eatingHabitColumn,
+                cookingGroupColumn = cookingGroupColumn
             )
         }
     }
@@ -152,7 +169,8 @@ class CsvImportViewModel(
                     firstNameColumn = firstNameColumn,
                     lastNameColumn = lastNameColumn,
                     birthDateColumn = currentState.birthDateColumn,
-                    eatingHabitColumn = currentState.eatingHabitColumn
+                    eatingHabitColumn = currentState.eatingHabitColumn,
+                    cookingGroupColumn = currentState.cookingGroupColumn
                 )
 
                 // Check for existing participants to detect duplicates in database
@@ -342,6 +360,7 @@ class CsvImportViewModel(
                     lastName = participantData.lastName
                     birthdate = participantData.birthDate
                     eatingHabit = participantData.eatingHabit
+                    selectedGroup = participantData.cookingGroup
                 }
 
                 val participantCreated = eventRepository.createNewParticipant(participant)
@@ -389,6 +408,7 @@ class CsvImportViewModel(
                         lastNameColumn = null,
                         birthDateColumn = null,
                         eatingHabitColumn = null,
+                        cookingGroupColumn = null,
                         parseError = null
                     )
                 }

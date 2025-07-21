@@ -68,8 +68,11 @@ fun NewParticipantScreen(
     val viewModelNewParticipant: ViewModelNewParticipant = koinInject()
     val state = viewModelNewParticipant.state.collectAsStateWithLifecycle()
     val ingredientViewModel: IngredientViewModel = koinInject();
-    val allIngredientList: List<Ingredient> =
-        ingredientViewModel.state.collectAsStateWithLifecycle().value;
+    val allIngredientState = ingredientViewModel.state.collectAsStateWithLifecycle()
+    val allIngredientList: List<Ingredient> = when (val state = allIngredientState.value) {
+        is ResultState.Success -> state.data
+        else -> emptyList()
+    }
     val allParticipantsViewModel: AllParticipantsViewModel = koinInject()
     val allParticipantsState = allParticipantsViewModel.state.collectAsStateWithLifecycle()
 

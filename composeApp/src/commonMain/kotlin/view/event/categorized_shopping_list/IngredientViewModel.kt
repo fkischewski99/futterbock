@@ -8,16 +8,28 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import model.Ingredient
+import view.shared.ResultState
 
 class IngredientViewModel(val eventRepository: EventRepository) : ViewModel() {
 
-    private var _state = MutableStateFlow<List<Ingredient>>(listOf())
+    private var _state = MutableStateFlow<ResultState<List<Ingredient>>>(ResultState.Loading)
     val state = _state.asStateFlow()
 
     init {
+        loadIngredients()
+    }
+
+    private fun loadIngredients() {
         viewModelScope.launch {
-            Logger.i("Request all ingredients")
-            _state.value = eventRepository.getAllIngredients()
+            try {
+                Logger.i("Request all ingredients")
+                _state.value = ResultState.Loading
+                val ingredients = eventRepository.getAllIngredients()
+                _state.value = ResultState.Success(ingredients)
+            } catch (e: Exception) {
+                Logger.e("Error loading ingredients", e)
+                _state.value = ResultState.Error(e.message ?: "Unbekannter Fehler beim Laden der Zutaten")
+            }
         }
     }
 

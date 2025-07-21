@@ -56,4 +56,7 @@ interface Routes {
     
     @Serializable
     object CookingGroupIngredients : Routes
+
+    @Serializable
+    object RecipeManagement : Routes
 }

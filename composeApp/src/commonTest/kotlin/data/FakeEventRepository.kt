@@ -217,4 +217,20 @@ class FakeEventRepository : EventRepository {
             multiDayShoppingLists[eventId] = multiDayList.copy(dailyLists = updatedDailyLists)
         }
     }
+
+    override suspend fun getUserCreatedRecipes(): List<Recipe> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun createRecipe(recipe: Recipe) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun updateRecipe(recipe: Recipe) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun deleteRecipe(recipeId: String) {
+        TODO("Not yet implemented")
+    }
 }

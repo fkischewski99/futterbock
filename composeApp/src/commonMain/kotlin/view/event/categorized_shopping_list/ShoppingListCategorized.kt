@@ -72,6 +72,12 @@ fun ShoppingListScreen(navController: NavHostController) {
     val viewModelShoppingList: CategorizedShoppingListViewModel = koinInject()
     val viewModelIngredient: IngredientViewModel = koinInject()
     val state = viewModelShoppingList.state.collectAsStateWithLifecycle()
+    val ingredientState = viewModelIngredient.state.collectAsStateWithLifecycle()
+    
+    val ingredientList = when (val ingredientsState = ingredientState.value) {
+        is ResultState.Success -> ingredientsState.data
+        else -> emptyList()
+    }
 
     ShoppingListCategorized(
         onAction = { action ->
@@ -81,7 +87,7 @@ fun ShoppingListScreen(navController: NavHostController) {
             }
         },
         state = state.value,
-        ingredientList = viewModelIngredient.state.value
+        ingredientList = ingredientList
     )
 
 }

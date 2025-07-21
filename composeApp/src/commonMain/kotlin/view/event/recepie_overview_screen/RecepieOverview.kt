@@ -211,7 +211,7 @@ fun RecipeDetails(recipeSelection: RecipeSelection) {
                 val pageText = if (recipeSelection.recipe!!.pageInCookbook > 0) {
                     recipeSelection.recipe!!.pageInCookbook.toString()
                 } else {
-                    "selbst erstellt"
+                    "Erstellt von: ${recipeSelection.recipe!!.source}"
                 }
                 CaptionedText(
                     label = "Futterbock Seite:",
@@ -296,7 +296,7 @@ fun IngredientList(ingredientList: List<ShoppingIngredient>) {
             val sortedIngredients = ingredientList.sortedBy { ingredient ->
                 if (ingredient.amount <= 0.0) 1 else 0
             }
-            
+
             sortedIngredients.forEach { ingredient ->
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),

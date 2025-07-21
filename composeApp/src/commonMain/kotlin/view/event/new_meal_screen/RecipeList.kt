@@ -62,7 +62,7 @@ fun RecipeItem(recipe: Recipe, onClicked: (Recipe) -> Unit) {
             val pageText = if (recipe.pageInCookbook > 0) {
                 "Seite ${recipe.pageInCookbook}"
             } else {
-                "selbst erstellt"
+                "Erstellt von: ${recipe.source}"
             }
             Text("${recipe.name} - ($pageText)")
         }
@@ -132,7 +132,7 @@ fun RecipeWithMembers(
                 thickness = 1.dp,
                 color = MaterialTheme.colorScheme.outline
             )
-            
+
             participants.forEach { participant ->
                 val isChecked = checkedState[participant.participantRef] ?: false
                 val canEat = canParticipantEatRecipe(participant, recipeSelection)

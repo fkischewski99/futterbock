@@ -28,7 +28,8 @@ import services.login.LoginAndRegister
 fun DrawerContent(
     onClose: () -> Unit,
     onLogoutNavigation: () -> Unit,
-    onManageParticipants: () -> Unit
+    onManageParticipants: () -> Unit,
+    onManageRecipes: () -> Unit
 ) {
     val login: LoginAndRegister = koinInject()
     var showConfirmDialog by remember { mutableStateOf(false) }
@@ -43,6 +44,13 @@ fun DrawerContent(
             selected = false,
             onClick = {
                 onManageParticipants()
+            }
+        )
+        NavigationDrawerItem(
+            label = { Text(text = "Rezepte verwalten") },
+            selected = false,
+            onClick = {
+                onManageRecipes()
             }
         )
         Text("Benutzer", fontWeight = FontWeight.Bold, modifier = Modifier.padding(16.dp))

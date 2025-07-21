@@ -59,7 +59,12 @@ fun RecipeItem(recipe: Recipe, onClicked: (Recipe) -> Unit) {
                 .clickable { onClicked(recipe) }
                 .padding(16.dp)
         ) {
-            Text("${recipe.name} - (Seite ${recipe.pageInCookbook})")
+            val pageText = if (recipe.pageInCookbook > 0) {
+                "Seite ${recipe.pageInCookbook}"
+            } else {
+                "selbst erstellt"
+            }
+            Text("${recipe.name} - ($pageText)")
         }
         HorizontalDivider()
     }

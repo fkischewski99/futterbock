@@ -88,6 +88,11 @@ fun Register(
                 loading = false
                 return@launch
             }
+            if (group.equals("Futterbock", ignoreCase = true)) {
+                registerError = "Der Gruppenname 'Futterbock' ist reserviert und kann nicht verwendet werden"
+                loading = false
+                return@launch
+            }
             try {
                 currentApp.register(email = email, password = password, group = group)
                 onRegisterNavigation()

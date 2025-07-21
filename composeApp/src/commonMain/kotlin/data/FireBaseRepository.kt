@@ -707,4 +707,57 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             saveMultiDayShoppingList(eventId, updatedMultiDayList)
         }
     }
+
+    override suspend fun createRecipe(recipe: Recipe) {
+        // Set the user's group as the source to identify user-created recipes
+        recipe.source = loginAndRegister.getCustomUserGroup()
+        
+        // Clean the transient ingredient property before saving
+        val cleanedRecipe = recipe.apply {
+            shoppingIngredients.forEach { shoppingIngredient ->
+                shoppingIngredient.ingredient = null // Only save the ingredientRef, not the full ingredient
+            }
+        }
+        
+        firestore.collection(RECIPES)
+            .document(cleanedRecipe.uid)
+            .set(cleanedRecipe)
+    }
+
+    override suspend fun updateRecipe(recipe: Recipe) {
+        // Clean the transient ingredient property before saving
+        val cleanedRecipe = recipe.apply {
+            shoppingIngredients.forEach { shoppingIngredient ->
+                shoppingIngredient.ingredient = null // Only save the ingredientRef, not the full ingredient
+            }
+        }
+        
+        firestore.collection(RECIPES)
+            .document(cleanedRecipe.uid)
+            .set(cleanedRecipe)
+    }
+
+    override suspend fun deleteRecipe(recipeId: String) {
+        firestore.collection(RECIPES)
+            .document(recipeId)
+            .delete()
+    }
+
+    override suspend fun getUserCreatedRecipes(): List<Recipe> {
+        val userGroup = loginAndRegister.getCustomUserGroup()
+        val recipes: MutableList<Recipe> = mutableListOf()
+        
+        firestore.collection(RECIPES)
+            .where {
+                "source" equalTo userGroup
+            }
+            .get()
+            .documents
+            .map { query ->
+                val recipe = query.data<Recipe>()
+                recipes.add(recipe)
+                Logger.i("Deserialized user recipe: " + recipe.name)
+            }
+        return recipes
+    }
 }

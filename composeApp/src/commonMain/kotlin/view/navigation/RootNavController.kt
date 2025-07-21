@@ -13,6 +13,7 @@ import services.login.LoginAndRegister
 import view.admin.csv_import.CsvImportScreen
 import view.admin.new_participant.NewParticipantScreen
 import view.admin.participants.ParticipantAdminScreen
+import view.admin.recipes.RecipeManagementScreen
 import view.event.categorized_shopping_list.MaterialListScreen
 import view.event.categorized_shopping_list.ShoppingListScreen
 import view.event.homescreen.EventOverviewScreen
@@ -63,6 +64,9 @@ fun RootNavController(
         }
         composable<Routes.CsvImport> {
             CsvImportScreen(navController = navController)
+        }
+        composable<Routes.RecipeManagement> {
+            RecipeManagementScreen(navController = navController)
         }
         composable<Routes.EventCsvImport> { backStackEntry ->
             val route = backStackEntry.toRoute<Routes.EventCsvImport>()

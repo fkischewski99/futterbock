@@ -31,7 +31,7 @@ junitJupiter = "5.13.3"
 buildkonfig = "0.16.0"
 compose-hot-reload = "1.0.0-alpha03"
 resolver = "1.0.0"
-ktor = "3.0.3"
+ktor = "3.2.3"
 
 [libraries]
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }

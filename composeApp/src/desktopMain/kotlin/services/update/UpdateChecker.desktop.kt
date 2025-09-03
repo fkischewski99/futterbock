@@ -15,6 +15,7 @@ import kotlinx.serialization.json.Json
 import java.io.File
 import java.time.Instant
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Desktop implementation of UpdateChecker that checks GitHub releases
@@ -34,7 +35,7 @@ actual class UpdateChecker {
     private val githubApiUrl = "https://api.github.com/repos/fkischewski99/futterbock/releases"
 
     // Cache for 24 hours
-    private val cacheValidityDuration = 24.hours
+    private val cacheValidityDuration = 1.milliseconds
 
     private var cachedUpdateInfo: UpdateInfo? = null
     private var lastCheckTime: Instant? = null
@@ -111,8 +112,8 @@ actual class UpdateChecker {
                 return null
             }
 
-            val currentVersion = getCurrentVersion()
-            val latestVersion = latestRelease.tag_name
+            val currentVersion = getCurrentVersion().filter { it.isDigit() || it == '.' }
+            val latestVersion = latestRelease.tag_name.filter { it.isDigit() || it == '.' }
 
             Logger.d("UpdateChecker: Current version: $currentVersion, Latest version: $latestVersion")
 

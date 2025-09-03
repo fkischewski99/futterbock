@@ -34,6 +34,17 @@ fun getEnvOrLocal(key: String): String {
     return System.getenv(key) ?: localProperties.getProperty(key) ?: error("Missing property: $key")
 }
 
+val versionPropertiesInputStream = FileInputStream("$rootDir/versions.properties")
+val versionProperties = Properties().apply {
+    load(versionPropertiesInputStream)
+}
+val versionCodeProperty = versionProperties.getProperty("versionCode").toInt()
+val versionMajorProperty = versionProperties.getProperty("versionMajor").toInt()
+val versionMinorProperty = versionProperties.getProperty("versionMinor").toInt()
+val versionPatchProperty = versionProperties.getProperty("versionPatch").toInt()
+
+val versionNameProperty = "$versionMajorProperty.$versionMinorProperty.$versionPatchProperty"
+
 
 buildkonfig {
     packageName = "com.andreasgift.kmpweatherapp"
@@ -56,7 +67,7 @@ buildkonfig {
             "FIREBASE_API_KEY",
             getEnvOrLocal("FIREBASE_API_KEY")
         )
-        
+
         buildConfigField(
             com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
             "APP_VERSION",
@@ -64,17 +75,6 @@ buildkonfig {
         )
     }
 }
-
-val versionPropertiesInputStream = FileInputStream("$rootDir/versions.properties")
-val versionProperties = Properties().apply {
-    load(versionPropertiesInputStream)
-}
-val versionCodeProperty = versionProperties.getProperty("versionCode").toInt()
-val versionMajorProperty = versionProperties.getProperty("versionMajor").toInt()
-val versionMinorProperty = versionProperties.getProperty("versionMinor").toInt()
-val versionPatchProperty = versionProperties.getProperty("versionPatch").toInt()
-
-val versionNameProperty = "$versionMajorProperty.$versionMinorProperty.$versionPatchProperty"
 
 kotlin {
 
@@ -141,7 +141,7 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.pdfbox)
-            
+
             // Ktor dependencies for update checker
             implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.content.negotiation)

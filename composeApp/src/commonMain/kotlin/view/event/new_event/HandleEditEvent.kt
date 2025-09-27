@@ -126,8 +126,10 @@ class HandleEditEvent(
         oldState: EventState
     ): ResultState.Success<EventState> {
         // First, save the current meal to ensure any changes are persisted
-        eventRepository.updateMeal(eventId = oldState.event.uid, oldState.selectedMeal)
-        
+        if (oldState.selectedMeal.uid.isNotEmpty()) {
+            eventRepository.updateMeal(eventId = oldState.event.uid, oldState.selectedMeal)
+        }
+
         val newMealList = oldState.mealList.toMutableList()
         val meal =
             eventRepository.createNewMeal(

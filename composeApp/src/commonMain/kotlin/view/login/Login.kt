@@ -47,6 +47,7 @@ import futterbock_app.composeapp.generated.resources.login_submit
 import futterbock_app.composeapp.generated.resources.register_link
 import futterbock_app.composeapp.generated.resources.register_prefix
 import futterbock_app.composeapp.generated.resources.startPage
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -88,6 +89,7 @@ fun LoginScreen(
                     loading = true
                     try {
                         loginService.login(email = email, password = password)
+                        delay(100)
                         navigateToHome()
                     } catch (t: Throwable) {
                         loginError =

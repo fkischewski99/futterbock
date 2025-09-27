@@ -503,7 +503,7 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
                 val eventsWithParticipant = events.mapNotNull { eventDoc ->
                     async {
                         val eventId = eventDoc.id
-                        
+
                         // Check if participant exists in participant schedule for this event
                         val participantScheduleExists = try {
                             firestore.collection(EVENTS)
@@ -711,14 +711,15 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
     override suspend fun createRecipe(recipe: Recipe) {
         // Set the user's group as the source to identify user-created recipes
         recipe.source = loginAndRegister.getCustomUserGroup()
-        
+
         // Clean the transient ingredient property before saving
         val cleanedRecipe = recipe.apply {
             shoppingIngredients.forEach { shoppingIngredient ->
-                shoppingIngredient.ingredient = null // Only save the ingredientRef, not the full ingredient
+                shoppingIngredient.ingredient =
+                    null // Only save the ingredientRef, not the full ingredient
             }
         }
-        
+
         firestore.collection(RECIPES)
             .document(cleanedRecipe.uid)
             .set(cleanedRecipe)
@@ -728,10 +729,11 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         // Clean the transient ingredient property before saving
         val cleanedRecipe = recipe.apply {
             shoppingIngredients.forEach { shoppingIngredient ->
-                shoppingIngredient.ingredient = null // Only save the ingredientRef, not the full ingredient
+                shoppingIngredient.ingredient =
+                    null // Only save the ingredientRef, not the full ingredient
             }
         }
-        
+
         firestore.collection(RECIPES)
             .document(cleanedRecipe.uid)
             .set(cleanedRecipe)
@@ -746,7 +748,7 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
     override suspend fun getUserCreatedRecipes(): List<Recipe> {
         val userGroup = loginAndRegister.getCustomUserGroup()
         val recipes: MutableList<Recipe> = mutableListOf()
-        
+
         firestore.collection(RECIPES)
             .where {
                 "source" equalTo userGroup
@@ -756,7 +758,6 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
             .map { query ->
                 val recipe = query.data<Recipe>()
                 recipes.add(recipe)
-                Logger.i("Deserialized user recipe: " + recipe.name)
             }
         return recipes
     }

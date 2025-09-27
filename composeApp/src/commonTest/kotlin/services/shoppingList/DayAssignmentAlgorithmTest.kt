@@ -117,17 +117,6 @@ class DayAssignmentAlgorithmTest {
             ingredientsPerDay = ingredientsPerDay
         )
 
-
-        // Debug: Print actual result
-        println("=== Lettuce Test Results ===")
-        for ((date, dailyList) in result.dailyLists.toSortedMap()) {
-            println("Date: $date, Ingredients: ${dailyList.ingredients.map { "${it.ingredient?.name}: ${it.amount}" }}")
-        }
-
-        // Then: Lettuce with 3-day expiration used on days 4,5,6 should be split:
-        // - Can buy on day 4 for days 4,5,6 (expires after day 6)
-        // OR multiple purchases if needed for freshness
-
         // Verify total amount is preserved
         val totalLettuce = result.dailyLists.values.flatMap { it.ingredients }
             .filter { it.ingredient?.name == "lettuce" }
@@ -232,18 +221,6 @@ class DayAssignmentAlgorithmTest {
             ingredientsPerDay = ingredientsPerDay
         )
 
-        // Debug output
-        println("=== Multi-Day Split Purchase Test ===")
-        for ((date, dailyList) in result.dailyLists.toSortedMap()) {
-            println("Date: $date, Ingredients: ${dailyList.ingredients.map { "${it.ingredient?.name}: ${it.amount}" }}")
-        }
-
-        // Then: Should split purchases across multiple days to ensure freshness
-        // Expected purchases:
-        // Day 1: milk for day 1 (100.0, expires after day 2)
-        // Day 3: milk for days 3&4 (200.0, expires after day 4) 
-        // Day 7: milk for day 7 (100.0, expires after day 8)
-
         assertTrue(
             result.dailyLists.size >= 3,
             "Should have multiple shopping days due to expiration constraints"
@@ -297,16 +274,6 @@ class DayAssignmentAlgorithmTest {
             eventEndDate = eventStartDate.plus(DatePeriod(years = 0, months = 0, days = 12)),
             ingredientsPerDay = ingredientsPerDay
         )
-
-        // Debug output
-        println("=== Mixed Expiration Trip Minimization Test ===")
-        for ((date, dailyList) in result.dailyLists.toSortedMap()) {
-            println("Date: $date, Ingredients: ${dailyList.ingredients.map { "${it.ingredient?.name}: ${it.amount}" }}")
-        }
-
-        // Then: Should have exactly 2 shopping days with trip minimization
-        // Day 1: lettuce (100.0) + apple (150.0) 
-        // Day 6: lettuce (100.0) + apple (150.0)
 
         assertEquals(2, result.dailyLists.size, "Should have exactly 2 shopping days")
 

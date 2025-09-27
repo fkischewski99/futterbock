@@ -37,7 +37,9 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import co.touchlab.kermit.Logger
 import dev.gitlive.firebase.auth.FirebaseAuthInvalidCredentialsException
+import dev.gitlive.firebase.auth.FirebaseAuthInvalidUserException
 import dev.gitlive.firebase.auth.FirebaseAuthUserCollisionException
 import futterbock_app.composeapp.generated.resources.Res
 import futterbock_app.composeapp.generated.resources.login_submit
@@ -89,12 +91,14 @@ fun Register(
                 return@launch
             }
             if (group.equals("Futterbock", ignoreCase = true)) {
-                registerError = "Der Gruppenname 'Futterbock' ist reserviert und kann nicht verwendet werden"
+                registerError =
+                    "Der Gruppenname 'Futterbock' ist reserviert und kann nicht verwendet werden"
                 loading = false
                 return@launch
             }
             try {
                 currentApp.register(email = email, password = password, group = group)
+                delay(100)
                 onRegisterNavigation()
             } catch (e: FirebaseAuthInvalidCredentialsException) {
                 registerError =
@@ -102,9 +106,13 @@ fun Register(
             } catch (e: FirebaseAuthUserCollisionException) {
                 registerError =
                     "Fehler beim Registrieren: Der Username existiert bereits. Bitte verwenden Sie einen anderen Usernamen."
-            } catch (e: Exception) {
+            } catch (e: FirebaseAuthInvalidUserException) {
                 registerError =
-                    "Ein unbekannter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut"
+                    "Fehler beim Registrieren: Der Username existiert bereits. Bitte verwenden Sie einen anderen Usernamen."
+            } catch (e: Exception) {
+                Logger.e(e.stackTraceToString())
+                registerError =
+                    "Ein unbekannter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut: "
             } finally {
                 loading = false
             }
@@ -112,7 +120,8 @@ fun Register(
     }
 
     Scaffold(modifier = Modifier.fillMaxSize().imePadding(), topBar = {
-        TopAppBar(title = { Text("Registrieren") },
+        TopAppBar(
+            title = { Text("Registrieren") },
             navigationIcon = { NavigationIconButton(onLeave = onBackNavigation) })
     }) {
         Column(
@@ -135,7 +144,8 @@ fun Register(
                 },
             )
             Spacer(modifier = Modifier.padding(4.dp))
-            GroupTextField(group = group,
+            GroupTextField(
+                group = group,
                 onStammChange = { value: String -> group = value },
                 loading = loading,
                 onNext = {

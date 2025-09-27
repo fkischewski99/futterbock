@@ -31,33 +31,38 @@ class ViewModelEventOverview(
 
     private var _state = MutableStateFlow<ResultState<EventOverviewState>>(ResultState.Loading)
     val state = _state.asStateFlow()
-    
+
     init {
         // Initialize the Flow in a coroutine
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val userGroup = loginAndRegister.getCustomUserGroup()
-                eventRepository.getEventList(userGroup)
-                    .collect { events -> 
-                        try {
-                            Logger.i("Processing ${events.size} events")
-                            val (pastEvents, upcomingEvents) = events.partition { !it.isFutureEvent() }
-                            _state.value = ResultState.Success(
-                                EventOverviewState(
-                                    pastEvents = pastEvents,
-                                    upcommingEvents = upcomingEvents
-                                )
-                            )
-                        } catch (e: Exception) {
-                            Logger.e("Error processing events: ${e.message}")
-                            _state.value = ResultState.Error("Fehler beim Verarbeiten der Lager")
-                        }
-                    }
+                _state.value = ResultState.Loading
+                initializeEvents()
             } catch (e: Exception) {
                 Logger.e("Error initializing event flow: ${e.message}")
                 _state.value = ResultState.Error("Fehler beim Initialisieren der Lager")
             }
         }
+    }
+
+    private suspend fun initializeEvents() {
+        val userGroup = loginAndRegister.getCustomUserGroup()
+        eventRepository.getEventList(userGroup)
+            .collect { events ->
+                try {
+                    Logger.i("Processing ${events.size} events")
+                    val (pastEvents, upcomingEvents) = events.partition { !it.isFutureEvent() }
+                    _state.value = ResultState.Success(
+                        EventOverviewState(
+                            pastEvents = pastEvents,
+                            upcommingEvents = upcomingEvents
+                        )
+                    )
+                } catch (e: Exception) {
+                    Logger.e("Error processing events: ${e.message}")
+                    _state.value = ResultState.Error("Fehler beim Verarbeiten der Lager")
+                }
+            }
     }
 
     var data = mutableStateOf(emptyList<Event>())
@@ -68,9 +73,10 @@ class ViewModelEventOverview(
                 when (actionsEventOverview) {
                     is ActionsEventOverview.DeleteEvent -> onDeleteClick(actionsEventOverview.eventId)
                     ActionsEventOverview.Init -> {
-                        // No longer needed - Flow is automatically managed
                         Logger.i("ViewModel initialized - Flow will handle data updates")
+                        initializeEvents()
                     }
+
                     else -> {
                         //only navigation
                     }
@@ -84,7 +90,7 @@ class ViewModelEventOverview(
     fun onDeleteClick(eventId: String) {
         // Optimistic UI update is now handled by the reactive Flow
         // Just delete from DB and the Flow will automatically update the UI
-        viewModelScope.launch(Dispatchers.IO) { 
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 eventRepository.deleteEvent(eventId)
                 Logger.i("Deleted event: $eventId")

@@ -10,5 +10,4 @@ sealed interface ActionsEventOverview : BaseAction {
 
     // Navigation
     data class EditEvent(val eventId: String) : ActionsEventOverview
-    data object ShowUserScreen : ActionsEventOverview
 }

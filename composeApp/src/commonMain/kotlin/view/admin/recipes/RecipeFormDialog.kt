@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import co.touchlab.kermit.Logger
 import model.*
 import org.koin.compose.koinInject
 import view.admin.new_participant.IngredientPickerDialog
@@ -37,10 +38,10 @@ fun RecipeFormDialog(
     val ingredientViewModel: IngredientViewModel = koinInject()
     val allIngredients by ingredientViewModel.state.collectAsState()
     val focusManager = LocalFocusManager.current
-    
+
     var showIngredientPicker by remember { mutableStateOf(false) }
     var editingIngredientIndex by remember { mutableStateOf(-1) }
-    
+
     // Recipe form state
     var name by remember { mutableStateOf(recipe?.name ?: "") }
     var description by remember { mutableStateOf(recipe?.description ?: "") }
@@ -51,14 +52,23 @@ fun RecipeFormDialog(
     var materials by remember { mutableStateOf(recipe?.materials ?: listOf()) }
     var price by remember { mutableStateOf(recipe?.price ?: Range.MEDIUM) }
     var season by remember { mutableStateOf(recipe?.season ?: listOf()) }
-    var foodIntolerances by remember { mutableStateOf(recipe?.foodIntolerances ?: listOf()) }
+    var foodIntolerances by remember {
+        mutableStateOf(
+            (recipe?.foodIntolerances ?: setOf(
+                FoodIntolerance.FRUCTOSE_INTOLERANCE,
+                FoodIntolerance.LACTOSE_INTOLERANCE,
+                FoodIntolerance.GLUTEN_INTOLERANCE,
+                FoodIntolerance.WITHOUT_NUTS
+            )).toMutableSet()
+        )
+    }
     var time by remember { mutableStateOf(recipe?.time ?: TimeRange.MEDIUM) }
     var skillLevel by remember { mutableStateOf(recipe?.skillLevel ?: Range.MEDIUM) }
     var recipeType by remember { mutableStateOf(recipe?.type ?: listOf()) }
-    
+
     // UI state for expanding sections
     var expandedSections by remember { mutableStateOf(setOf("basic")) }
-    
+
     // Form validation
     val isValid = name.isNotBlank() && shoppingIngredients.isNotEmpty()
 
@@ -87,12 +97,12 @@ fun RecipeFormDialog(
                         text = if (recipe == null) "Neues Rezept" else "Rezept bearbeiten",
                         style = MaterialTheme.typography.headlineSmall
                     )
-                    
+
                     Row {
                         TextButton(onClick = onDismiss) {
                             Text("Abbrechen")
                         }
-                        
+
                         Button(
                             onClick = {
                                 val newRecipe = Recipe().apply {
@@ -109,7 +119,7 @@ fun RecipeFormDialog(
                                     this.source = recipe?.source ?: "" // Will be set by repository
                                     this.price = price
                                     this.season = season
-                                    this.foodIntolerances = foodIntolerances
+                                    this.foodIntolerances = foodIntolerances.toList()
                                     this.time = time
                                     this.skillLevel = skillLevel
                                     this.type = recipeType
@@ -122,9 +132,9 @@ fun RecipeFormDialog(
                         }
                     }
                 }
-                
+
                 Divider()
-                
+
                 // Form content
                 LazyColumn(
                     modifier = Modifier
@@ -160,7 +170,7 @@ fun RecipeFormDialog(
                                     ),
                                     singleLine = true
                                 )
-                                
+
                                 OutlinedTextField(
                                     value = description,
                                     onValueChange = { description = it },
@@ -178,7 +188,7 @@ fun RecipeFormDialog(
                             }
                         }
                     }
-                    
+
                     // Ingredients Section
                     item {
                         ExpandableSection(
@@ -202,11 +212,11 @@ fun RecipeFormDialog(
                                         text = if (shoppingIngredients.isEmpty()) "Keine Zutaten hinzugefügt" else "${shoppingIngredients.size} Zutaten",
                                         style = MaterialTheme.typography.bodyMedium
                                     )
-                                    
+
                                     Button(
-                                        onClick = { 
+                                        onClick = {
                                             editingIngredientIndex = -1
-                                            showIngredientPicker = true 
+                                            showIngredientPicker = true
                                         }
                                     ) {
                                         Icon(Icons.Default.Add, contentDescription = null)
@@ -214,7 +224,7 @@ fun RecipeFormDialog(
                                         Text("Zutat hinzufügen")
                                     }
                                 }
-                                
+
                                 shoppingIngredients.forEachIndexed { index, ingredient ->
                                     IngredientItem(
                                         ingredient = ingredient,
@@ -223,16 +233,17 @@ fun RecipeFormDialog(
                                             showIngredientPicker = true
                                         },
                                         onDelete = {
-                                            shoppingIngredients = shoppingIngredients.toMutableList().apply {
-                                                removeAt(index)
-                                            }
+                                            shoppingIngredients =
+                                                shoppingIngredients.toMutableList().apply {
+                                                    removeAt(index)
+                                                }
                                         }
                                     )
                                 }
                             }
                         }
                     }
-                    
+
                     // Properties Section
                     item {
                         ExpandableSection(
@@ -255,7 +266,7 @@ fun RecipeFormDialog(
                                     onOptionSelected = { dietaryHabit = it },
                                     displayText = { it.toString() }
                                 )
-                                
+
                                 // Time Range
                                 DropdownSelector(
                                     label = "Zeitaufwand",
@@ -264,7 +275,7 @@ fun RecipeFormDialog(
                                     onOptionSelected = { time = it },
                                     displayText = { it.displayName }
                                 )
-                                
+
                                 // Price Range
                                 DropdownSelector(
                                     label = "Preis",
@@ -273,7 +284,7 @@ fun RecipeFormDialog(
                                     onOptionSelected = { price = it },
                                     displayText = { it.displayName }
                                 )
-                                
+
                                 // Skill Level
                                 DropdownSelector(
                                     label = "Schwierigkeitsgrad",
@@ -285,7 +296,7 @@ fun RecipeFormDialog(
                             }
                         }
                     }
-                    
+
                     // Additional Information Section
                     item {
                         ExpandableSection(
@@ -308,7 +319,7 @@ fun RecipeFormDialog(
                                     placeholder = "Schritt hinzufügen...",
                                     showNumbering = true
                                 )
-                                
+
                                 // Notes
                                 StringListEditor(
                                     label = "Notizen",
@@ -316,7 +327,7 @@ fun RecipeFormDialog(
                                     onItemsChanged = { notes = it },
                                     placeholder = "Notiz hinzufügen..."
                                 )
-                                
+
                                 // Materials
                                 StringListEditor(
                                     label = "Benötigte Materialien",
@@ -331,7 +342,7 @@ fun RecipeFormDialog(
             }
         }
     }
-    
+
     if (showIngredientPicker) {
         RecipeIngredientPickerDialog(
             allIngredients = allIngredients,
@@ -346,6 +357,7 @@ fun RecipeFormDialog(
                     shoppingIngredients + newIngredient
                 }
                 showIngredientPicker = false
+                foodIntolerances.removeAll(newIngredient.ingredient?.intolerances ?: listOf())
             }
         )
     }

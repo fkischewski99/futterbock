@@ -16,4 +16,5 @@ interface EditShoppingListActions : BaseAction {
     class DeleteShoppingItem(val shoppingIngredient: ShoppingIngredient) : EditShoppingListActions {
 
     }
+    data object ExportPdf : EditShoppingListActions
 }

@@ -11,8 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
@@ -28,8 +32,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
+import getPlatformName
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -84,17 +90,34 @@ fun MaterialList(
                 },
                 onItemAdded = { text -> onAction(EditMaterialListActions.Add(text)) },
                 topBar = {
-                    TopAppBar(title = {
-                        Text(text = "Materialliste")
-                    }, navigationIcon = {
-                        NavigationIconButton(
-                            onLeave = {
-                                onAction(EditMaterialListActions.SaveMaterialList)
-                                onAction(NavigationActions.GoBack)
+                    TopAppBar(
+                        title = { Text(text = "Materialliste") },
+                        navigationIcon = {
+                            NavigationIconButton(
+                                onLeave = {
+                                    onAction(EditMaterialListActions.SaveMaterialList)
+                                    onAction(NavigationActions.GoBack)
+                                }
+                            )
+                        },
+                        actions = {
+                            IconButton(
+                                onClick = { onAction(EditMaterialListActions.ExportPdf) },
+                                modifier = Modifier.clip(RoundedCornerShape(75))
+                                    .background(MaterialTheme.colorScheme.tertiary)
+                            ) {
+                                val imageVector = when (getPlatformName()) {
+                                    "desktop" -> Icons.Default.Save
+                                    else -> Icons.Default.Share
+                                }
+                                Icon(
+                                    imageVector = imageVector,
+                                    contentDescription = "Export PDF",
+                                    tint = MaterialTheme.colorScheme.onTertiary
+                                )
                             }
-
-                        )
-                    })
+                        }
+                    )
                 })
 
         }

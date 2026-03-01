@@ -9,4 +9,5 @@ interface EditMaterialListActions : BaseAction {
     data class Add(val materialName: String) : EditMaterialListActions
     data class Delete(val material: Material) : EditMaterialListActions
     data object SaveMaterialList : EditMaterialListActions
+    data object ExportPdf : EditMaterialListActions
 }

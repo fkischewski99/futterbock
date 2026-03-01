@@ -28,6 +28,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import getPlatformName
 import kotlinx.datetime.LocalDate
 import model.Ingredient
 import model.MultiDayShoppingList
@@ -105,16 +108,34 @@ fun ShoppingListCategorized(
                 items = ingredientList,
                 onItemAdded = { text -> onAction(EditShoppingListActions.AddNewIngredient(text)) },
                 topBar = {
-                    TopAppBar(title = {
-                        Text(text = "Einkaufsliste")
-                    }, navigationIcon = {
-                        NavigationIconButton(
-                            onLeave = {
-                                onAction(EditShoppingListActions.SaveToEvent)
-                                onAction(NavigationActions.GoBack)
+                    TopAppBar(
+                        title = { Text(text = "Einkaufsliste") },
+                        navigationIcon = {
+                            NavigationIconButton(
+                                onLeave = {
+                                    onAction(EditShoppingListActions.SaveToEvent)
+                                    onAction(NavigationActions.GoBack)
+                                }
+                            )
+                        },
+                        actions = {
+                            IconButton(
+                                onClick = { onAction(EditShoppingListActions.ExportPdf) },
+                                modifier = Modifier.clip(RoundedCornerShape(75))
+                                    .background(MaterialTheme.colorScheme.tertiary)
+                            ) {
+                                val imageVector = when (getPlatformName()) {
+                                    "desktop" -> Icons.Default.Save
+                                    else -> Icons.Default.Share
+                                }
+                                Icon(
+                                    imageVector = imageVector,
+                                    contentDescription = "Export PDF",
+                                    tint = MaterialTheme.colorScheme.onTertiary
+                                )
                             }
-                        )
-                    })
+                        }
+                    )
                 },
                 content = {
                     Column(

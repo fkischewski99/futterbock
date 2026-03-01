@@ -25,6 +25,9 @@ interface Routes {
     object MaterialList : Routes
 
     @Serializable
+    object RecipePlan : Routes
+
+    @Serializable
     class RecipeOverview(val recipeRef: String) : Routes
 
     @Serializable

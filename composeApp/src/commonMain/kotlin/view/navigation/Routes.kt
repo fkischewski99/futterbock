@@ -62,4 +62,7 @@ interface Routes {
 
     @Serializable
     object RecipeManagement : Routes
+
+    @Serializable
+    object RecipeList : Routes
 }

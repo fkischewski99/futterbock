@@ -28,7 +28,8 @@ fun RecipeList(
     filterForTime: TimeRange?,
     filterForSkillLevel: Range?,
     filterForSeason: Season?,
-    filterForRecipeType: RecipeType?
+    filterForRecipeType: RecipeType?,
+    selectedIngredientFilters: Set<String> = emptySet()
 ) {
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
         allRecipes
@@ -41,7 +42,8 @@ fun RecipeList(
                     filterForTime,
                     filterForRecipeType,
                     filterForSkillLevel,
-                    filterForSeason
+                    filterForSeason,
+                    selectedIngredientFilters
                 )
             }
             .forEach { recipe ->

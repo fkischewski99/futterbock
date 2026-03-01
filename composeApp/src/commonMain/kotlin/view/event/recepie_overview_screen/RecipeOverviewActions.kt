@@ -8,5 +8,8 @@ interface RecipeOverviewActions : BaseAction {
     data class InitializeScreen(val recipeSelection: RecipeSelection, val eventId: String?) :
         RecipeOverviewActions
 
+    data class InitializeScreenWithRecipeId(val recipeId: String) :
+        RecipeOverviewActions
+
     data class UpdateNumberOfPortions(val newNumberOfPortions: Int) : RecipeOverviewActions
 }

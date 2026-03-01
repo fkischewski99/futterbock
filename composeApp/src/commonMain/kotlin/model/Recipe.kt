@@ -44,7 +44,8 @@ class Recipe {
         filterForTime: TimeRange?,
         filterForRecipeType: RecipeType?,
         filterForSkillLevel: Range?,
-        filterForSeason: Season?
+        filterForSeason: Season?,
+        filterForIngredients: Set<String> = emptySet()
     ): Boolean {
         // Apply Filters
         if (filterForEatingHabit != null && !dietaryHabit.matches(filterForEatingHabit))
@@ -66,6 +67,14 @@ class Recipe {
 
         if (filterForSeason != null && !season.contains(filterForSeason))
             return false
+
+        // Filter by ingredients (recipe must contain ALL selected ingredients)
+        if (filterForIngredients.isNotEmpty()) {
+            val recipeIngredientIds = shoppingIngredients.map { it.ingredientRef }.toSet()
+            if (!recipeIngredientIds.containsAll(filterForIngredients)) {
+                return false
+            }
+        }
 
         // Filter Text
         if (name.contains(searchText, ignoreCase = true))

@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +49,7 @@ fun IngredientPickerDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     selectedIngredients: List<String> = emptyList(),
+    multiSelect: Boolean = false
 ) {
     Dialog(
         onDismissRequest = onDismiss
@@ -54,8 +57,10 @@ fun IngredientPickerDialog(
         IngredientPickerContent(
             ingredientList = ingredientList,
             onSelected = onSelected,
+            onDismiss = onDismiss,
             modifier = modifier,
-            selectedIngredients = selectedIngredients
+            selectedIngredients = selectedIngredients,
+            multiSelect = multiSelect
         )
     }
 }
@@ -65,8 +70,10 @@ fun IngredientPickerDialog(
 private fun IngredientPickerContent(
     ingredientList: List<Ingredient>,
     onSelected: (currency: Ingredient) -> Unit,
+    onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     selectedIngredients: List<String> = emptyList(),
+    multiSelect: Boolean = false
 ) {
     var query by remember { mutableStateOf("") }
     var filteredIngredients by remember { mutableStateOf(ingredientList) }
@@ -125,6 +132,19 @@ private fun IngredientPickerContent(
                                 contentDescription = "Search"
                             )
                         },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close",
+                                modifier = Modifier.clickable {
+                                    if (query.isEmpty()) {
+                                        onDismiss()
+                                    } else {
+                                        query = ""
+                                    }
+                                }
+                            )
+                        },
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
@@ -136,7 +156,12 @@ private fun IngredientPickerContent(
             ) {
                 IngredientCard(
                     ingredient = it,
-                    onClick = { onSelected(it) },
+                    onClick = {
+                        onSelected(it)
+                        if (!multiSelect) {
+                            onDismiss()
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     selected = selectedIngredients.contains(it.uid)
                 )

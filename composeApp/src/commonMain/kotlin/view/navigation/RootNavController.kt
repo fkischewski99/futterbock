@@ -25,6 +25,7 @@ import view.event.participants.ParticipantSearchBarScreen
 import view.event.cooking_groups.CookingGroupsScreen
 import view.event.cooking_groups.ingredients.CookingGroupIngredientScreen
 import view.event.recepie_overview_screen.RecipeOverviewScreen
+import view.event.recipe_list.RecipeListScreen
 import view.login.LoginScreen
 import view.login.Register
 
@@ -68,6 +69,9 @@ fun RootNavController(
         }
         composable<Routes.RecipeManagement> {
             RecipeManagementScreen(navController = navController)
+        }
+        composable<Routes.RecipeList> {
+            RecipeListScreen(navController = navController)
         }
         composable<Routes.EventCsvImport> { backStackEntry ->
             val route = backStackEntry.toRoute<Routes.EventCsvImport>()

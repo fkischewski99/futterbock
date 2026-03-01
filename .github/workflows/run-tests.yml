@@ -37,7 +37,7 @@ jobs:
           restore-keys: gradle-v2-${{ runner.os }}
 
       - name: Run Tests
-        run: ./gradlew test --no-daemon
+        run: ./gradlew :composeApp:desktopTest --no-daemon
         continue-on-error: false
 
       - name: Test Desktop Run Command

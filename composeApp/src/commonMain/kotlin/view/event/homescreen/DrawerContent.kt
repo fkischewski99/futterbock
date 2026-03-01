@@ -47,13 +47,6 @@ fun DrawerContent(
                 onManageParticipants()
             }
         )
-        NavigationDrawerItem(
-            label = { Text(text = "Rezepte verwalten") },
-            selected = false,
-            onClick = {
-                onManageRecipes()
-            }
-        )
         HorizontalDivider()
         Text("Rezepte", fontWeight = FontWeight.Bold, modifier = Modifier.padding(16.dp))
         HorizontalDivider()
@@ -62,6 +55,13 @@ fun DrawerContent(
             selected = false,
             onClick = {
                 onViewRecipes()
+            }
+        )
+        NavigationDrawerItem(
+            label = { Text(text = "Rezepte verwalten") },
+            selected = false,
+            onClick = {
+                onManageRecipes()
             }
         )
         HorizontalDivider()

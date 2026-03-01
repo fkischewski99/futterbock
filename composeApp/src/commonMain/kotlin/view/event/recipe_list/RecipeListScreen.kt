@@ -16,12 +16,15 @@ import view.event.actions.NavigationActions
 import view.event.actions.handleNavigation
 import view.event.new_meal_screen.RecipeList
 import view.event.new_meal_screen.RecipeViewModel
+import view.event.recepie_overview_screen.RecipeOverviewActions
+import view.event.recepie_overview_screen.RecipeOverviewViewModel
 import view.navigation.Routes
 import view.shared.NavigationIconButton
 
 @Composable
 fun RecipeListScreen(navController: NavHostController) {
     val recipeViewModel: RecipeViewModel = koinInject()
+    val recipeOverviewViewModel: RecipeOverviewViewModel = koinInject()
     val allRecipes by recipeViewModel.state.collectAsStateWithLifecycle()
     var searchText by remember { mutableStateOf("") }
 
@@ -43,6 +46,9 @@ fun RecipeListScreen(navController: NavHostController) {
                 filterForFoodIntolerance = emptySet(),
                 filterForEatingHabit = null,
                 onRecipeSelected = { recipe ->
+                    recipeOverviewViewModel.handleAction(
+                        RecipeOverviewActions.InitializeScreenWithRecipeId(recipe.uid)
+                    )
                     navController.navigate(Routes.RecipeOverview(recipe.uid))
                 },
                 filterForPrice = null,

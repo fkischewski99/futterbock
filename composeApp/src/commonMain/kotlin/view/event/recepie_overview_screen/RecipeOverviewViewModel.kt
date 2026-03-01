@@ -45,6 +45,31 @@ class RecipeOverviewViewModel(
         }
     }
 
+    private fun initializeViewModelWithRecipeId(recipeId: String) {
+        _recipeState.value = ResultState.Loading
+        viewModelScope.launch {
+            val recipe = eventRepository.getRecipeById(recipeId)
+            val recipeSelection = RecipeSelection().apply {
+                recipeRef = recipeId
+                this.recipe = recipe
+                selectedRecipeName = recipe.name
+                guestCount = 1
+            }
+            val calulatedMap = calculatedIngredientAmounts.calculateAmountsForRecipe(
+                mutableMapOf(),
+                recipeSelection,
+                eventId = null
+            )
+            _recipeState.value = ResultState.Success(
+                RecipeOverviewState(
+                    recipeSelection = recipeSelection,
+                    calculatedIngredientAmounts = calulatedMap.values.toList(),
+                    numberOfPortions = 1
+                )
+            )
+        }
+    }
+
     private fun changePortionNumber(numberOfPortions: Int) {
         val state = _recipeState.value.getSuccessData() ?: return
         viewModelScope.launch {
@@ -67,6 +92,10 @@ class RecipeOverviewViewModel(
             is RecipeOverviewActions.InitializeScreen -> initializeViewModel(
                 action.recipeSelection,
                 action.eventId
+            )
+
+            is RecipeOverviewActions.InitializeScreenWithRecipeId -> initializeViewModelWithRecipeId(
+                action.recipeId
             )
 
             is RecipeOverviewActions.UpdateNumberOfPortions -> changePortionNumber(action.newNumberOfPortions)

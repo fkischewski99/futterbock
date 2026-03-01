@@ -33,8 +33,8 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
-          restore-keys: gradle-${{ runner.os }}
+          key: gradle-v2-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: gradle-v2-${{ runner.os }}
 
       - name: Run Tests
         run: ./gradlew test --no-daemon

@@ -17,6 +17,7 @@ import view.admin.recipes.RecipeManagementScreen
 import view.event.categorized_shopping_list.MaterialListScreen
 import view.event.categorized_shopping_list.ShoppingListScreen
 import view.event.homescreen.EventOverviewScreen
+import view.event.recipe_plan.RecipePlanScreen
 import view.event.new_event.NewEventScreen
 import view.event.new_meal_screen.EditMealScreen
 import view.event.participants.ParticipantScreen
@@ -103,6 +104,9 @@ fun RootNavController(
             }
             composable<Routes.MaterialList> {
                 MaterialListScreen(navController)
+            }
+            composable<Routes.RecipePlan> {
+                RecipePlanScreen(navController)
             }
             composable<Routes.CookingGroups> {
                 CookingGroupsScreen(navController)

@@ -27,7 +27,8 @@ data class MaterialListState(
 
 class MaterialListViewModel(
     private val calculateMaterialList: CalculateMaterialList,
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val pdfServiceModule: services.pdfService.PdfServiceModule
 ) :
     ViewModel() {
 
@@ -54,6 +55,10 @@ class MaterialListViewModel(
 
                 is EditMaterialListActions.Delete -> {
                     deleteMaterial(materialListActions.material)
+                }
+
+                is EditMaterialListActions.ExportPdf -> {
+                    exportPdf()
                 }
             }
         } catch (e: Exception) {
@@ -122,6 +127,13 @@ class MaterialListViewModel(
                     allMaterialList = state.allMaterialList
                 )
             )
+        }
+    }
+
+    private fun exportPdf() {
+        val state = _state.value.getSuccessData() ?: return
+        viewModelScope.launch {
+            pdfServiceModule.createPdf(state.eventId)
         }
     }
 }

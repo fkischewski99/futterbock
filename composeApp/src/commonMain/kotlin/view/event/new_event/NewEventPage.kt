@@ -338,7 +338,7 @@ private fun ShoppingAndMaterialList(
             }
             Button(
                 onClick = {
-                    onAction(EditEventActions.ShareRecipePlanPdf)
+                    onAction(NavigationActions.GoToRoute(Routes.RecipePlan))
                 },
                 modifier = Modifier.padding(8.dp).height(IntrinsicSize.Min),
                 colors = ButtonColors(
@@ -381,103 +381,6 @@ fun TopBarEventPage(
             onAction(NavigationActions.GoBack)
             onAction(EditEventActions.SaveEvent)
         })
-    }, actions = {
-        Row(
-            horizontalArrangement = Arrangement.End,
-        ) {
-
-            IconButton(
-                onClick = {
-                    if (sharedState is ResultState.Success) {
-                        onAction(EditShoppingListActions.Initialize(sharedState.data.event.uid))
-                        onAction(
-                            NavigationActions.GoToRoute(
-                                Routes.ShoppingList(sharedState.data.event.uid)
-                            )
-                        )
-                    }
-                },
-                modifier = Modifier.clip(shape = RoundedCornerShape(75))
-                    .background(MaterialTheme.colorScheme.secondary),
-
-                ) {
-                Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = "Shopping Cart Icon",
-                    tint = MaterialTheme.colorScheme.onSecondary
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            ShareRecipePlanPdfButton(onAction)
-            Spacer(modifier = Modifier.width(8.dp))
-            SharePdfButton(onAction)
-        }
     })
 
 }
-
-@Composable
-private fun SharePdfButton(onAction: (BaseAction) -> Unit) {
-    var isButtonEnabled by remember { mutableStateOf(true) }
-
-    LaunchedEffect(isButtonEnabled) {
-        if (isButtonEnabled) return@LaunchedEffect
-        else delay(2000L)
-        isButtonEnabled = true
-    }
-
-    IconButton(
-        onClick = {
-            if (isButtonEnabled) {
-                isButtonEnabled = false
-                onAction(EditEventActions.SharePdf)
-            }
-        },
-        enabled = isButtonEnabled,
-        modifier = Modifier.clip(shape = RoundedCornerShape(75))
-            .background(MaterialTheme.colorScheme.tertiary),
-    ) {
-        val imageVector = when (getPlatformName()) {
-            "desktop" -> Icons.Default.Save
-            else -> Icons.Default.Share
-        }
-        Icon(
-            imageVector = imageVector,
-            contentDescription = "Printer Icon",
-            tint = MaterialTheme.colorScheme.onTertiary
-        )
-
-    }
-}
-
-@Composable
-private fun ShareRecipePlanPdfButton(onAction: (BaseAction) -> Unit) {
-    var isButtonEnabled by remember { mutableStateOf(true) }
-
-    LaunchedEffect(isButtonEnabled) {
-        if (isButtonEnabled) return@LaunchedEffect
-        else delay(2000L)
-        isButtonEnabled = true
-    }
-
-    IconButton(
-        onClick = {
-            if (isButtonEnabled) {
-                isButtonEnabled = false
-                onAction(EditEventActions.ShareRecipePlanPdf)
-            }
-        },
-        enabled = isButtonEnabled,
-        modifier = Modifier.clip(shape = RoundedCornerShape(75))
-            .background(MaterialTheme.colorScheme.tertiary),
-    ) {
-        Icon(
-            imageVector = Icons.Default.RestaurantMenu,
-            contentDescription = "Rezeptplan exportieren",
-            tint = MaterialTheme.colorScheme.onTertiary
-        )
-    }
-}
-
-
-

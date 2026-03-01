@@ -18,14 +18,14 @@ import view.admin.recipes.RecipeManagementViewModel
 
 val viewModelModules = module {
     single { ViewModelEventOverview(get(), get()) }
-    single { CategorizedShoppingListViewModel(get(), get()) }
+    single { CategorizedShoppingListViewModel(get(), get(), get()) }
     single { ViewModelNewParticipant(get()) }
     single { SharedEventViewModel(get(), get(), get()) }
     single { RecipeViewModel(get()) }
     single { IngredientViewModel(get()) }
     single { AllParticipantsViewModel(get()) }
     single { RecipeOverviewViewModel(get(), get()) }
-    single { MaterialListViewModel(get(), get()) }
+    single { MaterialListViewModel(get(), get(), get()) }
     single { CsvImportViewModel(get(), get()) }
     single { CookingGroupIngredientsViewModel(get()) }
     single { RecipeManagementViewModel(get(), get()) }

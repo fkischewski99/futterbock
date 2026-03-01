@@ -28,7 +28,8 @@ data class ShoppingListState(
 
 class CategorizedShoppingListViewModel(
     private val calculateShoppingList: CalculateShoppingList,
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val pdfServiceModule: services.pdfService.PdfServiceModule
 ) :
     ViewModel() {
 
@@ -65,6 +66,8 @@ class CategorizedShoppingListViewModel(
                 is EditShoppingListActions.SelectShoppingDay -> selectShoppingDay(
                     editShoppingListActions.date
                 )
+
+                is EditShoppingListActions.ExportPdf -> exportPdf()
 
             }
         } catch (e: Exception) {
@@ -236,6 +239,13 @@ class CategorizedShoppingListViewModel(
                 ingredientsByCategory = newIngredientByCategory
             )
         )
+    }
+
+    private fun exportPdf() {
+        val successData = state.value.getSuccessData() ?: return
+        viewModelScope.launch {
+            pdfServiceModule.createPdf(successData.eventId)
+        }
     }
 }
 

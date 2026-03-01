@@ -29,7 +29,8 @@ fun DrawerContent(
     onClose: () -> Unit,
     onLogoutNavigation: () -> Unit,
     onManageParticipants: () -> Unit,
-    onManageRecipes: () -> Unit
+    onManageRecipes: () -> Unit,
+    onViewRecipes: () -> Unit
 ) {
     val login: LoginAndRegister = koinInject()
     var showConfirmDialog by remember { mutableStateOf(false) }
@@ -53,6 +54,17 @@ fun DrawerContent(
                 onManageRecipes()
             }
         )
+        HorizontalDivider()
+        Text("Rezepte", fontWeight = FontWeight.Bold, modifier = Modifier.padding(16.dp))
+        HorizontalDivider()
+        NavigationDrawerItem(
+            label = { Text(text = "Rezeptliste ansehen") },
+            selected = false,
+            onClick = {
+                onViewRecipes()
+            }
+        )
+        HorizontalDivider()
         Text("Benutzer", fontWeight = FontWeight.Bold, modifier = Modifier.padding(16.dp))
         HorizontalDivider()
         NavigationDrawerItem(

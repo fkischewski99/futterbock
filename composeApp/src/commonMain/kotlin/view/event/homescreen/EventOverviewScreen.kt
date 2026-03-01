@@ -91,7 +91,8 @@ fun EventOverview(
                 onClose = { scope.launch { drawerState.close() } },
                 onLogoutNavigation = { onAction(ActionsEventOverview.Logout) },
                 onManageParticipants = { onAction(NavigationActions.GoToRoute(Routes.ParticipantAdministration)) },
-                onManageRecipes = { onAction(NavigationActions.GoToRoute(Routes.RecipeManagement)) }
+                onManageRecipes = { onAction(NavigationActions.GoToRoute(Routes.RecipeManagement)) },
+                onViewRecipes = { onAction(NavigationActions.GoToRoute(Routes.RecipeList)) }
             )
         },
         gesturesEnabled = true

@@ -89,10 +89,16 @@ fun EditMealScreen(
     val recipeViewModel: RecipeViewModel = koinInject()
     val allRecipesState = recipeViewModel.state.collectAsState()
     val canParticipantEat: ParticipantCanEatRecipe = koinInject()
+    val ingredientViewModel: view.event.categorized_shopping_list.IngredientViewModel = koinInject()
+    val ingredientsState = ingredientViewModel.state.collectAsState()
 
     NewMealPage(
         state = state.value,
         allRecipes = allRecipesState.value,
+        allIngredients = when (val ingredientsResult = ingredientsState.value) {
+            is ResultState.Success -> ingredientsResult.data
+            else -> emptyList()
+        },
         onAction = { action ->
             when (action) {
                 is EditMealActions.ViewRecipe -> recipeOverviewViewModel.handleAction(
@@ -125,6 +131,7 @@ fun EditMealScreen(
 fun NewMealPage(
     state: ResultState<EventState>,
     allRecipes: List<Recipe>,
+    allIngredients: List<model.Ingredient>,
     onAction: (BaseAction) -> Unit,
     participantCanEatRecipe: (ParticipantTime, RecipeSelection) -> Boolean,
     getRecipeEatingError: suspend (ParticipantTime, RecipeSelection) -> String?,
@@ -140,6 +147,7 @@ fun NewMealPage(
                 onAction = onAction,
                 state = state,
                 allRecipes = allRecipes,
+                allIngredients = allIngredients,
                 isSearchBarActive = isSearchBarActive,
                 onSearchBarActiveChange = { isSearchBarActive = it }
             )
@@ -256,6 +264,7 @@ private fun navigateToRecipe(
 fun SearchBarComponent(
     state: ResultState<EventState>,
     allRecipes: List<Recipe>,
+    allIngredients: List<model.Ingredient>,
     onAction: (BaseAction) -> Unit,
     isSearchBarActive: Boolean,
     onSearchBarActiveChange: (Boolean) -> Unit
@@ -268,6 +277,7 @@ fun SearchBarComponent(
     var selectedRecipeTypeFilter: RecipeType? by remember { mutableStateOf(null) }
     var selectedSeasonFilter: Season? by remember { mutableStateOf(null) }
     var selectedSkillLevelFilter: Range? by remember { mutableStateOf(null) }
+    var selectedIngredientFilters by remember { mutableStateOf(setOf<String>()) }
 
 
     when (state) {
@@ -330,6 +340,11 @@ fun SearchBarComponent(
                             onFilterSelect = { selectedSkillLevelFilter = it },
                             selectedRecipeType = selectedSkillLevelFilter
                         )
+                        IngredientFilter(
+                            selectedIngredientIds = selectedIngredientFilters,
+                            onIngredientsChange = { selectedIngredientFilters = it },
+                            allIngredients = allIngredients
+                        )
                     }
                     HorizontalDivider(thickness = 4.dp)
                     RecipeList(
@@ -346,7 +361,8 @@ fun SearchBarComponent(
                         filterForTime = selectedTimeFilter,
                         filterForRecipeType = selectedRecipeTypeFilter,
                         filterForSkillLevel = selectedSkillLevelFilter,
-                        filterForSeason = selectedSeasonFilter
+                        filterForSeason = selectedSeasonFilter,
+                        selectedIngredientFilters = selectedIngredientFilters
                     )
                 }
             )

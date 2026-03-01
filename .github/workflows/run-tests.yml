@@ -1,6 +1,6 @@
 name: Run Tests
 
-on: [ pull_request_target ]
+on: [ pull_request ]
 
 env:
   GITHUB_ACTOR: ${{ github.actor }}
@@ -16,8 +16,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          ref: refs/pull/${{ github.event.pull_request.number }}/head
 
       - name: Write google-services.json from secret or fallback
         run: |

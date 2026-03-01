@@ -110,7 +110,6 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
-            implementation(project.dependencies.platform(libs.android.firebase.bom))
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -184,6 +183,10 @@ android {
     }
     dependencies {
         debugImplementation(compose.uiTooling)
+        implementation(platform(libs.android.firebase.bom))
+        implementation("com.google.firebase:firebase-auth")
+        implementation("com.google.firebase:firebase-common")
+        implementation("com.google.firebase:firebase-firestore")
     }
 }
 dependencies {

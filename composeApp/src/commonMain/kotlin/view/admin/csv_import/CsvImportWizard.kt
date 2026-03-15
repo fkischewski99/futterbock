@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import data.csv.*
+import view.shared.NavigationIconButton
 
 enum class ImportStep {
     FILE_SELECTION,
@@ -64,9 +65,7 @@ fun CsvImportWizard(
             TopAppBar(
                 title = { Text("CSV Import") },
                 navigationIcon = {
-                    IconButton(onClick = onClose) {
-                        Icon(Icons.Default.FileUpload, contentDescription = "Schließen")
-                    }
+                    NavigationIconButton(onLeave = onClose)
                 }
             )
         }

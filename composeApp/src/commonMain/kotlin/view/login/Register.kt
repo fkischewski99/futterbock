@@ -81,7 +81,6 @@ fun Register(
     fun onSubmit() {
         scope.launch {
             loading = true
-            delay(5000)
             if (password != passwordConfirm) {
                 registerError = "Passwörter stimmen nicht überein"
                 loading = false

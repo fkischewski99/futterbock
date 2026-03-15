@@ -158,6 +158,7 @@ fun NewEventPage(
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            itemVerticalAlignment = Alignment.CenterVertically,
                         ) {
                             ParticipantNumberTextField(sharedState, onAction)
                             CookingGroupsButton(onAction)

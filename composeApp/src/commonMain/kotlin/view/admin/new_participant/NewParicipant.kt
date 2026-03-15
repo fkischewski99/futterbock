@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
@@ -34,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,7 +45,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -140,7 +145,12 @@ fun NewParicipant(
                                     onAction(ActionsNewParticipant.ChangeFirstName(it))
                                 },
                                 label = { Text("Vorname:") },
-                                modifier = Modifier.padding(8.dp)
+                                modifier = Modifier.padding(8.dp),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                                keyboardActions = KeyboardActions(onNext = {
+                                    focusManager.moveFocus(FocusDirection.Down)
+                                }),
+                                singleLine = true
                             )
                         }
 
@@ -149,7 +159,12 @@ fun NewParicipant(
                                 value = state.data.lastName,
                                 onValueChange = { onAction(ActionsNewParticipant.ChangeLastName(it)) },
                                 label = { Text("Nachname:") },
-                                modifier = Modifier.padding(8.dp)
+                                modifier = Modifier.padding(8.dp),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(onDone = {
+                                    focusManager.clearFocus()
+                                }),
+                                singleLine = true
                             )
                         }
                         Row {
@@ -260,6 +275,7 @@ private fun AllergySelection(
             selectedIngredients = state.allergies,
             onSelected = { onAction(ActionsNewParticipant.AddOrRemoveAllergy(allergy = it.uid)) },
             onDismiss = { showDialog = false },
+            multiSelect = true
         )
     }
 }
@@ -309,9 +325,12 @@ private fun BirthdaySelectionField(
     onAction: (ActionsNewParticipant) -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
 
-    if (interactionSource.collectIsPressedAsState().value) {
-        onAction(ActionsNewParticipant.ShowDatePicker)
+    LaunchedEffect(isPressed) {
+        if (isPressed) {
+            onAction(ActionsNewParticipant.ShowDatePicker)
+        }
     }
 
     DateInputField(

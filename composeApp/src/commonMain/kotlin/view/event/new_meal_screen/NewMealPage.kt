@@ -189,21 +189,20 @@ fun NewMealPage(
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
+                                modifier = Modifier.padding(start = 8.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Info,
                                     contentDescription = "Rezept ansehen",
-                                    modifier = Modifier.padding(start = 16.dp).clickable {
+                                    modifier = Modifier.padding(start = 8.dp).clickable {
                                         navigateToRecipe(onAction, it)
                                     })
                                 Text(
                                     "${it.selectedRecipeName} (${it.eaterIds.size + it.guestCount} ${if (it.eaterIds.size + it.guestCount == 1) "Person" else "Personen"})",
                                     style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(8.dp).clickable {
+                                    modifier = Modifier.weight(1f).padding(8.dp).clickable {
                                         navigateToRecipe(onAction, it)
                                     },
-                                    textAlign = TextAlign.Center
                                 )
                                 IconButton(
                                     onClick = {

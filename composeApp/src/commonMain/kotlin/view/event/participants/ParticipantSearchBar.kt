@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -200,7 +202,7 @@ fun ParticipantSearchBar(
                                 )
                             }
                         }
-                        Box(modifier = Modifier.fillMaxSize()) {
+                        Box(modifier = Modifier.fillMaxSize().navigationBarsPadding().imePadding()) {
                             Column(
                                 modifier = Modifier.verticalScroll(rememberScrollState())
                                     .padding(bottom = 165.dp)

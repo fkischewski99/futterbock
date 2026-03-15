@@ -127,8 +127,7 @@ fun Register(
     Scaffold(modifier = Modifier.fillMaxSize()
         .pointerInput(Unit) {
             detectTapGestures(onTap = { focusManager.clearFocus() })
-        }
-        .imePadding(), topBar = {
+        }, topBar = {
         TopAppBar(
             title = { Text("Registrieren") },
             navigationIcon = { NavigationIconButton(onLeave = onBackNavigation) })

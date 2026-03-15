@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,7 +22,7 @@ fun DatePickerDialog(
 ) {
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = Clock.System.now().toEpochMilliseconds(),
-        yearRange = IntRange(1950, 2025),
+        yearRange = IntRange(1950, Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).year),
         initialDisplayMode = DisplayMode.Picker,
         selectableDates = PastOrPresentSelectableDates
     )

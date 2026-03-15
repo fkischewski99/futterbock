@@ -21,7 +21,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        window.decorView.setBackgroundColor(android.graphics.Color.parseColor("#F9FAF7"))
         FirebaseApp.initializeApp(this)
         setContent {
             App(PdfServiceImpl(this))

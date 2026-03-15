@@ -80,8 +80,7 @@ fun LoginScreen(
         modifier = Modifier.fillMaxSize()
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { focusManager.clearFocus() })
-            }
-            .imePadding(),
+            },
     ) {
         LoginContent(
             onPasswordChange = { value: String -> password = value },

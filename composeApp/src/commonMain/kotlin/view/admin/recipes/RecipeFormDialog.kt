@@ -1,30 +1,26 @@
 package view.admin.recipes
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import co.touchlab.kermit.Logger
 import model.*
 import org.koin.compose.koinInject
-import view.admin.new_participant.IngredientPickerDialog
 import view.event.categorized_shopping_list.IngredientViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,6 +37,7 @@ fun RecipeFormDialog(
 
     var showIngredientPicker by remember { mutableStateOf(false) }
     var editingIngredientIndex by remember { mutableStateOf(-1) }
+    val descriptionFocusRequester = remember { FocusRequester() }
 
     // Recipe form state
     var name by remember { mutableStateOf(recipe?.name ?: "") }
@@ -95,14 +92,13 @@ fun RecipeFormDialog(
                 ) {
                     Text(
                         text = if (recipe == null) "Neues Rezept" else "Rezept bearbeiten",
-                        style = MaterialTheme.typography.headlineSmall
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
-
-                    Row {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         TextButton(onClick = onDismiss) {
                             Text("Abbrechen")
                         }
-
                         Button(
                             onClick = {
                                 val newRecipe = Recipe().apply {
@@ -114,9 +110,8 @@ fun RecipeFormDialog(
                                     this.dietaryHabit = dietaryHabit
                                     this.shoppingIngredients = shoppingIngredients
                                     this.materials = materials
-                                    // Preserve existing values for fields user cannot edit
                                     this.pageInCookbook = recipe?.pageInCookbook ?: 0
-                                    this.source = recipe?.source ?: "" // Will be set by repository
+                                    this.source = recipe?.source ?: ""
                                     this.price = price
                                     this.season = season
                                     this.foodIntolerances = foodIntolerances.toList()
@@ -133,13 +128,16 @@ fun RecipeFormDialog(
                     }
                 }
 
-                Divider()
+                HorizontalDivider()
 
                 // Form content
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp),
+                        .padding(16.dp)
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = { focusManager.clearFocus() })
+                        },
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Basic Information Section
@@ -166,7 +164,7 @@ fun RecipeFormDialog(
                                         imeAction = ImeAction.Next
                                     ),
                                     keyboardActions = KeyboardActions(
-                                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                                        onNext = { descriptionFocusRequester.requestFocus() }
                                     ),
                                     singleLine = true
                                 )
@@ -175,15 +173,10 @@ fun RecipeFormDialog(
                                     value = description,
                                     onValueChange = { description = it },
                                     label = { Text("Beschreibung") },
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.fillMaxWidth()
+                                        .focusRequester(descriptionFocusRequester),
                                     minLines = 2,
-                                    maxLines = 4,
-                                    keyboardOptions = KeyboardOptions(
-                                        imeAction = ImeAction.Done
-                                    ),
-                                    keyboardActions = KeyboardActions(
-                                        onDone = { focusManager.clearFocus() }
-                                    )
+                                    maxLines = 4
                                 )
                             }
                         }
@@ -203,26 +196,23 @@ fun RecipeFormDialog(
                             }
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
+                                if (shoppingIngredients.isNotEmpty()) {
                                     Text(
-                                        text = if (shoppingIngredients.isEmpty()) "Keine Zutaten hinzugefügt" else "${shoppingIngredients.size} Zutaten",
+                                        text = "${shoppingIngredients.size} Zutaten",
                                         style = MaterialTheme.typography.bodyMedium
                                     )
+                                }
 
-                                    Button(
-                                        onClick = {
-                                            editingIngredientIndex = -1
-                                            showIngredientPicker = true
-                                        }
-                                    ) {
-                                        Icon(Icons.Default.Add, contentDescription = null)
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("Zutat hinzufügen")
-                                    }
+                                Button(
+                                    onClick = {
+                                        editingIngredientIndex = -1
+                                        showIngredientPicker = true
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Zutat hinzufügen")
                                 }
 
                                 shoppingIngredients.forEachIndexed { index, ingredient ->

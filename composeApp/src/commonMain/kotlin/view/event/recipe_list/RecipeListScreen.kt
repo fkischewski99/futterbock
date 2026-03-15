@@ -1,6 +1,7 @@
 package view.event.recipe_list
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,6 +11,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -54,7 +57,12 @@ fun RecipeListScreen(navController: NavHostController) {
     var selectedSkillLevelFilter by remember { mutableStateOf<Range?>(null) }
     var selectedIngredientFilters by remember { mutableStateOf(setOf<String>()) }
 
+    val focusManager = LocalFocusManager.current
+
     Scaffold(
+        modifier = Modifier.pointerInput(Unit) {
+            detectTapGestures(onTap = { focusManager.clearFocus() })
+        },
         topBar = {
             RecipeListTopBar(
                 searchText = searchText,

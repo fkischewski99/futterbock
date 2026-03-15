@@ -13,7 +13,7 @@ import services.shoppingList.CalculateShoppingList
 import view.event.SharedEventViewModel
 import view.event.new_event.groupMealsByDate
 import view.shared.ResultState
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import model.Participant

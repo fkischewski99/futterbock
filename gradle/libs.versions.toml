@@ -11,17 +11,16 @@ androidx-espresso-core = "3.7.0"
 androidx-material = "1.13.0"
 androidx-test-junit = "1.3.0"
 androidx-lifecycle = "2.9.4"
-compose-plugin = "1.7.1"
+compose-plugin = "1.10.2"
 junit = "4.13.2"
 kermit = "2.0.6"
 kotlin = "2.2.0"
 koin = "3.6.0-alpha3"
 koin-compose = "1.2.0-Beta5"
-compose = "1.9.2"
-kotlin-x-datetime = "0.6.2"
+kotlin-x-datetime = "0.7.1"
 kotlin-x-coroutines = "1.10.1"
-androidx-navigation = "2.8.0-alpha10"
-kotlinx-serialization-plugin = "2.0.20"
+androidx-navigation = "2.9.2"
+kotlinx-serialization-plugin = "2.2.0"
 kotlinx-serialization = "1.7.3"
 pdfbox = "3.0.2"
 google-services = "4.4.3"
@@ -29,7 +28,6 @@ firebase-bom = "34.3.0"
 gitlive = "2.4.0"
 junitJupiter = "5.13.3"
 buildkonfig = "0.16.0"
-compose-hot-reload = "1.0.0-alpha03"
 resolver = "1.0.0"
 ktor = "3.0.3"
 
@@ -39,6 +37,7 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core-ktx" }
 androidx-test-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-junit" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "androidx-espresso-core" }
@@ -56,8 +55,6 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 pdfbox = { group = "org.apache.pdfbox", name = "pdfbox", version.ref = "pdfbox" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlin-x-coroutines" }
 
-#Preview
-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
 #firebase
 android-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 gitlive-firebase-firestore = { group = "dev.gitlive", name = "firebase-firestore", version.ref = "gitlive" }
@@ -83,5 +80,4 @@ kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotlin" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
-hotreload = { id = "org.jetbrains.compose.hot-reload", version.ref = "compose-hot-reload" }
 resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "resolver" }

@@ -14,7 +14,6 @@ plugins {
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.google.services)
     alias(libs.plugins.buildkonfig)
-    alias(libs.plugins.hotreload)
 }
 
 composeCompiler {
@@ -80,6 +79,7 @@ kotlin {
 
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
+        freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
     }
     androidTarget {
         compilerOptions {
@@ -106,7 +106,6 @@ kotlin {
 
 
         androidMain.dependencies {
-            implementation(libs.compose.ui.tooling.preview)
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
@@ -124,6 +123,7 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.couroutines.core)
             implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(compose.materialIconsExtended)
             implementation(libs.androidx.navigation)
             implementation(libs.kotlinx.serialization.json)
@@ -135,8 +135,6 @@ kotlin {
             implementation(libs.kermit)
         }
         desktopMain.dependencies {
-            // TODO delete when this pr is merged: https://github.com/GitLiveApp/firebase-java-sdk/pull/33
-            implementation("dev.gitlive:firebase-java-sdk:0.6.2")
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.pdfbox)

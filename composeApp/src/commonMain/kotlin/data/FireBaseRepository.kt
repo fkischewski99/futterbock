@@ -8,7 +8,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.flow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import model.DailyShoppingList
@@ -365,13 +365,15 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         return recipes
     }
 
-    override suspend fun getRecipeById(recipeId: String): Recipe {
-        val recipe = firestore
+    override suspend fun getRecipeById(recipeId: String): Recipe? {
+        val doc = firestore
             .collection(RECIPES)
             .document(recipeId)
             .get()
-            .data<Recipe> {
-            }
+
+        if (!doc.exists) return null
+
+        val recipe = doc.data<Recipe>()
 
         // Batch load all ingredients in a single request instead of individual requests
         val ingredientRefs = recipe.shoppingIngredients.map { it.ingredientRef }.distinct()

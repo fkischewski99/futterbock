@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,9 +14,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -47,7 +50,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -167,6 +169,7 @@ fun NewMealPage(
         Column(
             modifier = Modifier.padding(top = it.calculateTopPadding()).padding(8.dp)
                 .verticalScroll(rememberScrollState()).fillMaxHeight()
+                .padding(bottom = 165.dp)
         ) {
             when (state) {
                 is ResultState.Success -> {
@@ -186,21 +189,20 @@ fun NewMealPage(
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
+                                modifier = Modifier.padding(start = 8.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Info,
                                     contentDescription = "Rezept ansehen",
-                                    modifier = Modifier.padding(start = 16.dp).clickable {
+                                    modifier = Modifier.padding(start = 8.dp).clickable {
                                         navigateToRecipe(onAction, it)
                                     })
                                 Text(
                                     "${it.selectedRecipeName} (${it.eaterIds.size + it.guestCount} ${if (it.eaterIds.size + it.guestCount == 1) "Person" else "Personen"})",
                                     style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(8.dp).clickable {
+                                    modifier = Modifier.weight(1f).padding(8.dp).clickable {
                                         navigateToRecipe(onAction, it)
                                     },
-                                    textAlign = TextAlign.Center
                                 )
                                 IconButton(
                                     onClick = {
@@ -436,27 +438,21 @@ fun ActionButtons(
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalAlignment = Alignment.End
+        horizontalAlignment = Alignment.End,
+        modifier = Modifier.width(IntrinsicSize.Max).widthIn(max = 400.dp)
     ) {
         ExtendedFloatingActionButton(
             onClick = onOpenSearch,
-            modifier = Modifier
-                .width(400.dp)
-                .clip(shape = RoundedCornerShape(75)),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(75),
             containerColor = MaterialTheme.colorScheme.secondary,
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Rezept hinzufügen"
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Rezept hinzufügen")
-            }
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Rezept hinzufügen"
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Rezept hinzufügen")
         }
 
         ExtendedFloatingActionButton(
@@ -467,23 +463,16 @@ fun ActionButtons(
                     )
                 )
             },
-            modifier = Modifier
-                .width(400.dp)
-                .clip(shape = RoundedCornerShape(75)),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(75),
             containerColor = MaterialTheme.colorScheme.primary,
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add Icon"
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Weitere Mahlzeit anlegen")
-            }
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add Icon"
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Weitere Mahlzeit anlegen")
         }
     }
 }

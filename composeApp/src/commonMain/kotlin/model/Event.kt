@@ -1,6 +1,6 @@
 package model
 
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import view.shared.HelperFunctions

@@ -29,7 +29,12 @@ class RecipeOverviewViewModel(
     private fun initializeViewModel(recipeSelection: RecipeSelection, eventId: String?) {
         _recipeState.value = ResultState.Loading
         viewModelScope.launch {
-            recipeSelection.recipe = eventRepository.getRecipeById(recipeSelection.recipeRef)
+            val recipe = eventRepository.getRecipeById(recipeSelection.recipeRef)
+            if (recipe == null) {
+                _recipeState.value = ResultState.Error("Rezept wurde gelöscht")
+                return@launch
+            }
+            recipeSelection.recipe = recipe
             val calulatedMap = calculatedIngredientAmounts.calculateAmountsForRecipe(
                 mutableMapOf(),
                 recipeSelection,
@@ -49,6 +54,10 @@ class RecipeOverviewViewModel(
         _recipeState.value = ResultState.Loading
         viewModelScope.launch {
             val recipe = eventRepository.getRecipeById(recipeId)
+            if (recipe == null) {
+                _recipeState.value = ResultState.Error("Rezept wurde gelöscht")
+                return@launch
+            }
             val recipeSelection = RecipeSelection().apply {
                 recipeRef = recipeId
                 this.recipe = recipe

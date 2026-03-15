@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import getPlatformName
 import kotlinx.datetime.Instant
 import view.shared.HelperFunctions
 import view.shared.date.FutureOrPresentSelectableDates
@@ -50,7 +51,7 @@ fun DateInputField(
         isError = error.isNotEmpty(),
         supportingText = { Text(error, color = MaterialTheme.colorScheme.error) },
         singleLine = true,
-        readOnly = !isInputFieldEditable,
+        readOnly = !isInputFieldEditable || getPlatformName() != "desktop",
         value = text,
         trailingIcon = trailingIcon,
         onValueChange = {},

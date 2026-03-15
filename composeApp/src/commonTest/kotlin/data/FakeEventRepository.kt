@@ -1,7 +1,7 @@
 package data
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -114,7 +114,7 @@ class FakeEventRepository : EventRepository {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getRecipeById(recipeId: String): Recipe {
+    override suspend fun getRecipeById(recipeId: String): Recipe? {
         TODO("Not yet implemented")
     }
 

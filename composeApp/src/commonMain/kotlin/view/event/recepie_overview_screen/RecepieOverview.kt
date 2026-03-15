@@ -28,7 +28,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.navigation.NavHostController
 import futterbock_app.composeapp.generated.resources.Res
 import futterbock_app.composeapp.generated.resources.schwierigkeit1
@@ -76,7 +79,12 @@ fun RecipeOverview(
     state: ResultState<RecipeOverviewState>,
     onAction: (BaseAction) -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
+
     Scaffold(
+        modifier = Modifier.pointerInput(Unit) {
+            detectTapGestures(onTap = { focusManager.clearFocus() })
+        },
         topBar = {
             TopAppBar(
                 title = { Text(text = "Rezeptübersicht") },

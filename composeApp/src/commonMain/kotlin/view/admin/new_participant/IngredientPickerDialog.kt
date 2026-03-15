@@ -121,7 +121,7 @@ private fun IngredientPickerContent(
                         ),
                         placeholder = {
                             Text(
-                                text = "Search",
+                                text = "Suchen",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -129,7 +129,7 @@ private fun IngredientPickerContent(
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Search,
-                                contentDescription = "Search"
+                                contentDescription = "Suchen"
                             )
                         },
                         trailingIcon = {

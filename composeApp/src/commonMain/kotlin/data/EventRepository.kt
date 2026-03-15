@@ -43,7 +43,7 @@ interface EventRepository {
     suspend fun getAllRecipes(): List<Recipe>
     suspend fun getUserCreatedRecipes(): List<Recipe>
     suspend fun getMealById(eventId: String, mealId: String): Meal
-    suspend fun getRecipeById(recipeId: String): Recipe
+    suspend fun getRecipeById(recipeId: String): Recipe?
     suspend fun createRecipe(recipe: Recipe)
     suspend fun updateRecipe(recipe: Recipe)
     suspend fun deleteRecipe(recipeId: String)

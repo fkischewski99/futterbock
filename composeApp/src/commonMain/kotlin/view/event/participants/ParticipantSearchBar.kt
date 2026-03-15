@@ -8,11 +8,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
@@ -32,12 +40,16 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -93,6 +105,9 @@ fun ParticipantSearchBar(
     var searchText by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(true) }
     var participantsAddedInThisStep by remember { mutableStateOf(listOf<model.Participant>()) }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    var fabHeightPx by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
 
 
     Scaffold(
@@ -107,8 +122,7 @@ fun ParticipantSearchBar(
                                 query = searchText,
                                 onQueryChange = { searchText = it },
                                 onSearch = {
-                                    active = false
-                                    // Optional: handle search
+                                    keyboardController?.hide()
                                 },
                                 expanded = active,
                                 onExpandedChange = { active = it },
@@ -159,7 +173,6 @@ fun ParticipantSearchBar(
                                     },
                                     onClick = {
                                         participantsAddedInThisStep = participantsAddedInThisStep.filter { p -> p.uid != it.uid }
-                                        // Find matching ParticipantTime in event state
                                         val participantTime = (state as? ResultState.Success)?.data?.participantList?.find { pt -> pt.participantRef == it.uid }
                                         if (participantTime != null) {
                                             onAction(
@@ -179,7 +192,6 @@ fun ParticipantSearchBar(
                                                 .padding(start = 4.dp)
                                                 .clickable {
                                                     participantsAddedInThisStep = participantsAddedInThisStep.filter { p -> p.uid != it.uid }
-                                                    // Find matching ParticipantTime in event state
                                                     val participantTime = (state as? ResultState.Success)?.data?.participantList?.find { pt -> pt.participantRef == it.uid }
                                                     if (participantTime != null) {
                                                         onAction(
@@ -195,99 +207,50 @@ fun ParticipantSearchBar(
                                 )
                             }
                         }
-                        when (allParticipants) {
-                            is ResultState.Success -> {
-                                getSelectableParticipants(
-                                    allParticipants = allParticipants.data.allParticipants,
-                                    participantsOfEvent = state.data.participantList
-                                ).filter {
-                                    it.firstName.lowercase().contains(searchText.lowercase()) ||
-                                            it.lastName.lowercase()
-                                                .contains(searchText.lowercase()) ||
-                                            (it.firstName.lowercase() + " " + it.lastName.lowercase()).contains(
-                                                searchText.lowercase()
-                                            )
-                                }.sortedBy { it.firstName }.forEach {
-                                    Row(
-                                        modifier = Modifier.padding(16.dp).clickable {
-                                            searchText = ""
-                                            participantsAddedInThisStep = participantsAddedInThisStep + it
-                                            onAction(EditParticipantActions.AddParticipant(it))
+                        Box(modifier = Modifier.fillMaxSize().navigationBarsPadding().imePadding()) {
+                            Column(
+                                modifier = Modifier.verticalScroll(rememberScrollState())
+                                    .padding(bottom = with(density) { fabHeightPx.toDp() } + 32.dp)
+                            ) {
+                                when (allParticipants) {
+                                    is ResultState.Success -> {
+                                        getSelectableParticipants(
+                                            allParticipants = allParticipants.data.allParticipants,
+                                            participantsOfEvent = state.data.participantList
+                                        ).filter {
+                                            it.firstName.lowercase().contains(searchText.lowercase()) ||
+                                                    it.lastName.lowercase()
+                                                        .contains(searchText.lowercase()) ||
+                                                    (it.firstName.lowercase() + " " + it.lastName.lowercase()).contains(
+                                                        searchText.lowercase()
+                                                    )
+                                        }.sortedBy { it.firstName }.forEach {
+                                            Row(
+                                                modifier = Modifier.padding(16.dp).clickable {
+                                                    searchText = ""
+                                                    participantsAddedInThisStep =
+                                                        participantsAddedInThisStep + it
+                                                    onAction(EditParticipantActions.AddParticipant(it))
+                                                }
+                                            ) {
+                                                Text(text = it.firstName.trim() + " " + it.lastName.trim())
+                                            }
+                                            HorizontalDivider()
                                         }
-
-                                    ) {
-                                        Text(text = it.firstName.trim() + " " + it.lastName.trim())
                                     }
-                                    HorizontalDivider()
+
+                                    else -> {}
                                 }
                             }
-
-                            else -> {}
-                        }
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.BottomEnd
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.End,
+                            Box(
+                                modifier = Modifier.align(Alignment.BottomEnd)
+                                    .padding(16.dp)
+                                    .onSizeChanged { fabHeightPx = it.height }
                             ) {
-                                ExtendedFloatingActionButton(
-                                    onClick = {
-                                        onAction(ActionsNewParticipant.InitWithoutParticipant)
-                                        onAction(NavigationActions.GoToRoute(Routes.CreateOrEditParticipant))
-                                    },
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                        .width(400.dp)
-                                        .clip(shape = RoundedCornerShape(75)), // Limit the width to prevent stretching,
-                                    containerColor = MaterialTheme.colorScheme.onPrimary,
-
-                                    ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.Start,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Add,
-                                            contentDescription = "Add Icon"
-                                        )
-                                        Text(
-                                            text = "Teilnehmende anlegen",
-                                            modifier = Modifier.padding(start = 8.dp)
-                                        )
-                                    }
-                                }
-                                ExtendedFloatingActionButton(
-                                    onClick = {
-                                        onAction(NavigationActions.GoBack)
-                                    },
-                                    modifier = Modifier.padding(bottom = 16.dp)
-                                        .width(400.dp)
-                                        .clip(shape = RoundedCornerShape(75)), // Limit the width to prevent stretching,
-                                    elevation = FloatingActionButtonDefaults.elevation(16.dp),
-                                    containerColor = MaterialTheme.colorScheme.primary
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.Start,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                            contentDescription = "Add Icon"
-                                        )
-                                        Text(
-                                            text = "Teilnehmende übernehmen",
-                                            modifier = Modifier.padding(start = 8.dp)
-                                        )
-                                    }
-                                }
+                                ParticipantActionButtons(onAction = onAction)
                             }
                         }
                     }
-
-                    //elevation = AppBarDefaults.TopAppBarElevation
-
                 }
 
                 is ResultState.Error -> ErrorField(errorMessage = state.message)
@@ -298,4 +261,49 @@ fun ParticipantSearchBar(
 
     }
 
+}
+
+@Composable
+fun ParticipantActionButtons(
+    onAction: (BaseAction) -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.End,
+        modifier = Modifier.width(IntrinsicSize.Max).widthIn(max = 400.dp)
+    ) {
+        ExtendedFloatingActionButton(
+            onClick = {
+                onAction(ActionsNewParticipant.InitWithoutParticipant)
+                onAction(NavigationActions.GoToRoute(Routes.CreateOrEditParticipant))
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(75),
+            containerColor = MaterialTheme.colorScheme.onPrimary,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add Icon"
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Teilnehmende anlegen")
+        }
+
+        ExtendedFloatingActionButton(
+            onClick = {
+                onAction(NavigationActions.GoBack)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(75),
+            elevation = FloatingActionButtonDefaults.elevation(16.dp),
+            containerColor = MaterialTheme.colorScheme.primary
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Übernehmen"
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Teilnehmende übernehmen")
+        }
+    }
 }

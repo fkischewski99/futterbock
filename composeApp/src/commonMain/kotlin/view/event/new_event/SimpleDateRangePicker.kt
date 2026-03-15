@@ -1,17 +1,13 @@
 package view.event.new_event
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
@@ -26,9 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.Instant
 import view.shared.HelperFunctions
 import view.shared.date.DateRangePickerDialog
@@ -53,6 +48,7 @@ fun SimpleDateRangePickerInDatePickerDialog(
 
     FlowRow(
         horizontalArrangement = Arrangement.Start,
+        itemVerticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth(),
     ) {
         DateInputField(
@@ -75,11 +71,7 @@ fun SimpleDateRangePickerInDatePickerDialog(
                 }
             },
             modifier = Modifier
-                .padding(8.dp).height(IntrinsicSize.Min).align(Alignment.CenterVertically)
-                .clip(shape = RoundedCornerShape(75))
-                .background(
-                    MaterialTheme.colorScheme.primary
-                ),
+                .padding(8.dp).align(Alignment.CenterVertically),
 
             ) {
             Row {

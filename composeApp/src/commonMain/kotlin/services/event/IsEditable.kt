@@ -1,6 +1,6 @@
 package services.event
 
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.Instant
 
 

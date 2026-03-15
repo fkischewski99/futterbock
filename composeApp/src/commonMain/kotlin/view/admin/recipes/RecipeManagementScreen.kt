@@ -1,5 +1,6 @@
 package view.admin.recipes
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -9,6 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import model.Recipe
@@ -27,8 +30,12 @@ fun RecipeManagementScreen(
     
     var showCreateDialog by remember { mutableStateOf(false) }
     var editingRecipe by remember { mutableStateOf<Recipe?>(null) }
+    val focusManager = LocalFocusManager.current
 
     Scaffold(
+        modifier = Modifier.pointerInput(Unit) {
+            detectTapGestures(onTap = { focusManager.clearFocus() })
+        },
         topBar = {
             TopAppBar(
                 title = { Text("Rezepte verwalten") },

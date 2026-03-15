@@ -1,11 +1,16 @@
 package view.admin.recipes
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -41,6 +46,8 @@ fun RecipeIngredientPickerDialog(
                   amount.toDoubleOrNull() != null && 
                   amount.toDoubleOrNull()!! > 0
 
+    val focusManager = LocalFocusManager.current
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = modifier
@@ -51,7 +58,10 @@ fun RecipeIngredientPickerDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(24.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures(onTap = { focusManager.clearFocus() })
+                    },
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Title
@@ -95,7 +105,13 @@ fun RecipeIngredientPickerDialog(
                     value = amount,
                     onValueChange = { amount = it },
                     label = { Text("Menge") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { focusManager.clearFocus() }
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                     isError = amount.isNotBlank() && (amount.toDoubleOrNull() == null || amount.toDoubleOrNull()!! <= 0),
                     supportingText = {

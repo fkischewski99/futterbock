@@ -5,7 +5,7 @@ import co.touchlab.kermit.Logger
 import data.EventRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.merge
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone

@@ -5,10 +5,15 @@ import CategorizedShoppingListViewModel
 import MaterialListViewModel
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -49,6 +54,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -97,18 +105,26 @@ fun NewEventScreen(
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NewEventPage(
     sharedState: ResultState<EventState>,
     onAction: (BaseAction) -> Unit
 
 ) {
-    Scaffold(topBar = {
-        TopBarEventPage(
-            onAction = onAction,
-            sharedState = sharedState
-        )
-    }) {
+    val focusManager = LocalFocusManager.current
+
+    Scaffold(
+        modifier = Modifier.pointerInput(Unit) {
+            detectTapGestures(onTap = { focusManager.clearFocus() })
+        },
+        topBar = {
+            TopBarEventPage(
+                onAction = onAction,
+                sharedState = sharedState
+            )
+        }
+    ) {
         Surface(
             color = MaterialTheme.colorScheme.background,
             contentColor = MaterialTheme.colorScheme.onBackground,
@@ -133,14 +149,16 @@ fun NewEventPage(
                                     onAction(EditEventActions.ChangeEventName(value))
                                 },
                                 label = { Text("Name:") },
-                                modifier = Modifier.padding(8.dp)
+                                modifier = Modifier.padding(8.dp),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
                             )
                         }
-                        Row(
+                        FlowRow(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-
+                            itemVerticalAlignment = Alignment.CenterVertically,
                         ) {
                             ParticipantNumberTextField(sharedState, onAction)
                             CookingGroupsButton(onAction)
@@ -255,7 +273,7 @@ private fun CookingGroupsButton(
         onClick = {
             onAction(NavigationActions.GoToRoute(Routes.CookingGroups))
         },
-        modifier = Modifier.padding(8.dp).height(IntrinsicSize.Min),
+        modifier = Modifier.padding(8.dp),
     ) {
         Icon(
             imageVector = Icons.Default.Group,
@@ -266,6 +284,7 @@ private fun CookingGroupsButton(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ShoppingAndMaterialList(
     onAction: (BaseAction) -> Unit,
@@ -275,8 +294,7 @@ private fun ShoppingAndMaterialList(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 32.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        FlowRow(
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -289,8 +307,7 @@ private fun ShoppingAndMaterialList(
                         )
                     )
                 },
-                modifier = Modifier.padding(8.dp).height(IntrinsicSize.Min)
-                    .align(Alignment.CenterVertically),
+                modifier = Modifier.padding(8.dp).height(IntrinsicSize.Min),
                 colors = ButtonColors(
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -315,8 +332,7 @@ private fun ShoppingAndMaterialList(
                         )
                     )
                 },
-                modifier = Modifier.padding(8.dp).height(IntrinsicSize.Min)
-                    .align(Alignment.CenterVertically),
+                modifier = Modifier.padding(8.dp).height(IntrinsicSize.Min),
                 border = BorderStroke(
                     width = 2.dp,
                     color = MaterialTheme.colorScheme.primary

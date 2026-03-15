@@ -3,6 +3,7 @@ package view.login
 import EmailTextField
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.autofill.AutofillNode
 import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.composed
@@ -72,8 +74,13 @@ fun LoginScreen(
     val scope = rememberCoroutineScope()
     val loginService: LoginAndRegister = koinInject<LoginAndRegister>()
 
+    val focusManager = LocalFocusManager.current
+
     Scaffold(
-        modifier = Modifier.fillMaxSize().imePadding(),
+        modifier = Modifier.fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = { focusManager.clearFocus() })
+            },
     ) {
         LoginContent(
             onPasswordChange = { value: String -> password = value },
@@ -120,8 +127,7 @@ fun LoginContent(
 
     Column(
         modifier = Modifier.fillMaxSize().navigationBarsPadding().imePadding()
-            .verticalScroll(rememberScrollState()).padding(16.dp)
-            .clickable { focusManager.clearFocus() },
+            .verticalScroll(rememberScrollState()).padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {

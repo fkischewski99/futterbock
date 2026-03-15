@@ -1,7 +1,32 @@
 {
   "permissions": {
     "allow": [
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(./gradlew :composeApp:compileKotlinDesktop 2>&1 | tail -20)",
+      "Bash(./gradlew :composeApp:compileKotlinDesktop 2>&1 | grep -i \"error\\\\|Error\" | head -20)",
+      "Bash(./gradlew :composeApp:compileKotlinDesktop 2>&1 | grep -E \"\\\\.kt:\" | head -20)",
+      "Bash(./gradlew :composeApp:compileKotlinDesktop 2>&1 | tail -10)",
+      "Bash(./gradlew :composeApp:compileKotlinDesktop 2>&1 | tail -5)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:central.sonatype.com)",
+      "WebFetch(domain:www.jetbrains.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:maven.pkg.jetbrains.space)",
+      "WebFetch(domain:plugins.gradle.org)",
+      "Bash(curl:*)",
+      "Bash(./gradlew build:*)",
+      "Bash(./gradlew :composeApp:compileCommonMainKotlinMetadata :composeApp:compileKotlinDesktop :composeApp:compileDebugKotlinAndroid 2>&1 | grep \"^e:\\\\|BUILD\")",
+      "Bash(./gradlew tasks:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(./gradlew :composeApp:testDebugUnitTest 2>&1)",
+      "WebFetch(domain:gitliveapp.github.io)",
+      "Bash(git fetch:*)",
+      "Bash(gh pr:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }

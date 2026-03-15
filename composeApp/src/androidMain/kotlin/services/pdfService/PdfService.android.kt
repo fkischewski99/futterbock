@@ -9,7 +9,7 @@ import android.graphics.pdf.PdfDocument
 import android.graphics.pdf.PdfDocument.Page
 import android.os.Environment
 import android.provider.MediaStore
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import model.Material
 import model.Meal

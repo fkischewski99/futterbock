@@ -2,7 +2,8 @@ package view.login
 
 import EmailTextField
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -38,15 +39,15 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import co.touchlab.kermit.Logger
+import dev.gitlive.firebase.auth.FirebaseAuthEmailException
 import dev.gitlive.firebase.auth.FirebaseAuthInvalidCredentialsException
-import dev.gitlive.firebase.auth.FirebaseAuthInvalidUserException
 import dev.gitlive.firebase.auth.FirebaseAuthUserCollisionException
+import dev.gitlive.firebase.auth.FirebaseAuthWeakPasswordException
 import futterbock_app.composeapp.generated.resources.Res
 import futterbock_app.composeapp.generated.resources.login_submit
 import futterbock_app.composeapp.generated.resources.logo
 import futterbock_app.composeapp.generated.resources.stamm
 import futterbock_app.composeapp.generated.resources.startPage
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -79,47 +80,45 @@ fun Register(
     fun onSubmit() {
         scope.launch {
             loading = true
-            delay(5000)
             if (password != passwordConfirm) {
-                registerError = "Passwörter stimmen nicht überein"
+                registerError = "Die Passwörter stimmen nicht überein."
                 loading = false
                 return@launch
             }
             if (password.length < 6) {
-                registerError = "Passwort muss mindestens 6 Zeichen lang sein"
+                registerError = "Das Passwort muss mindestens 6 Zeichen lang sein."
                 loading = false
                 return@launch
             }
             if (group.equals("Futterbock", ignoreCase = true)) {
-                registerError =
-                    "Der Gruppenname 'Futterbock' ist reserviert und kann nicht verwendet werden"
+                registerError = "Der Gruppenname 'Futterbock' ist reserviert."
                 loading = false
                 return@launch
             }
             try {
                 currentApp.register(email = email, password = password, group = group)
-                delay(100)
                 onRegisterNavigation()
+            } catch (e: FirebaseAuthWeakPasswordException) {
+                registerError = "Das Passwort ist zu schwach. Bitte wähle ein stärkeres Passwort."
+            } catch (e: FirebaseAuthEmailException) {
+                registerError = "Bitte gib eine gültige E-Mail-Adresse ein."
             } catch (e: FirebaseAuthInvalidCredentialsException) {
-                registerError =
-                    "Fehler beim Registrieren: Bitte geben Sie eine valide email an."
+                registerError = "Ungültige Anmeldedaten. Bitte überprüfe deine Eingaben."
             } catch (e: FirebaseAuthUserCollisionException) {
-                registerError =
-                    "Fehler beim Registrieren: Der Username existiert bereits. Bitte verwenden Sie einen anderen Usernamen."
-            } catch (e: FirebaseAuthInvalidUserException) {
-                registerError =
-                    "Fehler beim Registrieren: Der Username existiert bereits. Bitte verwenden Sie einen anderen Usernamen."
+                registerError = "Diese E-Mail-Adresse wird bereits verwendet. Bitte melde dich an oder verwende eine andere E-Mail."
             } catch (e: Exception) {
                 Logger.e(e.stackTraceToString())
-                registerError =
-                    "Ein unbekannter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut: "
+                registerError = "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut."
             } finally {
                 loading = false
             }
         }
     }
 
-    Scaffold(modifier = Modifier.fillMaxSize().imePadding(), topBar = {
+    Scaffold(modifier = Modifier.fillMaxSize()
+        .pointerInput(Unit) {
+            detectTapGestures(onTap = { focusManager.clearFocus() })
+        }, topBar = {
         TopAppBar(
             title = { Text("Registrieren") },
             navigationIcon = { NavigationIconButton(onLeave = onBackNavigation) })
@@ -156,13 +155,16 @@ fun Register(
                 password = password,
                 onPasswordChange = { value: String -> password = value },
                 loading = loading,
+                imeAction = ImeAction.Next,
+                onNext = { focusManager.moveFocus(FocusDirection.Down) },
             )
             Spacer(modifier = Modifier.padding(4.dp))
             PasswordTextField(
                 password = passwordConfirm,
                 onPasswordChange = { value: String -> passwordConfirm = value },
                 loading = loading,
-                passwordName = "Passwort bestätigen"
+                passwordName = "Passwort bestätigen",
+                onDone = { focusManager.clearFocus() },
             )
             Spacer(modifier = Modifier.padding(8.dp))
             ErrorField(errorMessage = registerError)

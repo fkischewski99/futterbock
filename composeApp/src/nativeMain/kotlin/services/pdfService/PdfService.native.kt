@@ -9,6 +9,8 @@ import model.Meal
 import model.MultiDayShoppingList
 import model.ShoppingIngredient
 import services.pdfService.RecipePlanPdfProcessor
+import platform.darwin.dispatch_async
+import platform.darwin.dispatch_get_main_queue
 import platform.CoreGraphics.CGRect
 import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSAttributedString
@@ -255,15 +257,18 @@ actual class PdfServiceImpl {
             return
         }
 
-        // Create share activity
-        val activityViewController = UIActivityViewController(
-            activityItems = listOf(pdfFileURL),
-            applicationActivities = null
-        )
+        // UIKit presentation must happen on the main queue
+        dispatch_async(dispatch_get_main_queue()) {
+            // Create share activity
+            val activityViewController = UIActivityViewController(
+                activityItems = listOf(pdfFileURL),
+                applicationActivities = null
+            )
 
-        // Present the share sheet from the root view controller
-        val currentViewController = UIApplication.sharedApplication.keyWindow?.rootViewController
-        currentViewController?.presentViewController(activityViewController, true, null)
+            // Present the share sheet from the root view controller
+            val currentViewController = UIApplication.sharedApplication.keyWindow?.rootViewController
+            currentViewController?.presentViewController(activityViewController, true, null)
+        }
     }
 
     @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)

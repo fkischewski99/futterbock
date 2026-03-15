@@ -2,7 +2,8 @@ package view.login
 
 import EmailTextField
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +39,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import co.touchlab.kermit.Logger
+import dev.gitlive.firebase.auth.FirebaseAuthEmailException
 import dev.gitlive.firebase.auth.FirebaseAuthInvalidCredentialsException
 import dev.gitlive.firebase.auth.FirebaseAuthInvalidUserException
 import dev.gitlive.firebase.auth.FirebaseAuthUserCollisionException
@@ -102,14 +104,17 @@ fun Register(
                 onRegisterNavigation()
             } catch (e: FirebaseAuthInvalidCredentialsException) {
                 registerError =
-                    "Fehler beim Registrieren: Bitte geben Sie eine valide email an."
+                    "Fehler beim Registrieren: Bitte geben Sie eine valide Email-Adresse an."
             } catch (e: FirebaseAuthUserCollisionException) {
                 registerError =
                     "Fehler beim Registrieren: Der Username existiert bereits. Bitte verwenden Sie einen anderen Usernamen."
             } catch (e: FirebaseAuthInvalidUserException) {
                 registerError =
                     "Fehler beim Registrieren: Der Username existiert bereits. Bitte verwenden Sie einen anderen Usernamen."
-            } catch (e: Exception) {
+            } catch (e: FirebaseAuthEmailException){
+                registerError = "Bitte geben Sie eine valide Email-Adresse an."
+            }
+            catch (e: Exception) {
                 Logger.e(e.stackTraceToString())
                 registerError =
                     "Ein unbekannter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut: "
@@ -119,7 +124,11 @@ fun Register(
         }
     }
 
-    Scaffold(modifier = Modifier.fillMaxSize().imePadding(), topBar = {
+    Scaffold(modifier = Modifier.fillMaxSize()
+        .pointerInput(Unit) {
+            detectTapGestures(onTap = { focusManager.clearFocus() })
+        }
+        .imePadding(), topBar = {
         TopAppBar(
             title = { Text("Registrieren") },
             navigationIcon = { NavigationIconButton(onLeave = onBackNavigation) })
@@ -156,13 +165,16 @@ fun Register(
                 password = password,
                 onPasswordChange = { value: String -> password = value },
                 loading = loading,
+                imeAction = ImeAction.Next,
+                onNext = { focusManager.moveFocus(FocusDirection.Down) },
             )
             Spacer(modifier = Modifier.padding(4.dp))
             PasswordTextField(
                 password = passwordConfirm,
                 onPasswordChange = { value: String -> passwordConfirm = value },
                 loading = loading,
-                passwordName = "Passwort bestätigen"
+                passwordName = "Passwort bestätigen",
+                onDone = { focusManager.clearFocus() },
             )
             Spacer(modifier = Modifier.padding(8.dp))
             ErrorField(errorMessage = registerError)

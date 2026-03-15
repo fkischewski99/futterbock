@@ -32,6 +32,8 @@ fun PasswordTextField(
     onPasswordChange: (value: String) -> Unit,
     loading: Boolean,
     onDone: () -> Unit = {},
+    onNext: () -> Unit = {},
+    imeAction: ImeAction = ImeAction.Done,
     passwordName: String = "Password"
 ) {
     var passwordVisibility by remember { mutableStateOf(false) }
@@ -52,11 +54,12 @@ fun PasswordTextField(
         keyboardOptions =
         KeyboardOptions(
             keyboardType = KeyboardType.Password,
-            imeAction = ImeAction.Done,
+            imeAction = imeAction,
         ),
         keyboardActions =
         KeyboardActions(
             onDone = { onDone() },
+            onNext = { onNext() },
         ),
         trailingIcon = {
             IconButton(onClick = {

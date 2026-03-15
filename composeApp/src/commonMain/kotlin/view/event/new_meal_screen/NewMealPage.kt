@@ -169,7 +169,7 @@ fun NewMealPage(
         Column(
             modifier = Modifier.padding(top = it.calculateTopPadding()).padding(8.dp)
                 .verticalScroll(rememberScrollState()).fillMaxHeight()
-                .padding(bottom = 165.dp)
+                .padding(bottom = it.calculateBottomPadding())
         ) {
             when (state) {
                 is ResultState.Success -> {

@@ -114,7 +114,7 @@ class FakeEventRepository : EventRepository {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getRecipeById(recipeId: String): Recipe {
+    override suspend fun getRecipeById(recipeId: String): Recipe? {
         TODO("Not yet implemented")
     }
 

@@ -17,6 +17,9 @@ import kotlin.coroutines.resume
 
 @OptIn(ExperimentalForeignApi::class)
 actual class FilePicker {
+    // Strong reference to prevent GC before UIKit weak delegate callback fires
+    private var currentDelegate: NSObject? = null
+
     actual suspend fun pickCsvFile(): FilePickerResult {
         return suspendCancellableCoroutine { continuation ->
             val contentTypes = listOf(
@@ -32,6 +35,7 @@ actual class FilePicker {
                     controller: UIDocumentPickerViewController,
                     didPickDocumentsAtURLs: List<*>
                 ) {
+                    currentDelegate = null
                     val url = didPickDocumentsAtURLs.firstOrNull() as? NSURL
                     if (url == null) {
                         continuation.resume(FilePickerResult(error = "Keine Datei ausgewählt"))
@@ -67,16 +71,24 @@ actual class FilePicker {
                 }
 
                 override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) {
+                    currentDelegate = null
                     continuation.resume(FilePickerResult(error = "Dateiauswahl abgebrochen"))
                 }
             }
 
+            currentDelegate = delegate
             picker.delegate = delegate
+
+            continuation.invokeOnCancellation {
+                currentDelegate = null
+                picker.dismissViewControllerAnimated(true, completion = null)
+            }
 
             val rootViewController = UIApplication.sharedApplication.keyWindow?.rootViewController
             if (rootViewController != null) {
                 rootViewController.presentViewController(picker, animated = true, completion = null)
             } else {
+                currentDelegate = null
                 continuation.resume(FilePickerResult(error = "Kein ViewController verfügbar"))
             }
         }

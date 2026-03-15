@@ -48,7 +48,6 @@ import futterbock_app.composeapp.generated.resources.login_submit
 import futterbock_app.composeapp.generated.resources.logo
 import futterbock_app.composeapp.generated.resources.stamm
 import futterbock_app.composeapp.generated.resources.startPage
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -98,7 +97,6 @@ fun Register(
             }
             try {
                 currentApp.register(email = email, password = password, group = group)
-                delay(100)
                 onRegisterNavigation()
             } catch (e: FirebaseAuthWeakPasswordException) {
                 registerError = "Das Passwort ist zu schwach. Bitte wähle ein stärkeres Passwort."

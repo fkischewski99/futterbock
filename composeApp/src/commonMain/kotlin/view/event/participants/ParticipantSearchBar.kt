@@ -40,12 +40,15 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -103,6 +106,8 @@ fun ParticipantSearchBar(
     var active by remember { mutableStateOf(true) }
     var participantsAddedInThisStep by remember { mutableStateOf(listOf<model.Participant>()) }
     val keyboardController = LocalSoftwareKeyboardController.current
+    var fabHeightPx by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
 
 
     Scaffold(
@@ -205,7 +210,7 @@ fun ParticipantSearchBar(
                         Box(modifier = Modifier.fillMaxSize().navigationBarsPadding().imePadding()) {
                             Column(
                                 modifier = Modifier.verticalScroll(rememberScrollState())
-                                    .padding(bottom = 165.dp)
+                                    .padding(bottom = with(density) { fabHeightPx.toDp() } + 32.dp)
                             ) {
                                 when (allParticipants) {
                                     is ResultState.Success -> {
@@ -240,6 +245,7 @@ fun ParticipantSearchBar(
                             Box(
                                 modifier = Modifier.align(Alignment.BottomEnd)
                                     .padding(16.dp)
+                                    .onSizeChanged { fabHeightPx = it.height }
                             ) {
                                 ParticipantActionButtons(onAction = onAction)
                             }

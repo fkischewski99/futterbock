@@ -365,13 +365,15 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
         return recipes
     }
 
-    override suspend fun getRecipeById(recipeId: String): Recipe {
-        val recipe = firestore
+    override suspend fun getRecipeById(recipeId: String): Recipe? {
+        val doc = firestore
             .collection(RECIPES)
             .document(recipeId)
             .get()
-            .data<Recipe> {
-            }
+
+        if (!doc.exists) return null
+
+        val recipe = doc.data<Recipe>()
 
         // Batch load all ingredients in a single request instead of individual requests
         val ingredientRefs = recipe.shoppingIngredients.map { it.ingredientRef }.distinct()

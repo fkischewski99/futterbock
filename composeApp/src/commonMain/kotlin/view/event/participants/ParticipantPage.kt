@@ -76,7 +76,7 @@ fun ParticipantPage(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Teilnehmendeliste") },
+                title = { Text("Teilnehmendenliste") },
                 navigationIcon = {
                     NavigationIconButton(
                         onLeave = {

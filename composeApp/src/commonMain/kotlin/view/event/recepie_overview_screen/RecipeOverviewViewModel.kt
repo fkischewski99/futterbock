@@ -31,7 +31,7 @@ class RecipeOverviewViewModel(
         viewModelScope.launch {
             val recipe = eventRepository.getRecipeById(recipeSelection.recipeRef)
             if (recipe == null) {
-                _recipeState.value = ResultState.Error(Exception("Rezept wurde gelöscht"))
+                _recipeState.value = ResultState.Error("Rezept wurde gelöscht")
                 return@launch
             }
             recipeSelection.recipe = recipe
@@ -55,7 +55,7 @@ class RecipeOverviewViewModel(
         viewModelScope.launch {
             val recipe = eventRepository.getRecipeById(recipeId)
             if (recipe == null) {
-                _recipeState.value = ResultState.Error(Exception("Rezept wurde gelöscht"))
+                _recipeState.value = ResultState.Error("Rezept wurde gelöscht")
                 return@launch
             }
             val recipeSelection = RecipeSelection().apply {

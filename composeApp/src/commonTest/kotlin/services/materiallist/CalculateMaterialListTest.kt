@@ -15,7 +15,7 @@ import org.koin.test.get
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.test.assertEquals
 
 class CalculateMaterialListTest : KoinTest {

@@ -41,8 +41,8 @@ import androidx.compose.ui.unit.dp
 import co.touchlab.kermit.Logger
 import dev.gitlive.firebase.auth.FirebaseAuthEmailException
 import dev.gitlive.firebase.auth.FirebaseAuthInvalidCredentialsException
-import dev.gitlive.firebase.auth.FirebaseAuthInvalidUserException
 import dev.gitlive.firebase.auth.FirebaseAuthUserCollisionException
+import dev.gitlive.firebase.auth.FirebaseAuthWeakPasswordException
 import futterbock_app.composeapp.generated.resources.Res
 import futterbock_app.composeapp.generated.resources.login_submit
 import futterbock_app.composeapp.generated.resources.logo
@@ -82,18 +82,17 @@ fun Register(
         scope.launch {
             loading = true
             if (password != passwordConfirm) {
-                registerError = "Passwörter stimmen nicht überein"
+                registerError = "Die Passwörter stimmen nicht überein."
                 loading = false
                 return@launch
             }
             if (password.length < 6) {
-                registerError = "Passwort muss mindestens 6 Zeichen lang sein"
+                registerError = "Das Passwort muss mindestens 6 Zeichen lang sein."
                 loading = false
                 return@launch
             }
             if (group.equals("Futterbock", ignoreCase = true)) {
-                registerError =
-                    "Der Gruppenname 'Futterbock' ist reserviert und kann nicht verwendet werden"
+                registerError = "Der Gruppenname 'Futterbock' ist reserviert."
                 loading = false
                 return@launch
             }
@@ -101,22 +100,17 @@ fun Register(
                 currentApp.register(email = email, password = password, group = group)
                 delay(100)
                 onRegisterNavigation()
+            } catch (e: FirebaseAuthWeakPasswordException) {
+                registerError = "Das Passwort ist zu schwach. Bitte wähle ein stärkeres Passwort."
+            } catch (e: FirebaseAuthEmailException) {
+                registerError = "Bitte gib eine gültige E-Mail-Adresse ein."
             } catch (e: FirebaseAuthInvalidCredentialsException) {
-                registerError =
-                    "Fehler beim Registrieren: Bitte geben Sie eine valide Email-Adresse an."
+                registerError = "Ungültige Anmeldedaten. Bitte überprüfe deine Eingaben."
             } catch (e: FirebaseAuthUserCollisionException) {
-                registerError =
-                    "Fehler beim Registrieren: Der Username existiert bereits. Bitte verwenden Sie einen anderen Usernamen."
-            } catch (e: FirebaseAuthInvalidUserException) {
-                registerError =
-                    "Fehler beim Registrieren: Der Username existiert bereits. Bitte verwenden Sie einen anderen Usernamen."
-            } catch (e: FirebaseAuthEmailException){
-                registerError = "Bitte geben Sie eine valide Email-Adresse an."
-            }
-            catch (e: Exception) {
+                registerError = "Diese E-Mail-Adresse wird bereits verwendet. Bitte melde dich an oder verwende eine andere E-Mail."
+            } catch (e: Exception) {
                 Logger.e(e.stackTraceToString())
-                registerError =
-                    "Ein unbekannter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut: "
+                registerError = "Ein unbekannter Fehler ist aufgetreten. Bitte versuche es später erneut."
             } finally {
                 loading = false
             }

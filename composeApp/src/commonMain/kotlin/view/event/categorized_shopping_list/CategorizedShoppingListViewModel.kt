@@ -242,8 +242,9 @@ class CategorizedShoppingListViewModel(
 
     private fun exportPdf() {
         val successData = state.value.getSuccessData() ?: return
+        val multiDayList = successData.multiDayShoppingList ?: return
         viewModelScope.launch {
-            pdfServiceModule.createPdf(successData.eventId)
+            pdfServiceModule.createPdf(successData.eventId, multiDayList)
         }
     }
 }

@@ -52,7 +52,6 @@ class HandleEditEvent(
                 oldState = currentState
             )
 
-            is EditEventActions.SharePdf -> onPdfShare(currentState = currentState)
             is EditEventActions.ShareRecipePlanPdf -> onRecipePlanPdfShare(currentState = currentState)
             is EditEventActions.CopyEventToFuture -> copyEventToFuture(
                 eventRepository = eventRepository,
@@ -66,11 +65,6 @@ class HandleEditEvent(
                 return ResultState.Error("wrong action")
             }
         }
-    }
-
-    private suspend fun onPdfShare(currentState: EventState): ResultState.Success<EventState> {
-        pdfServiceModule.createPdf(eventId = currentState.event.uid)
-        return ResultState.Success(currentState)
     }
 
     private suspend fun onRecipePlanPdfShare(currentState: EventState): ResultState.Success<EventState> {

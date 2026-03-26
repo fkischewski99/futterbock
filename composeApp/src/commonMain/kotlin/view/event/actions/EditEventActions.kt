@@ -5,7 +5,6 @@ import model.Meal
 import org.koin.core.time.TimeInMillis
 
 interface EditEventActions : BaseAction {
-    data object SharePdf : EditEventActions, LoadingAction
     data object ShareRecipePlanPdf : EditEventActions, LoadingAction
     data object SaveEvent : EditEventActions
     data class ChangeEventName(val newName: String) : EditEventActions

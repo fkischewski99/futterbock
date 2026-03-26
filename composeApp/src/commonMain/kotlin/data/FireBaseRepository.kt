@@ -122,7 +122,7 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
     private suspend fun getBatchRecipes(recipeIds: List<String>): Map<String, Recipe> {
         return coroutineScope {
             // Firestore 'in' query limit is 10, so we chunk the requests
-            recipeIds.chunked(10).map { chunk ->
+            val recipeMap = recipeIds.chunked(10).map { chunk ->
                 async {
                     try {
                         firestore.collection(RECIPES)
@@ -132,20 +132,7 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
                             .get()
                             .documents
                             .associate { doc ->
-                                val recipe = doc.data<Recipe>()
-                                // Populate ingredients for each recipe
-                                coroutineScope {
-                                    recipe.shoppingIngredients.map { shoppingIngredient ->
-                                        async {
-                                            shoppingIngredient.ingredient =
-                                                firestore.collection(INGREDIENT)
-                                                    .document(shoppingIngredient.ingredientRef)
-                                                    .get()
-                                                    .data<Ingredient?>()
-                                        }
-                                    }.awaitAll()
-                                }
-                                doc.id to recipe
+                                doc.id to doc.data<Recipe>()
                             }
                     } catch (e: Exception) {
                         Logger.e("Error batch fetching recipes: ${e.message}")
@@ -153,6 +140,23 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
                     }
                 }
             }.awaitAll().fold(emptyMap<String, Recipe>()) { acc, map -> acc + map }
+
+            // Collect all unique ingredient IDs across all recipes
+            val allIngredientIds = recipeMap.values
+                .flatMap { recipe -> recipe.shoppingIngredients.map { it.ingredientRef } }
+                .distinct()
+
+            // Batch fetch all ingredients at once
+            val ingredientMap = getBatchIngredients(allIngredientIds).associateBy { it.uid }
+
+            // Populate ingredients on each recipe
+            recipeMap.values.forEach { recipe ->
+                recipe.shoppingIngredients.forEach { shoppingIngredient ->
+                    shoppingIngredient.ingredient = ingredientMap[shoppingIngredient.ingredientRef]
+                }
+            }
+
+            recipeMap
         }
     }
 
@@ -341,14 +345,16 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
     }
 
     override suspend fun getAllParticipantsOfStamm() = flow {
-        firestore.collection(PARTICIPANTS).snapshots.collect { querySnapshot ->
-            val userEvents = querySnapshot.documents.filter { documentSnapshot ->
-                documentSnapshot.data<Participant>().group == loginAndRegister.getCustomUserGroup()
-            }.map { documentSnapshot ->
-                documentSnapshot.data<Participant>()
+        val group = loginAndRegister.getCustomUserGroup()
+        firestore.collection(PARTICIPANTS)
+            .where { "group" equalTo group }
+            .snapshots
+            .collect { querySnapshot ->
+                val participants = querySnapshot.documents.map { documentSnapshot ->
+                    documentSnapshot.data<Participant>()
+                }
+                emit(participants)
             }
-            emit(userEvents)
-        }
     }
 
     override suspend fun getParticipantById(participantId: String): Participant? {

@@ -19,6 +19,19 @@ class RecipeManagementViewModel(
     private val _uiState = MutableStateFlow<ResultState<List<Recipe>>>(ResultState.Loading)
     val uiState = _uiState.asStateFlow()
 
+    private val _selectedRecipeForEdit = MutableStateFlow<Recipe?>(null)
+    val selectedRecipeForEdit = _selectedRecipeForEdit.asStateFlow()
+
+    fun setRecipeForEdit(recipe: Recipe?) {
+        _selectedRecipeForEdit.value = recipe
+    }
+
+    fun consumeRecipeForEdit(): Recipe? {
+        val recipe = _selectedRecipeForEdit.value
+        _selectedRecipeForEdit.value = null
+        return recipe
+    }
+
     private val _message = MutableStateFlow<String?>(null)
     val message = _message.asStateFlow()
 

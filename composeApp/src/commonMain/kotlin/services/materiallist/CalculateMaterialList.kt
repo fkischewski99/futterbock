@@ -13,7 +13,8 @@ class CalculateMaterialList(private val eventRepository: EventRepository) {
         val meals = eventRepository.getMealsWithRecipeAndIngredients(eventId);
         meals.forEach { meal ->
             meal.recipeSelections.forEach { recipeSelection ->
-                val materials = recipeSelection.recipe!!.materials
+                val recipe = recipeSelection.recipe ?: return@forEach
+                val materials = recipe.materials
                 val materialCounts = materials.groupingBy { it }.eachCount()
                 materialCounts.forEach { (material, count) ->
                     val existingMaterial = materialSet.find { it.name == material }

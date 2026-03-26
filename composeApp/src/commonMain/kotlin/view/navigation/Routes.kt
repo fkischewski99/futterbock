@@ -65,4 +65,7 @@ interface Routes {
 
     @Serializable
     object RecipeList : Routes
+
+    @Serializable
+    object RecipeForm : Routes
 }

@@ -2,8 +2,6 @@ package view.admin.recipes
 
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -14,8 +12,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import model.Recipe
 import org.koin.compose.koinInject
+import view.navigation.Routes
 import view.shared.MGCircularProgressIndicator
 import view.shared.NavigationIconButton
 import view.shared.ResultState
@@ -27,9 +25,6 @@ fun RecipeManagementScreen(
 ) {
     val viewModel: RecipeManagementViewModel = koinInject()
     val uiState by viewModel.uiState.collectAsState()
-    
-    var showCreateDialog by remember { mutableStateOf(false) }
-    var editingRecipe by remember { mutableStateOf<Recipe?>(null) }
     val focusManager = LocalFocusManager.current
 
     Scaffold(
@@ -39,7 +34,7 @@ fun RecipeManagementScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Rezepte verwalten") },
-                navigationIcon = { 
+                navigationIcon = {
                     NavigationIconButton(
                         onLeave = { navController.popBackStack() }
                     )
@@ -48,7 +43,10 @@ fun RecipeManagementScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showCreateDialog = true }
+                onClick = {
+                    viewModel.setRecipeForEdit(null)
+                    navController.navigate(Routes.RecipeForm)
+                }
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -71,12 +69,13 @@ fun RecipeManagementScreen(
                         MGCircularProgressIndicator()
                     }
                 }
-                
+
                 is ResultState.Success -> {
                     RecipeList(
                         recipes = state.data,
                         onEditRecipe = { recipe ->
-                            editingRecipe = recipe
+                            viewModel.setRecipeForEdit(recipe)
+                            navController.navigate(Routes.RecipeForm)
                         },
                         onDeleteRecipe = { recipe ->
                             viewModel.onAction(RecipeManagementAction.DeleteRecipe(recipe))
@@ -86,7 +85,7 @@ fun RecipeManagementScreen(
                             .padding(16.dp)
                     )
                 }
-                
+
                 is ResultState.Error -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -100,26 +99,5 @@ fun RecipeManagementScreen(
                 }
             }
         }
-    }
-
-    if (showCreateDialog) {
-        RecipeFormDialog(
-            onDismiss = { showCreateDialog = false },
-            onSave = { recipe ->
-                viewModel.onAction(RecipeManagementAction.CreateRecipe(recipe))
-                showCreateDialog = false
-            }
-        )
-    }
-    
-    editingRecipe?.let { recipe ->
-        RecipeFormDialog(
-            recipe = recipe,
-            onDismiss = { editingRecipe = null },
-            onSave = { updatedRecipe ->
-                viewModel.onAction(RecipeManagementAction.UpdateRecipe(updatedRecipe))
-                editingRecipe = null
-            }
-        )
     }
 }

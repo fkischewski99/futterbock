@@ -13,6 +13,7 @@ import services.login.LoginAndRegister
 import view.admin.csv_import.CsvImportScreen
 import view.admin.new_participant.NewParticipantScreen
 import view.admin.participants.ParticipantAdminScreen
+import view.admin.recipes.RecipeFormScreen
 import view.admin.recipes.RecipeManagementScreen
 import view.event.categorized_shopping_list.MaterialListScreen
 import view.event.categorized_shopping_list.ShoppingListScreen
@@ -69,6 +70,9 @@ fun RootNavController(
         }
         composable<Routes.RecipeManagement> {
             RecipeManagementScreen(navController = navController)
+        }
+        composable<Routes.RecipeForm> {
+            RecipeFormScreen(navController = navController)
         }
         composable<Routes.RecipeList> {
             RecipeListScreen(navController = navController)

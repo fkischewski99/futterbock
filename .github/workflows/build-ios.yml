@@ -1,0 +1,137 @@
+name: Build iOS
+
+on:
+  workflow_call:
+
+env:
+  FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+  FIREBASE_APPLICATION_ID: ${{ secrets.FIREBASE_APPLICATION_ID }}
+  FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+
+jobs:
+  build-ios:
+    permissions: write-all
+    runs-on: macos-15
+    env:
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APPSTORE_KEY_ID }}
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+      DIST_CERTIFICATE: ${{ secrets.DIST_CERTIFICATE }}
+      DIST_CERTIFICATE_PASSWORD: ${{ secrets.DIST_CERTIFICATE_PASSWORD }}
+      DIST_PROFILE: ${{ secrets.DIST_PROFILE }}
+      IOS_SCHEME: iosApp
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'zulu'
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
+
+      - name: Install Codemagic CLI tools
+        run: pip install codemagic-cli-tools
+
+      - name: Set up keychain
+        run: keychain initialize
+
+      - name: Set up Provisioning profiles
+        run: |
+          PROFILES_HOME="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILES_HOME"
+          PROFILE_PATH="$(mktemp "$PROFILES_HOME"/$(uuidgen).mobileprovision)"
+          echo ${DIST_PROFILE} | base64 --decode > "$PROFILE_PATH"
+          echo "Saved provisioning profile $PROFILE_PATH"
+
+      - name: Set up signing certificate
+        run: |
+          echo $DIST_CERTIFICATE | base64 --decode > /tmp/certificate.p12
+          keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password $DIST_CERTIFICATE_PASSWORD
+
+      - name: Set up code signing settings on Xcode project
+        run: xcode-project use-profiles
+
+      - name: Prepare KMP frameworks
+        run: ./gradlew :composeApp:commonizeCInterop || true
+
+      - name: Build archive
+        run: |
+          cd iosApp
+
+          xcrun xcodebuild \
+            -scheme "${IOS_SCHEME}" \
+            -configuration "Release" \
+            -sdk "iphoneos" \
+            -parallelizeTargets \
+            -showBuildTimingSummary \
+            -disableAutomaticPackageResolution \
+            -derivedDataPath "${RUNNER_TEMP}/Build/DerivedData" \
+            -archivePath "${RUNNER_TEMP}/Build/Archives/${IOS_SCHEME}.xcarchive" \
+            -resultBundlePath "${RUNNER_TEMP}/Build/Artifacts/${IOS_SCHEME}.xcresult" \
+            -destination "generic/platform=iOS" \
+            DEVELOPMENT_TEAM="${{ secrets.APPSTORE_TEAM_ID }}" \
+            PRODUCT_BUNDLE_IDENTIFIER="${{ secrets.BUNDLE_ID }}" \
+            archive | xcbeautify --renderer github-actions || true
+
+      - name: Generate ExportOptions.plist
+        run: |
+          cat <<EOF > ${RUNNER_TEMP}/Build/ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+            <dict>
+              <key>destination</key>
+              <string>export</string>
+              <key>method</key>
+              <string>app-store-connect</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>generateAppStoreInformation</key>
+              <true/>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>teamID</key>
+              <string>${{ secrets.APPSTORE_TEAM_ID }}</string>
+              <key>uploadSymbols</key>
+              <true/>
+              <key>provisioningProfiles</key>
+              <dict>
+                <key>${{ secrets.BUNDLE_ID }}</key>
+                <string>${{ secrets.DIST_PROVISIONING_PROFILE_NAME }}</string>
+              </dict>
+            </dict>
+          </plist>
+          EOF
+
+      - name: Export archive
+        run: |
+          xcrun xcodebuild \
+            -exportArchive \
+            -exportOptionsPlist "${RUNNER_TEMP}/Build/ExportOptions.plist" \
+            -archivePath "${RUNNER_TEMP}/Build/Archives/${IOS_SCHEME}.xcarchive" \
+            -exportPath "${RUNNER_TEMP}/Build/Archives/${IOS_SCHEME}.xcarchive" \
+            PRODUCT_BUNDLE_IDENTIFIER="${{ secrets.BUNDLE_ID }}"
+
+      - name: Publish to TestFlight
+        run: |
+          IPA_PATH=$(find "${RUNNER_TEMP}/Build/Archives/${IOS_SCHEME}.xcarchive" -name "*.ipa")
+          echo "Publishing Futterbock to TestFlight"
+          app-store-connect publish \
+            --path "$IPA_PATH"

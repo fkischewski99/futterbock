@@ -12,10 +12,17 @@ jobs:
   create-release:
     uses: ./.github/workflows/create-release.yml
 
+  build-android:
+    needs: create-release
+    uses: ./.github/workflows/build-android.yml
+    with:
+      asset_url: ${{ needs.create-release.outputs.upload_asset_url }}
+    secrets: inherit
 
-  #build-android:
-  #  needs: create-release
-  #  uses: ./.github/workflows/build-android.yml
+  build-ios:
+    needs: create-release
+    uses: ./.github/workflows/build-ios.yml
+    secrets: inherit
 
   build-windows:
     needs: create-release

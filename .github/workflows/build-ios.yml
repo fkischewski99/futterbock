@@ -72,7 +72,7 @@ jobs:
             
       - name: Publish to TestFlight
         run: |
-          IPA_PATH=$(find "${RUNNER_TEMP}/Build/Archives/${IOS_SCHEME}.xcarchive" -name "*.ipa")
+          IPA_PATH=$(find . -name "*.ipa")
           echo "Publishing Futterbock to TestFlight"
           app-store-connect publish \
             --path "$IPA_PATH"

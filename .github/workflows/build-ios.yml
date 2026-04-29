@@ -63,64 +63,13 @@ jobs:
         run: xcode-project use-profiles
 
 
-      - name: Build archive
+      - name: Build IPA
         run: |
           cd iosApp
-
-          xcrun xcodebuild \
-            -scheme "${IOS_SCHEME}" \
-            -configuration "Release" \
-            -sdk "iphoneos" \
-            -parallelizeTargets \
-            -showBuildTimingSummary \
-            -disableAutomaticPackageResolution \
-            -derivedDataPath "${RUNNER_TEMP}/Build/DerivedData" \
-            -archivePath "${RUNNER_TEMP}/Build/Archives/${IOS_SCHEME}.xcarchive" \
-            -resultBundlePath "${RUNNER_TEMP}/Build/Artifacts/${IOS_SCHEME}.xcresult" \
-            -destination "generic/platform=iOS" \
-            DEVELOPMENT_TEAM="${{ secrets.APPSTORE_TEAM_ID }}" \
-            PRODUCT_BUNDLE_IDENTIFIER="${{ secrets.BUNDLE_ID }}" \
-            archive | xcbeautify --renderer github-actions || true
-
-      - name: Generate ExportOptions.plist
-        run: |
-          cat <<EOF > ${RUNNER_TEMP}/Build/ExportOptions.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-            <dict>
-              <key>destination</key>
-              <string>export</string>
-              <key>method</key>
-              <string>app-store-connect</string>
-              <key>signingStyle</key>
-              <string>manual</string>
-              <key>generateAppStoreInformation</key>
-              <true/>
-              <key>stripSwiftSymbols</key>
-              <true/>
-              <key>teamID</key>
-              <string>${{ secrets.APPSTORE_TEAM_ID }}</string>
-              <key>uploadSymbols</key>
-              <true/>
-              <key>provisioningProfiles</key>
-              <dict>
-                <key>${{ secrets.BUNDLE_ID }}</key>
-                <string>${{ secrets.DIST_PROVISIONING_PROFILE_NAME }}</string>
-              </dict>
-            </dict>
-          </plist>
-          EOF
-
-      - name: Export archive
-        run: |
-          xcrun xcodebuild \
-            -exportArchive \
-            -exportOptionsPlist "${RUNNER_TEMP}/Build/ExportOptions.plist" \
-            -archivePath "${RUNNER_TEMP}/Build/Archives/${IOS_SCHEME}.xcarchive" \
-            -exportPath "${RUNNER_TEMP}/Build/Archives/${IOS_SCHEME}.xcarchive" \
-            PRODUCT_BUNDLE_IDENTIFIER="${{ secrets.BUNDLE_ID }}"
-
+          xcode-project build-ipa \
+            --project "iosApp.xcodeproj" \
+            --scheme "${IOS_SCHEME}"
+            
       - name: Publish to TestFlight
         run: |
           IPA_PATH=$(find "${RUNNER_TEMP}/Build/Archives/${IOS_SCHEME}.xcarchive" -name "*.ipa")

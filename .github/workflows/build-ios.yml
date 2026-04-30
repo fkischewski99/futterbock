@@ -22,6 +22,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Write GoogleService-Info.plist from secret
+        run: echo '${{ secrets.FIREBASE_GOOGLE_SERVICE_INFO_PLIST }}' > iosApp/iosApp/GoogleService-Info.plist
+
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
@@ -62,6 +65,15 @@ jobs:
       - name: Set up code signing settings on Xcode project
         run: xcode-project use-profiles
 
+
+      - name: Set iOS version from versions.properties
+        run: |
+          source versions.properties
+          VERSION_NAME="${versionMajor}.${versionMinor}.${versionPatch}"
+          VERSION_CODE="${versionCode}"
+          echo "Setting iOS version to ${VERSION_NAME} (build ${VERSION_CODE})"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION_NAME}" iosApp/iosApp/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${VERSION_CODE}" iosApp/iosApp/Info.plist
 
       - name: Build IPA
         run: |

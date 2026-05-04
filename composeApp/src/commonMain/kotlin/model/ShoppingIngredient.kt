@@ -1,5 +1,8 @@
 package model
 
+import androidx.room.Entity
+import androidx.room.Ignore
+import androidx.room.PrimaryKey
 import co.touchlab.kermit.Logger
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -10,12 +13,14 @@ import kotlin.math.round
 import kotlin.math.roundToInt
 
 @Serializable
+@Entity(tableName = "shopping_ingredients")
 class ShoppingIngredient() : ListItem<ShoppingIngredient> {
-    var uid: String = ""
+    @PrimaryKey var uid: String = ""
     var ingredientRef: String = ""
     var nameEnteredByUser: String = ""
 
     @Transient
+    @Ignore
     var ingredient: Ingredient? = null
     var amount: Double = 0.0;
     var unit: IngredientUnit = IngredientUnit.GRAMM

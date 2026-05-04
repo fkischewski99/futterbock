@@ -1,5 +1,7 @@
 package model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import kotlin.time.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -7,8 +9,9 @@ import view.shared.HelperFunctions
 import view.shared.list.ListItem
 
 @Serializable
+@Entity(tableName = "events")
 class Event(val group: String) : ListItem<Event> {
-    var uid: String = ""
+    @PrimaryKey var uid: String = ""
     var from: Instant = Clock.System.now();
     var to: Instant = Clock.System.now();
 

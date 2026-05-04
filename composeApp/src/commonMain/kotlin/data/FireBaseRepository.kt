@@ -613,13 +613,12 @@ class FireBaseRepository(private val loginAndRegister: LoginAndRegister) : Event
     ): ParticipantTime {
         val participantId = generateRandomStringId()
         val participant = ParticipantTime(
-            participant = newParticipant,
             from = event.from,
             to = event.to,
             uid = participantId,
             participantRef = newParticipant.uid,
             cookingGroup = newParticipant.selectedGroup.takeIf { it.isNotBlank() } ?: ""
-        )
+        ).also { it.participant = newParticipant }
         firestore.collection(EVENTS)
             .document(event.uid)
             .collection(PARTICIPANT_SCHEDULE)

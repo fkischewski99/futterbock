@@ -1,16 +1,22 @@
 package model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import view.shared.list.ListItem
 
 @Serializable
+@Entity(tableName = "meals")
 data class Meal(
-    val uid: String = "",
+    @PrimaryKey val uid: String = "",
     var day: Instant,
     var mealType: MealType = MealType.MITTAG,
     var recipeSelections: List<RecipeSelection> = emptyList(),
 ) : ListItem<Meal> {
+
+    @kotlinx.serialization.Transient
+    var eventId: String = ""
 
     override fun getListItemTitle(): String {
         return mealType.name

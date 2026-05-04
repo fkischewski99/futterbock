@@ -1,13 +1,16 @@
 package model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import view.shared.HelperFunctions
 import view.shared.list.ListItem
 
 @Serializable
+@Entity(tableName = "participants")
 class Participant : ListItem<Participant> {
-    var uid: String = "";
+    @PrimaryKey var uid: String = "";
     var allergies: List<String> = emptyList();
     var intolerances: List<FoodIntolerance> = emptyList();
 

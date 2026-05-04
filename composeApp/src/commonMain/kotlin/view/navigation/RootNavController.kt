@@ -7,8 +7,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import data.AppMode
+import data.AppModeHolder
 import data.EventRepository
 import org.koin.compose.koinInject
+import services.SeedDataService
 import services.login.LoginAndRegister
 import view.admin.csv_import.CsvImportScreen
 import view.admin.new_participant.NewParticipantScreen
@@ -37,10 +40,12 @@ fun RootNavController(
     val navController = rememberNavController()
     val loginService = koinInject<LoginAndRegister>()
     val eventRepository = koinInject<EventRepository>()
+    val appModeHolder = koinInject<AppModeHolder>()
+    val seedDataService = koinInject<SeedDataService>()
 
     NavHost(
         navController = navController,
-        startDestination = getStartDestination(loginService)
+        startDestination = getStartDestination(loginService, appModeHolder.mode.value)
     ) {
         composable<Routes.LoadingScreen> {
             LoadingScreen()
@@ -48,7 +53,14 @@ fun RootNavController(
         composable<Routes.Login> {
             LoginScreen(
                 navigateToRegister = { navController.navigate(Routes.Register) },
-                navigateToHome = { navController.navigate(Routes.Home) }
+                navigateToHome = { navController.navigate(Routes.Home) },
+                onOfflineSelected = {
+                    seedDataService.downloadSeedDataIfNeeded()
+                    appModeHolder.switchMode(AppMode.OFFLINE_ONLY)
+                    navController.navigate(Routes.Home) {
+                        popUpTo(Routes.Login) { inclusive = true }
+                    }
+                }
             )
         }
         composable<Routes.Register> {
@@ -126,9 +138,8 @@ fun RootNavController(
     }
 }
 
-fun getStartDestination(loginService: LoginAndRegister): Any {
-    if (loginService.isAuthenticated()) {
-        return Routes.Home
-    }
+fun getStartDestination(loginService: LoginAndRegister, appMode: AppMode): Any {
+    if (appMode == AppMode.OFFLINE_ONLY) return Routes.Home
+    if (loginService.isAuthenticated()) return Routes.Home
     return Routes.Login
 }

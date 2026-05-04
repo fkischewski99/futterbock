@@ -1,5 +1,8 @@
 package model
 
+import androidx.room.Entity
+import androidx.room.Ignore
+import androidx.room.PrimaryKey
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -7,16 +10,22 @@ import view.shared.HelperFunctions
 import view.shared.list.ListItem
 
 @Serializable
+@Entity(tableName = "participant_times")
 class ParticipantTime(
-    var uid: String = "",
-    @Transient
-    var participant: Participant? = null,
+    @PrimaryKey var uid: String = "",
     var from: Instant,
     var to: Instant,
-    val participantRef: String,
+    var participantRef: String = "",
     var cookingGroup: String = ""
 ) :
     ListItem<ParticipantTime> {
+
+    @Transient
+    @Ignore
+    var participant: Participant? = null
+
+    @Transient
+    var eventId: String = ""
 
     override fun getListItemTitle(): String {
         return (this.participant?.firstName?.trim()

@@ -63,6 +63,7 @@ import view.shared.MGCircularProgressIndicator
 fun LoginScreen(
     navigateToRegister: () -> Unit,
     navigateToHome: () -> Unit,
+    onOfflineSelected: (suspend () -> Unit)? = null,
 ) {
     var loading by rememberSaveable { mutableStateOf(false) }
     var email by rememberSaveable { mutableStateOf("") }
@@ -91,6 +92,21 @@ fun LoginScreen(
             isSubmitEnabled = isSubmitEnabled,
             loginError = loginError,
             navigateToRegister = navigateToRegister,
+            onOfflineSelected = if (onOfflineSelected != null) {
+                {
+                    scope.launch {
+                        loading = true
+                        loginError = ""
+                        try {
+                            onOfflineSelected()
+                        } catch (e: Exception) {
+                            loginError = "Fehler beim Laden der Daten. Bitte überprüfe deine Internetverbindung."
+                        } finally {
+                            loading = false
+                        }
+                    }
+                }
+            } else null,
             onSubmit = {
                 scope.launch {
                     loading = true
@@ -122,6 +138,7 @@ fun LoginContent(
     isSubmitEnabled: Boolean,
     loginError: String,
     navigateToRegister: () -> Unit,
+    onOfflineSelected: (() -> Unit)? = null,
 ) {
     val focusManager by rememberUpdatedState(LocalFocusManager.current)
 
@@ -175,6 +192,21 @@ fun LoginContent(
         Spacer(modifier = Modifier.padding(16.dp))
         RegisterLink(onNavigateToRegister = navigateToRegister)
 
+        if (onOfflineSelected != null) {
+            Spacer(modifier = Modifier.padding(8.dp))
+            androidx.compose.material3.OutlinedButton(
+                onClick = onOfflineSelected,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = "App offline nutzen")
+            }
+            Text(
+                text = "Daten werden nur lokal gespeichert. Beim ersten Start werden alle Rezepte und Zutaten einmalig heruntergeladen.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
     }
 }
 

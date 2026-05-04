@@ -11,6 +11,7 @@ import data.sync.NetworkMonitor
 import data.sync.OfflineFirstRepository
 import data.sync.SyncManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import org.koin.dsl.module
 import services.login.FirebaseLoginAndRegister
 import services.login.OfflineLoginAndRegister

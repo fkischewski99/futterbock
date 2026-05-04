@@ -19,7 +19,6 @@ val dataModules = module {
     single<AppDatabase> {
         getDatabaseBuilder()
             .setQueryCoroutineContext(Dispatchers.IO)
-            .fallbackToDestructiveMigration(true)
             .build()
     }
 

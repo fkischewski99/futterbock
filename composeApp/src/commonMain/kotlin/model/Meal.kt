@@ -2,6 +2,7 @@ package model
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -15,7 +16,8 @@ import view.shared.list.ListItem
         parentColumns = ["uid"],
         childColumns = ["eventId"],
         onDelete = ForeignKey.CASCADE
-    )]
+    )],
+    indices = [Index("eventId")]
 )
 data class Meal(
     @PrimaryKey val uid: String = "",

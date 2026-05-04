@@ -1,11 +1,15 @@
 package data.local
 
+import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverters
 import data.local.dao.*
 import data.sync.PendingOperation
 import model.*
+
+expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase>
 
 @Database(
     entities = [
@@ -19,10 +23,11 @@ import model.*
         MultiDayShoppingList::class,
         PendingOperation::class,
     ],
-    version = 3,
+    version = 1,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
+@ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao
     abstract fun participantDao(): ParticipantDao

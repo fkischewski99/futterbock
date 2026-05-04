@@ -3,6 +3,7 @@ package model
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Ignore
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -26,7 +27,8 @@ import view.shared.list.ListItem
             childColumns = ["participantRef"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index("eventId"), Index("participantRef")]
 )
 class ParticipantTime(
     @PrimaryKey var uid: String = "",

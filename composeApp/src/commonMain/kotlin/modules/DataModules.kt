@@ -8,19 +8,16 @@ import data.local.RoomRepository
 import data.local.getDatabaseBuilder
 import data.sync.NetworkMonitorImpl
 import data.sync.NetworkMonitor
+import data.sync.InitialSyncService
 import data.sync.OfflineFirstRepository
 import data.sync.SyncManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import org.koin.dsl.module
 import services.login.FirebaseLoginAndRegister
 import services.login.OfflineLoginAndRegister
 
 val dataModules = module {
     single<AppDatabase> {
-        getDatabaseBuilder()
-            .setQueryCoroutineContext(Dispatchers.IO)
-            .build()
+        getDatabaseBuilder().build()
     }
 
     single { FirebaseLoginAndRegister() }
@@ -29,6 +26,7 @@ val dataModules = module {
     single { RoomRepository(get(), get<OfflineLoginAndRegister>()) }
     single<NetworkMonitor> { NetworkMonitorImpl() }
     single { SyncManager(get(), get(), get()) }
+    single { InitialSyncService(get(), get(), get()) }
     single { OfflineFirstRepository(get(), get(), get(), get()) }
 
     single<EventRepository> {

@@ -7,6 +7,7 @@ import data.local.AppDatabase
 import data.local.RoomRepository
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.encodeToString
@@ -41,15 +42,27 @@ class OfflineFirstRepository(
         )
     }
 
+    private suspend fun writeToFirebaseOrQueue(
+        operationType: String,
+        entityId: String,
+        parentId: String? = null,
+        payload: String = "",
+        firebaseAction: suspend () -> Unit
+    ) {
+        if (isOnline) {
+            try { firebaseAction() }
+            catch (e: Exception) { queueOperation(operationType, entityId, parentId, payload) }
+        } else {
+            queueOperation(operationType, entityId, parentId, payload)
+        }
+    }
+
     // --- Events ---
 
     override suspend fun deleteEvent(eventId: String) {
         roomRepository.deleteEvent(eventId)
-        if (isOnline) {
-            try { firebaseRepository.deleteEvent(eventId) }
-            catch (e: Exception) { queueOperation("DELETE_EVENT", eventId) }
-        } else {
-            queueOperation("DELETE_EVENT", eventId)
+        writeToFirebaseOrQueue("DELETE_EVENT", eventId) {
+            firebaseRepository.deleteEvent(eventId)
         }
     }
 
@@ -66,29 +79,27 @@ class OfflineFirstRepository(
 
     override suspend fun createNewEvent(): Event {
         val event = roomRepository.createNewEvent()
-        if (isOnline) {
-            try { firebaseRepository.saveExistingEvent(event) }
-            catch (e: Exception) { queueOperation("CREATE_EVENT", event.uid, payload = json.encodeToString(event)) }
-        } else {
-            queueOperation("CREATE_EVENT", event.uid, payload = json.encodeToString(event))
+        writeToFirebaseOrQueue("CREATE_EVENT", event.uid, payload = json.encodeToString(event)) {
+            firebaseRepository.saveExistingEvent(event)
         }
         return event
     }
 
     override suspend fun saveExistingEvent(event: Event) {
         roomRepository.saveExistingEvent(event)
-        if (isOnline) {
-            try { firebaseRepository.saveExistingEvent(event) }
-            catch (e: Exception) { queueOperation("UPDATE_EVENT", event.uid, payload = json.encodeToString(event)) }
-        } else {
-            queueOperation("UPDATE_EVENT", event.uid, payload = json.encodeToString(event))
+        writeToFirebaseOrQueue("UPDATE_EVENT", event.uid, payload = json.encodeToString(event)) {
+            firebaseRepository.saveExistingEvent(event)
         }
     }
 
     override suspend fun getEventList(group: String): Flow<List<Event>> {
         if (isOnline) {
             try {
-                return firebaseRepository.getEventList(group)
+                return firebaseRepository.getEventList(group).onEach { events ->
+                    events.forEach { event ->
+                        db.eventDao().insert(event)
+                    }
+                }
             } catch (_: Exception) {}
         }
         return roomRepository.getEventList(group)
@@ -106,76 +117,76 @@ class OfflineFirstRepository(
 
     override suspend fun getParticipantsOfEvent(eventId: String, withParticipant: Boolean): List<ParticipantTime> {
         if (isOnline) {
-            try { return firebaseRepository.getParticipantsOfEvent(eventId, withParticipant) }
-            catch (_: Exception) {}
+            try {
+                val participantTimes = firebaseRepository.getParticipantsOfEvent(eventId, withParticipant)
+                participantTimes.forEach { pt ->
+                    pt.eventId = eventId
+                    db.participantTimeDao().insert(pt)
+                    if (pt.participant != null) {
+                        db.participantDao().insert(pt.participant!!)
+                    }
+                }
+                return participantTimes
+            } catch (_: Exception) {}
         }
         return roomRepository.getParticipantsOfEvent(eventId, withParticipant)
     }
 
     override suspend fun getAllParticipantsOfStamm(): Flow<List<Participant>> {
         if (isOnline) {
-            try { return firebaseRepository.getAllParticipantsOfStamm() }
-            catch (_: Exception) {}
+            try {
+                return firebaseRepository.getAllParticipantsOfStamm().onEach { participants ->
+                    participants.forEach { db.participantDao().insert(it) }
+                }
+            } catch (_: Exception) {}
         }
         return roomRepository.getAllParticipantsOfStamm()
     }
 
     override suspend fun deleteParticipantOfEvent(eventId: String, participantId: String) {
         roomRepository.deleteParticipantOfEvent(eventId, participantId)
-        if (isOnline) {
-            try { firebaseRepository.deleteParticipantOfEvent(eventId, participantId) }
-            catch (e: Exception) { queueOperation("DELETE_PARTICIPANT_OF_EVENT", participantId, parentId = eventId) }
-        } else {
-            queueOperation("DELETE_PARTICIPANT_OF_EVENT", participantId, parentId = eventId)
+        writeToFirebaseOrQueue("DELETE_PARTICIPANT_OF_EVENT", participantId, parentId = eventId) {
+            firebaseRepository.deleteParticipantOfEvent(eventId, participantId)
         }
     }
 
     override suspend fun addParticipantToEvent(newParticipant: Participant, event: Event): ParticipantTime {
         val pt = roomRepository.addParticipantToEvent(newParticipant, event)
-        if (isOnline) {
-            try { firebaseRepository.addParticipantToEvent(newParticipant, event) }
-            catch (e: Exception) { queueOperation("ADD_PARTICIPANT_TO_EVENT", pt.uid, parentId = event.uid, payload = json.encodeToString(pt)) }
-        } else {
-            queueOperation("ADD_PARTICIPANT_TO_EVENT", pt.uid, parentId = event.uid, payload = json.encodeToString(pt))
+        writeToFirebaseOrQueue("ADD_PARTICIPANT_TO_EVENT", pt.uid, parentId = event.uid, payload = json.encodeToString(pt)) {
+            firebaseRepository.addParticipantToEvent(newParticipant, event)
         }
         return pt
     }
 
     override suspend fun createNewParticipant(participant: Participant): Participant? {
         val result = roomRepository.createNewParticipant(participant) ?: return null
-        if (isOnline) {
-            try { firebaseRepository.createNewParticipant(result) }
-            catch (e: Exception) { queueOperation("CREATE_PARTICIPANT", result.uid, payload = json.encodeToString(result)) }
-        } else {
-            queueOperation("CREATE_PARTICIPANT", result.uid, payload = json.encodeToString(result))
+        writeToFirebaseOrQueue("CREATE_PARTICIPANT", result.uid, payload = json.encodeToString(result)) {
+            firebaseRepository.createNewParticipant(result)
         }
         return result
     }
 
     override suspend fun updateParticipant(participant: Participant) {
         roomRepository.updateParticipant(participant)
-        if (isOnline) {
-            try { firebaseRepository.updateParticipant(participant) }
-            catch (e: Exception) { queueOperation("UPDATE_PARTICIPANT", participant.uid, payload = json.encodeToString(participant)) }
-        } else {
-            queueOperation("UPDATE_PARTICIPANT", participant.uid, payload = json.encodeToString(participant))
+        writeToFirebaseOrQueue("UPDATE_PARTICIPANT", participant.uid, payload = json.encodeToString(participant)) {
+            firebaseRepository.updateParticipant(participant)
         }
     }
 
     override suspend fun deleteParticipant(participantId: String) {
         roomRepository.deleteParticipant(participantId)
-        if (isOnline) {
-            try { firebaseRepository.deleteParticipant(participantId) }
-            catch (e: Exception) { queueOperation("DELETE_PARTICIPANT", participantId) }
-        } else {
-            queueOperation("DELETE_PARTICIPANT", participantId)
+        writeToFirebaseOrQueue("DELETE_PARTICIPANT", participantId) {
+            firebaseRepository.deleteParticipant(participantId)
         }
     }
 
     override suspend fun getParticipantById(participantId: String): Participant? {
         if (isOnline) {
-            try { return firebaseRepository.getParticipantById(participantId) }
-            catch (_: Exception) {}
+            try {
+                val participant = firebaseRepository.getParticipantById(participantId)
+                if (participant != null) db.participantDao().insert(participant)
+                return participant
+            } catch (_: Exception) {}
         }
         return roomRepository.getParticipantById(participantId)
     }
@@ -190,11 +201,8 @@ class OfflineFirstRepository(
 
     override suspend fun updateParticipantTime(eventId: String, participant: ParticipantTime) {
         roomRepository.updateParticipantTime(eventId, participant)
-        if (isOnline) {
-            try { firebaseRepository.updateParticipantTime(eventId, participant) }
-            catch (e: Exception) { queueOperation("UPDATE_PARTICIPANT_TIME", participant.uid, parentId = eventId, payload = json.encodeToString(participant)) }
-        } else {
-            queueOperation("UPDATE_PARTICIPANT_TIME", participant.uid, parentId = eventId, payload = json.encodeToString(participant))
+        writeToFirebaseOrQueue("UPDATE_PARTICIPANT_TIME", participant.uid, parentId = eventId, payload = json.encodeToString(participant)) {
+            firebaseRepository.updateParticipantTime(eventId, participant)
         }
     }
 
@@ -204,7 +212,8 @@ class OfflineFirstRepository(
         if (isOnline) {
             try {
                 val recipes = firebaseRepository.getAllRecipes()
-                recipes.filter { it.uid.isNotBlank() }
+                recipes
+                    .filter { it.uid.isNotBlank() }
                     .onEach { it.shoppingIngredients.forEach { si -> si.ingredient = null } }
                     .forEach { db.recipeDao().insert(it) }
                 return recipes
@@ -215,47 +224,66 @@ class OfflineFirstRepository(
 
     override suspend fun getUserCreatedRecipes(): List<Recipe> {
         if (isOnline) {
-            try { return firebaseRepository.getUserCreatedRecipes() }
-            catch (_: Exception) {}
+            try {
+                val recipes = firebaseRepository.getUserCreatedRecipes()
+                recipes
+                    .filter { it.uid.isNotBlank() }
+                    .onEach { it.shoppingIngredients.forEach { si -> si.ingredient = null } }
+                    .forEach { db.recipeDao().insert(it) }
+                return recipes
+            } catch (_: Exception) {}
         }
         return roomRepository.getUserCreatedRecipes()
     }
 
     override suspend fun getRecipeById(recipeId: String): Recipe? {
         if (isOnline) {
-            try { return firebaseRepository.getRecipeById(recipeId) }
-            catch (_: Exception) {}
+            try {
+                val recipe = firebaseRepository.getRecipeById(recipeId)
+                if (recipe != null && recipe.uid.isNotBlank()) {
+                    val toCache = Recipe().apply {
+                        uid = recipe.uid; name = recipe.name; description = recipe.description
+                        cookingInstructions = recipe.cookingInstructions; notes = recipe.notes
+                        dietaryHabit = recipe.dietaryHabit; materials = recipe.materials
+                        pageInCookbook = recipe.pageInCookbook; price = recipe.price
+                        season = recipe.season; foodIntolerances = recipe.foodIntolerances
+                        source = recipe.source; time = recipe.time; skillLevel = recipe.skillLevel
+                        type = recipe.type
+                        shoppingIngredients = recipe.shoppingIngredients.map { si ->
+                            ShoppingIngredient().apply {
+                                uid = si.uid; ingredientRef = si.ingredientRef
+                                nameEnteredByUser = si.nameEnteredByUser; amount = si.amount
+                                unit = si.unit; title = si.title; shoppingDone = si.shoppingDone
+                                note = si.note; source = si.source
+                            }
+                        }
+                    }
+                    db.recipeDao().insert(toCache)
+                }
+                return recipe
+            } catch (_: Exception) {}
         }
         return roomRepository.getRecipeById(recipeId)
     }
 
     override suspend fun createRecipe(recipe: Recipe) {
         roomRepository.createRecipe(recipe)
-        if (isOnline) {
-            try { firebaseRepository.createRecipe(recipe) }
-            catch (e: Exception) { queueOperation("CREATE_RECIPE", recipe.uid, payload = json.encodeToString(recipe)) }
-        } else {
-            queueOperation("CREATE_RECIPE", recipe.uid, payload = json.encodeToString(recipe))
+        writeToFirebaseOrQueue("CREATE_RECIPE", recipe.uid, payload = json.encodeToString(recipe)) {
+            firebaseRepository.createRecipe(recipe)
         }
     }
 
     override suspend fun updateRecipe(recipe: Recipe) {
         roomRepository.updateRecipe(recipe)
-        if (isOnline) {
-            try { firebaseRepository.updateRecipe(recipe) }
-            catch (e: Exception) { queueOperation("UPDATE_RECIPE", recipe.uid, payload = json.encodeToString(recipe)) }
-        } else {
-            queueOperation("UPDATE_RECIPE", recipe.uid, payload = json.encodeToString(recipe))
+        writeToFirebaseOrQueue("UPDATE_RECIPE", recipe.uid, payload = json.encodeToString(recipe)) {
+            firebaseRepository.updateRecipe(recipe)
         }
     }
 
     override suspend fun deleteRecipe(recipeId: String) {
         roomRepository.deleteRecipe(recipeId)
-        if (isOnline) {
-            try { firebaseRepository.deleteRecipe(recipeId) }
-            catch (e: Exception) { queueOperation("DELETE_RECIPE", recipeId) }
-        } else {
-            queueOperation("DELETE_RECIPE", recipeId)
+        writeToFirebaseOrQueue("DELETE_RECIPE", recipeId) {
+            firebaseRepository.deleteRecipe(recipeId)
         }
     }
 
@@ -263,48 +291,49 @@ class OfflineFirstRepository(
 
     override suspend fun getAllMealsOfEvent(eventId: String): List<Meal> {
         if (isOnline) {
-            try { return firebaseRepository.getAllMealsOfEvent(eventId) }
-            catch (_: Exception) {}
+            try {
+                val meals = firebaseRepository.getAllMealsOfEvent(eventId)
+                meals.forEach { meal ->
+                    meal.eventId = eventId
+                    db.mealDao().insert(meal)
+                }
+                return meals
+            } catch (_: Exception) {}
         }
         return roomRepository.getAllMealsOfEvent(eventId)
     }
 
     override suspend fun getMealById(eventId: String, mealId: String): Meal {
         if (isOnline) {
-            try { return firebaseRepository.getMealById(eventId, mealId) }
-            catch (_: Exception) {}
+            try {
+                val meal = firebaseRepository.getMealById(eventId, mealId)
+                meal.eventId = eventId
+                db.mealDao().insert(meal)
+                return meal
+            } catch (_: Exception) {}
         }
         return roomRepository.getMealById(eventId, mealId)
     }
 
     override suspend fun createNewMeal(eventId: String, day: Instant): Meal {
         val meal = roomRepository.createNewMeal(eventId, day)
-        if (isOnline) {
-            try { firebaseRepository.updateMeal(eventId, meal) }
-            catch (e: Exception) { queueOperation("CREATE_MEAL", meal.uid, parentId = eventId, payload = json.encodeToString(meal)) }
-        } else {
-            queueOperation("CREATE_MEAL", meal.uid, parentId = eventId, payload = json.encodeToString(meal))
+        writeToFirebaseOrQueue("CREATE_MEAL", meal.uid, parentId = eventId, payload = json.encodeToString(meal)) {
+            firebaseRepository.updateMeal(eventId, meal)
         }
         return meal
     }
 
     override suspend fun deleteMeal(eventId: String, mealId: String) {
         roomRepository.deleteMeal(eventId, mealId)
-        if (isOnline) {
-            try { firebaseRepository.deleteMeal(eventId, mealId) }
-            catch (e: Exception) { queueOperation("DELETE_MEAL", mealId, parentId = eventId) }
-        } else {
-            queueOperation("DELETE_MEAL", mealId, parentId = eventId)
+        writeToFirebaseOrQueue("DELETE_MEAL", mealId, parentId = eventId) {
+            firebaseRepository.deleteMeal(eventId, mealId)
         }
     }
 
     override suspend fun updateMeal(eventId: String, meal: Meal) {
         roomRepository.updateMeal(eventId, meal)
-        if (isOnline) {
-            try { firebaseRepository.updateMeal(eventId, meal) }
-            catch (e: Exception) { queueOperation("UPDATE_MEAL", meal.uid, parentId = eventId, payload = json.encodeToString(meal)) }
-        } else {
-            queueOperation("UPDATE_MEAL", meal.uid, parentId = eventId, payload = json.encodeToString(meal))
+        writeToFirebaseOrQueue("UPDATE_MEAL", meal.uid, parentId = eventId, payload = json.encodeToString(meal)) {
+            firebaseRepository.updateMeal(eventId, meal)
         }
     }
 
@@ -312,16 +341,25 @@ class OfflineFirstRepository(
 
     override suspend fun getIngredientById(ingredientId: String): Ingredient {
         if (isOnline) {
-            try { return firebaseRepository.getIngredientById(ingredientId) }
-            catch (_: Exception) {}
+            try {
+                val ingredient = firebaseRepository.getIngredientById(ingredientId)
+                db.ingredientDao().insert(ingredient)
+                return ingredient
+            } catch (_: Exception) {}
         }
         return roomRepository.getIngredientById(ingredientId)
     }
 
     override suspend fun getMealsWithRecipeAndIngredients(eventId: String): List<Meal> {
         if (isOnline) {
-            try { return firebaseRepository.getMealsWithRecipeAndIngredients(eventId) }
-            catch (_: Exception) {}
+            try {
+                val meals = firebaseRepository.getMealsWithRecipeAndIngredients(eventId)
+                meals.forEach { meal ->
+                    meal.eventId = eventId
+                    db.mealDao().insert(meal)
+                }
+                return meals
+            } catch (_: Exception) {}
         }
         return roomRepository.getMealsWithRecipeAndIngredients(eventId)
     }
@@ -352,11 +390,8 @@ class OfflineFirstRepository(
 
     override suspend fun saveMultiDayShoppingList(eventId: String, multiDayShoppingList: MultiDayShoppingList) {
         roomRepository.saveMultiDayShoppingList(eventId, multiDayShoppingList)
-        if (isOnline) {
-            try { firebaseRepository.saveMultiDayShoppingList(eventId, multiDayShoppingList) }
-            catch (e: Exception) { queueOperation("SAVE_MULTI_DAY_SHOPPING_LIST", eventId, parentId = eventId, payload = json.encodeToString(multiDayShoppingList)) }
-        } else {
-            queueOperation("SAVE_MULTI_DAY_SHOPPING_LIST", eventId, parentId = eventId, payload = json.encodeToString(multiDayShoppingList))
+        writeToFirebaseOrQueue("SAVE_MULTI_DAY_SHOPPING_LIST", eventId, parentId = eventId, payload = json.encodeToString(multiDayShoppingList)) {
+            firebaseRepository.saveMultiDayShoppingList(eventId, multiDayShoppingList)
         }
     }
 
@@ -393,36 +428,36 @@ class OfflineFirstRepository(
 
     override suspend fun saveMaterialList(eventId: String, materialList: List<Material>) {
         roomRepository.saveMaterialList(eventId, materialList)
-        if (isOnline) {
-            try { firebaseRepository.saveMaterialList(eventId, materialList) }
-            catch (e: Exception) { queueOperation("SAVE_MATERIAL_LIST", eventId, parentId = eventId, payload = json.encodeToString(materialList)) }
-        } else {
-            queueOperation("SAVE_MATERIAL_LIST", eventId, parentId = eventId, payload = json.encodeToString(materialList))
+        writeToFirebaseOrQueue("SAVE_MATERIAL_LIST", eventId, parentId = eventId, payload = json.encodeToString(materialList)) {
+            firebaseRepository.saveMaterialList(eventId, materialList)
         }
     }
 
     override suspend fun getMaterialListOfEvent(eventId: String): List<Material> {
         if (isOnline) {
-            try { return firebaseRepository.getMaterialListOfEvent(eventId) }
-            catch (_: Exception) {}
+            try {
+                val materials = firebaseRepository.getMaterialListOfEvent(eventId)
+                materials.forEach { db.materialDao().insert(it) }
+                return materials
+            } catch (_: Exception) {}
         }
         return roomRepository.getMaterialListOfEvent(eventId)
     }
 
     override suspend fun deleteMaterialById(eventId: String, materialId: String) {
         roomRepository.deleteMaterialById(eventId, materialId)
-        if (isOnline) {
-            try { firebaseRepository.deleteMaterialById(eventId, materialId) }
-            catch (e: Exception) { queueOperation("DELETE_MATERIAL", materialId, parentId = eventId) }
-        } else {
-            queueOperation("DELETE_MATERIAL", materialId, parentId = eventId)
+        writeToFirebaseOrQueue("DELETE_MATERIAL", materialId, parentId = eventId) {
+            firebaseRepository.deleteMaterialById(eventId, materialId)
         }
     }
 
     override suspend fun getAllMaterials(): List<Material> {
         if (isOnline) {
-            try { return firebaseRepository.getAllMaterials() }
-            catch (_: Exception) {}
+            try {
+                val materials = firebaseRepository.getAllMaterials()
+                materials.filter { it.uid.isNotBlank() }.forEach { db.materialDao().insert(it) }
+                return materials
+            } catch (_: Exception) {}
         }
         return roomRepository.getAllMaterials()
     }

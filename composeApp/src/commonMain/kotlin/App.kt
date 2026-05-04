@@ -4,6 +4,7 @@ import androidx.compose.runtime.remember
 import data.AppMode
 import data.AppModeHolder
 import data.AppModePreferences
+import data.sync.InitialSyncService
 import data.sync.SyncManager
 import modules.dataModules
 import modules.serviceModules
@@ -38,9 +39,11 @@ fun App(pdfService: PdfServiceImpl) {
         pdfServiceModule.setPdfService(pdfService)
 
         val syncManager = koinInject<SyncManager>()
+        val initialSyncService = koinInject<InitialSyncService>()
         LaunchedEffect(Unit) {
-            if (appModeHolder.mode.value == AppMode.OFFLINE_FIRST) {
+            if (appModeHolder.mode.value != AppMode.OFFLINE_ONLY) {
                 syncManager.startObserving()
+                initialSyncService.syncAllUserData()
             }
         }
 

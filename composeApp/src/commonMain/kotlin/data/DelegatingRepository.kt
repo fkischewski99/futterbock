@@ -16,9 +16,8 @@ class DelegatingRepository(
 
     private val active: EventRepository
         get() = when (appModeHolder.mode.value) {
-            AppMode.ONLINE -> firebaseRepository
             AppMode.OFFLINE_ONLY -> roomRepository
-            AppMode.OFFLINE_FIRST -> offlineFirstRepository
+            AppMode.ONLINE, AppMode.OFFLINE_FIRST -> offlineFirstRepository
         }
 
     override suspend fun deleteEvent(eventId: String) = active.deleteEvent(eventId)

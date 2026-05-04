@@ -201,7 +201,7 @@ fun LoginContent(
                 Text(text = "App offline nutzen")
             }
             Text(
-                text = "Daten werden nur lokal gespeichert. Beim ersten Start werden alle Rezepte und Zutaten einmalig heruntergeladen.",
+                text = "Daten werden nur lokal gespeichert. Beim ersten Start werden alle Rezepte und Zutaten einmalig heruntergeladen (Internetverbindung erforderlich).",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp)

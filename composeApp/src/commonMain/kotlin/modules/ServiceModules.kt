@@ -12,8 +12,8 @@ import services.event.ParticipantCanEatRecipe
 import services.update.UpdateChecker
 
 val serviceModules = module {
-    single<LoginAndRegister> { DelegatingLoginAndRegister(get()) }
-    single { SeedDataService(get(), get()) }
+    single<LoginAndRegister> { DelegatingLoginAndRegister(get(), get(), get()) }
+    single { SeedDataService(get(), get(), get()) }
     single { CalculateShoppingList(get()) }
     single { CalculateMaterialList(get()) }
     single { PdfServiceModule(get(), get()) }

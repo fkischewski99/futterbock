@@ -41,7 +41,7 @@ class RoomRepository(
     }
 
     override suspend fun saveExistingEvent(event: Event) {
-        db.eventDao().insert(event)
+        db.eventDao().update(event)
     }
 
     override suspend fun getEventList(group: String): Flow<List<Event>> {
@@ -133,7 +133,7 @@ class RoomRepository(
 
     override suspend fun updateParticipant(participant: Participant) {
         participant.group = loginAndRegister.getCustomUserGroup()
-        db.participantDao().insert(participant)
+        db.participantDao().update(participant)
     }
 
     override suspend fun deleteParticipant(participantId: String) {
@@ -153,7 +153,7 @@ class RoomRepository(
                     }
                 }
                 if (mealUpdated) {
-                    db.mealDao().insert(meal)
+                    db.mealDao().update(meal)
                 }
             }
             db.participantTimeDao().deleteByEventAndParticipant(event.uid, participantId)
@@ -172,7 +172,7 @@ class RoomRepository(
 
     override suspend fun updateParticipantTime(eventId: String, participant: ParticipantTime) {
         participant.eventId = eventId
-        db.participantTimeDao().insert(participant)
+        db.participantTimeDao().update(participant)
     }
 
     // --- Recipes ---
@@ -212,7 +212,7 @@ class RoomRepository(
 
     override suspend fun updateRecipe(recipe: Recipe) {
         recipe.shoppingIngredients.forEach { it.ingredient = null }
-        db.recipeDao().insert(recipe)
+        db.recipeDao().update(recipe)
     }
 
     override suspend fun deleteRecipe(recipeId: String) {
@@ -287,7 +287,7 @@ class RoomRepository(
 
     override suspend fun updateMeal(eventId: String, meal: Meal) {
         meal.eventId = eventId
-        db.mealDao().insert(meal)
+        db.mealDao().update(meal)
     }
 
     // --- Ingredients ---

@@ -1,6 +1,7 @@
 package model
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import kotlinx.datetime.Instant
@@ -10,7 +11,23 @@ import view.shared.HelperFunctions
 import view.shared.list.ListItem
 
 @Serializable
-@Entity(tableName = "participant_times")
+@Entity(
+    tableName = "participant_times",
+    foreignKeys = [
+        ForeignKey(
+            entity = Event::class,
+            parentColumns = ["uid"],
+            childColumns = ["eventId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Participant::class,
+            parentColumns = ["uid"],
+            childColumns = ["participantRef"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
 class ParticipantTime(
     @PrimaryKey var uid: String = "",
     var from: Instant,

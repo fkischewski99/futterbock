@@ -1,29 +1,24 @@
 package data
 
-import data.local.AppDatabase
 import data.local.RoomRepository
+import data.sync.OfflineFirstRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import model.*
-import services.login.LoginAndRegister
-import services.login.OfflineLoginAndRegister
 
 class DelegatingRepository(
     private val appModeHolder: AppModeHolder,
-    private val db: AppDatabase,
-    private val firebaseLoginAndRegister: LoginAndRegister
+    private val firebaseRepository: FireBaseRepository,
+    private val roomRepository: RoomRepository,
+    private val offlineFirstRepository: OfflineFirstRepository
 ) : EventRepository {
-
-    private val offlineLogin = OfflineLoginAndRegister()
-
-    private val firebaseRepository by lazy { FireBaseRepository(firebaseLoginAndRegister) }
-    private val roomRepository by lazy { RoomRepository(db, offlineLogin) }
 
     private val active: EventRepository
         get() = when (appModeHolder.mode.value) {
+            AppMode.ONLINE -> firebaseRepository
             AppMode.OFFLINE_ONLY -> roomRepository
-            else -> firebaseRepository
+            AppMode.OFFLINE_FIRST -> offlineFirstRepository
         }
 
     override suspend fun deleteEvent(eventId: String) = active.deleteEvent(eventId)

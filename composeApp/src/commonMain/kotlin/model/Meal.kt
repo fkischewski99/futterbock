@@ -1,13 +1,22 @@
 package model
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import view.shared.list.ListItem
 
 @Serializable
-@Entity(tableName = "meals")
+@Entity(
+    tableName = "meals",
+    foreignKeys = [ForeignKey(
+        entity = Event::class,
+        parentColumns = ["uid"],
+        childColumns = ["eventId"],
+        onDelete = ForeignKey.CASCADE
+    )]
+)
 data class Meal(
     @PrimaryKey val uid: String = "",
     var day: Instant,

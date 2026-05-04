@@ -4,11 +4,10 @@ import data.AppMode
 import data.AppModeHolder
 
 class DelegatingLoginAndRegister(
-    private val appModeHolder: AppModeHolder
+    private val appModeHolder: AppModeHolder,
+    private val firebase: FirebaseLoginAndRegister,
+    private val offline: OfflineLoginAndRegister
 ) : LoginAndRegister {
-
-    private val firebase by lazy { FirebaseLoginAndRegister() }
-    private val offline = OfflineLoginAndRegister()
 
     private val active: LoginAndRegister
         get() = when (appModeHolder.mode.value) {

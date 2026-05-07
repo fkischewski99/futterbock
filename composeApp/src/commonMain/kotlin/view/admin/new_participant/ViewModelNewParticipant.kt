@@ -25,6 +25,7 @@ data class NewParticipantState(
     val isNewParticipant: Boolean = true,
     val allergies: List<String> = emptyList(),
     val selectedGroup: String = "",
+    val successMessage: String? = null,
 )
 
 class ViewModelNewParticipant(
@@ -57,6 +58,7 @@ class ViewModelNewParticipant(
             )
 
             is ActionsNewParticipant.DeleteParticipant -> deleteParticipant(actionsNewParticipant.participantId)
+            is ActionsNewParticipant.DismissSuccess -> dismissSuccess()
         }
     }
 
@@ -112,10 +114,12 @@ class ViewModelNewParticipant(
             allergies = data.allergies
             selectedGroup = data.selectedGroup
         }
+        val name = "${data.firstName} ${data.lastName}"
+        val isNew = data.isNewParticipant
         viewModelScope.launch {
             try {
-                if (data.isNewParticipant) {
-                    Logger.i("Create new Participant with name ${participant.firstName} ${participant.lastName}")
+                if (isNew) {
+                    Logger.i("Create new Participant with name $name")
                     val success = eventRepository.createNewParticipant(participant)
                     if (success == null) {
                         _state.value =
@@ -123,15 +127,24 @@ class ViewModelNewParticipant(
                         return@launch
                     }
                 } else {
-                    Logger.i("Update Participant with name ${participant.firstName} ${participant.lastName}")
+                    Logger.i("Update Participant with name $name")
                     eventRepository.updateParticipant(participant)
                 }
             } catch (e: Exception) {
                 Logger.e("" + e.message)
-                ResultState.Error("Fehler beim anlegen des Teilnehmenden")
+                _state.value = ResultState.Error("Fehler beim Anlegen des Teilnehmenden")
+                return@launch
             }
             initializeScreenWithNewParticipant()
+            val currentData = state.value.getSuccessData() ?: return@launch
+            val message = if (isNew) "$name wurde erstellt" else "$name wurde aktualisiert"
+            _state.value = ResultState.Success(currentData.copy(successMessage = message))
         }
+    }
+
+    private fun dismissSuccess() {
+        val data = state.value.getSuccessData() ?: return
+        _state.value = ResultState.Success(data.copy(successMessage = null))
     }
 
     private fun initializeWithParticipant(participant: Participant) {

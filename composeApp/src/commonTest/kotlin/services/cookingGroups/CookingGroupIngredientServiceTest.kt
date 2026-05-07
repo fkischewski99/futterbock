@@ -634,12 +634,11 @@ class CookingGroupIngredientServiceTest : KoinTest {
         }
         
         return ParticipantTime(
-            participant = participant,
             from = Clock.System.now(),
             to = Clock.System.now(),
             uid = "pt_$participantId",
             participantRef = participantId,
             cookingGroup = cookingGroup
-        )
+        ).also { it.participant = participant }
     }
 }

@@ -62,9 +62,10 @@ class FakeEventRepository : EventRepository {
                     uid = id,
                     from = Clock.System.now(),
                     to = Clock.System.now(),
-                    participant = if (withParticipant) participant else null,
                     participantRef = participant.uid
-                )
+                ).also {
+                    if (withParticipant) it.participant = participant
+                }
             }
         }
     }

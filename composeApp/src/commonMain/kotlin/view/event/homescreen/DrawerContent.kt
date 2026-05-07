@@ -19,7 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import data.EventRepository
+import data.AppMode
+import data.AppModeHolder
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import services.login.LoginAndRegister
@@ -33,6 +34,7 @@ fun DrawerContent(
     onViewRecipes: () -> Unit
 ) {
     val login: LoginAndRegister = koinInject()
+    val appModeHolder: AppModeHolder = koinInject()
     var showConfirmDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
@@ -72,6 +74,7 @@ fun DrawerContent(
             selected = false,
             onClick = {
                 scope.launch {
+                    appModeHolder.switchMode(AppMode.OFFLINE_FIRST)
                     login.logout()
                     onLogoutNavigation()
                 }

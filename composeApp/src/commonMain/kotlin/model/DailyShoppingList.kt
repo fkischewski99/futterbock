@@ -1,11 +1,10 @@
 package model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 
-/**
- * Represents a shopping list for a specific day with ingredients categorized by purchase optimization
- */
 @Serializable
 data class DailyShoppingList(
     val purchaseDate: LocalDate,
@@ -37,12 +36,10 @@ data class DailyShoppingList(
     fun isCompleted(): Boolean = ingredients.isNotEmpty() && ingredients.all { it.shoppingDone }
 }
 
-/**
- * Container for multi-day shopping lists with utility methods
- */
 @Serializable
+@Entity(tableName = "multi_day_shopping_lists")
 data class MultiDayShoppingList(
-    val eventId: String,
+    @PrimaryKey val eventId: String,
     val dailyLists: Map<LocalDate, DailyShoppingList> = emptyMap()
 ) {
     /**

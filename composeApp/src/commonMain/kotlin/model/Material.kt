@@ -1,15 +1,21 @@
 package model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 import view.shared.HelperFunctions
 import view.shared.list.ListItem
 
 @Serializable
+@Entity(tableName = "materials")
 class Material : ListItem<Material> {
-    var uid = ""
+    @PrimaryKey var uid: String = ""
     var name: String = "";
     var source: Source = Source.ENTERED_BY_USER
     var amount: Int = 0
+
+    @kotlinx.serialization.Transient
+    var eventId: String? = null
 
     override fun getListItemTitle(): String {
         return name

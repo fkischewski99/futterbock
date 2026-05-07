@@ -7,7 +7,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import data.AppMode
+import data.AppModeHolder
 import data.EventRepository
+import data.sync.InitialSyncService
 import org.koin.compose.koinInject
 import services.login.LoginAndRegister
 import view.admin.csv_import.CsvImportScreen
@@ -37,10 +40,12 @@ fun RootNavController(
     val navController = rememberNavController()
     val loginService = koinInject<LoginAndRegister>()
     val eventRepository = koinInject<EventRepository>()
+    val appModeHolder = koinInject<AppModeHolder>()
+    val initialSyncService = koinInject<InitialSyncService>()
 
     NavHost(
         navController = navController,
-        startDestination = getStartDestination(loginService)
+        startDestination = getStartDestination(loginService, appModeHolder.mode.value)
     ) {
         composable<Routes.LoadingScreen> {
             LoadingScreen()
@@ -48,7 +53,14 @@ fun RootNavController(
         composable<Routes.Login> {
             LoginScreen(
                 navigateToRegister = { navController.navigate(Routes.Register) },
-                navigateToHome = { navController.navigate(Routes.Home) }
+                navigateToHome = { navController.navigate(Routes.Home) },
+                onOfflineSelected = {
+                    initialSyncService.syncBaseData()
+                    appModeHolder.switchMode(AppMode.OFFLINE_ONLY)
+                    navController.navigate(Routes.Home) {
+                        popUpTo(Routes.Login) { inclusive = true }
+                    }
+                }
             )
         }
         composable<Routes.Register> {
@@ -126,9 +138,10 @@ fun RootNavController(
     }
 }
 
-fun getStartDestination(loginService: LoginAndRegister): Any {
-    if (loginService.isAuthenticated()) {
-        return Routes.Home
+fun getStartDestination(loginService: LoginAndRegister, appMode: AppMode): Any {
+    return when {
+        appMode == AppMode.OFFLINE_ONLY -> Routes.Home
+        loginService.isAuthenticated() -> Routes.Home
+        else -> Routes.Login
     }
-    return Routes.Login
 }

@@ -14,6 +14,12 @@ plugins {
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.google.services)
     alias(libs.plugins.buildkonfig)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 composeCompiler {
@@ -133,6 +139,10 @@ kotlin {
             //implementation(libs.gitlive.firebase.crashlytics)
 
             implementation(libs.kermit)
+
+            // Room
+            implementation(libs.room.runtime)
+            implementation(libs.sqlite.bundled)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -189,6 +199,11 @@ android {
 }
 dependencies {
     testImplementation(libs.junit.jupiter)
+    add("kspAndroid", libs.room.compiler)
+    add("kspDesktop", libs.room.compiler)
+    add("kspIosX64", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
 }
 
 compose.desktop {

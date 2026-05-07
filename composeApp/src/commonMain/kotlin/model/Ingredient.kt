@@ -1,11 +1,14 @@
 package model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 import view.shared.list.ListItem
 
 @Serializable
+@Entity(tableName = "ingredients")
 class Ingredient : ListItem<Ingredient> {
-    var uid: String = ""
+    @PrimaryKey var uid: String = ""
     var name: String = ""
     var amountHaferl: Double? = null
     var unitHaferl: IngredientUnit? = null

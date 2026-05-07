@@ -11,14 +11,17 @@ private const val STAMM = "group"
 
 class FirebaseLoginAndRegister : LoginAndRegister {
 
+    private var cachedGroup: String? = null
 
     override suspend fun getCustomUserGroup(): String {
+        cachedGroup?.let { return it }
         if (!isAuthenticated()) {
             return ""
         }
         val userId = Firebase.auth.currentUser!!.uid
         val userDocRef = Firebase.firestore.collection(USER_COLLECTION).document(userId)
         val stamm = userDocRef.get().get<String>(STAMM)
+        cachedGroup = stamm
         return stamm
     }
 
@@ -50,6 +53,7 @@ class FirebaseLoginAndRegister : LoginAndRegister {
     }
 
     override suspend fun logout() {
+        cachedGroup = null
         Firebase.auth.signOut()
     }
 }

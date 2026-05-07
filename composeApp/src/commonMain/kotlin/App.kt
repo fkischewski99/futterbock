@@ -1,5 +1,9 @@
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import data.AppMode
+import data.AppModeHolder
+import data.sync.InitialSyncService
+import data.sync.SyncManager
 import modules.dataModules
 import modules.serviceModules
 import modules.viewModelModules
@@ -15,22 +19,24 @@ import view.theme.AppTheme
 fun App(pdfService: PdfServiceImpl) {
     KoinApplication(application = {
         modules(
-            dataModules, viewModelModules, serviceModules
+            serviceModules, dataModules, viewModelModules
         )
     }) {
         val pdfServiceModule: PdfServiceModule = koinInject()
-
         pdfServiceModule.setPdfService(pdfService)
+
+        val appModeHolder = koinInject<AppModeHolder>()
+        val syncManager = koinInject<SyncManager>()
+        val initialSyncService = koinInject<InitialSyncService>()
+        LaunchedEffect(Unit) {
+            if (appModeHolder.mode.value != AppMode.OFFLINE_ONLY) {
+                syncManager.startObserving()
+                initialSyncService.syncAllUserData()
+            }
+        }
 
         AppTheme {
             RootNavController()
-            //Navigator(NewParicipantScreen(null)) {navigator -> SlideTransition(navigator) }
         }
     }
-}
-
-@Composable
-fun AppContent(pdfService: PdfServiceImpl) {
-
-
 }

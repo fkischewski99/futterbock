@@ -1,10 +1,13 @@
 package model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
 @Serializable
+@Entity(tableName = "recipes")
 class Recipe {
-    var uid: String = ""
+    @PrimaryKey var uid: String = ""
 
     var cookingInstructions: List<String> = listOf()
 

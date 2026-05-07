@@ -30,6 +30,9 @@ junitJupiter = "5.13.3"
 buildkonfig = "0.16.0"
 resolver = "1.0.0"
 ktor = "3.0.3"
+room = "2.8.4"
+ksp = "2.2.0-2.0.2"
+sqlite = "2.5.1"
 
 [libraries]
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
@@ -65,6 +68,11 @@ junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.r
 koinTest = { module = "io.insert-koin:koin-test", version.ref = "koin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlin-x-coroutines" }
 
+##Room
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+
 ##Ktor for update checker
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
@@ -81,3 +89,5 @@ google-services = { id = "com.google.gms.google-services", version.ref = "google
 kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = "kotlin" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
 resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "resolver" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+room = { id = "androidx.room", version.ref = "room" }

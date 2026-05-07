@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import data.EventRepository
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -138,25 +139,15 @@ class RoomRepository(
 
     override suspend fun deleteParticipant(participantId: String) {
         val userGroup = loginAndRegister.getCustomUserGroup()
-        val events = db.eventDao().getByGroup(userGroup)
-        var eventsList: List<Event> = emptyList()
-        events.collect { eventsList = it; return@collect }
+        val events = db.eventDao().getByGroup(userGroup).first()
 
-        eventsList.forEach { event ->
-            val meals = db.mealDao().getByEventId(event.uid)
-            meals.forEach { meal ->
-                var mealUpdated = false
-                meal.recipeSelections.forEach { selection ->
-                    if (selection.eaterIds.contains(participantId)) {
-                        selection.eaterIds.remove(participantId)
-                        mealUpdated = true
-                    }
-                }
-                if (mealUpdated) {
+        events.forEach { event ->
+            db.mealDao().getByEventId(event.uid)
+                .filter { meal -> meal.recipeSelections.any { it.eaterIds.contains(participantId) } }
+                .forEach { meal ->
+                    meal.recipeSelections.forEach { it.eaterIds.remove(participantId) }
                     db.mealDao().update(meal)
                 }
-            }
-            db.participantTimeDao().deleteByEventAndParticipant(event.uid, participantId)
         }
 
         db.participantDao().deleteById(participantId)
@@ -191,8 +182,7 @@ class RoomRepository(
 
         val ingredientRefs = recipe.shoppingIngredients.map { it.ingredientRef }.distinct()
         if (ingredientRefs.isNotEmpty()) {
-            val allIngredients = db.ingredientDao().getAll()
-            val ingredientMap = allIngredients.associateBy { it.uid }
+            val ingredientMap = db.ingredientDao().getByIds(ingredientRefs).associateBy { it.uid }
             recipe.shoppingIngredients.forEach { si ->
                 si.ingredient = ingredientMap[si.ingredientRef]
             }
@@ -221,45 +211,15 @@ class RoomRepository(
 
     // --- Meals ---
 
-    override suspend fun getAllMealsOfEvent(eventId: String): List<Meal> {
-        val meals = db.mealDao().getByEventId(eventId)
+    private suspend fun enrichMealsWithRecipes(meals: List<Meal>) {
+        val recipeIds = meals.flatMap { it.recipeSelections.map { rs -> rs.recipeRef } }.distinct()
+        if (recipeIds.isEmpty()) return
 
-        val allRecipeIds = meals.flatMap { it.recipeSelections.map { rs -> rs.recipeRef } }.distinct()
-        if (allRecipeIds.isNotEmpty()) {
-            val recipes = db.recipeDao().getAll()
-            val recipeMap = recipes.associateBy { it.uid }
+        val recipeMap = db.recipeDao().getByIds(recipeIds).associateBy { it.uid }
+        val ingredientIds = recipeMap.values.flatMap { it.shoppingIngredients.map { si -> si.ingredientRef } }.distinct()
+        val ingredientMap = if (ingredientIds.isNotEmpty()) db.ingredientDao().getByIds(ingredientIds).associateBy { it.uid } else emptyMap()
 
-            val allIngredients = db.ingredientDao().getAll()
-            val ingredientMap = allIngredients.associateBy { it.uid }
-
-            meals.forEach { meal ->
-                meal.recipeSelections.forEach { selection ->
-                    val recipe = recipeMap[selection.recipeRef]
-                    if (recipe != null) {
-                        recipe.shoppingIngredients.forEach { si ->
-                            si.ingredient = ingredientMap[si.ingredientRef]
-                        }
-                        selection.recipe = recipe
-                    }
-                }
-            }
-        }
-
-        return meals
-    }
-
-    override suspend fun getMealById(eventId: String, mealId: String): Meal {
-        val meal = db.mealDao().getById(eventId, mealId)
-            ?: throw NoSuchElementException("Meal $mealId not found in event $eventId")
-
-        val recipeIds = meal.recipeSelections.map { it.recipeRef }.distinct()
-        if (recipeIds.isNotEmpty()) {
-            val recipes = db.recipeDao().getAll()
-            val recipeMap = recipes.associateBy { it.uid }
-
-            val allIngredients = db.ingredientDao().getAll()
-            val ingredientMap = allIngredients.associateBy { it.uid }
-
+        meals.forEach { meal ->
             meal.recipeSelections.forEach { selection ->
                 val recipe = recipeMap[selection.recipeRef]
                 if (recipe != null) {
@@ -270,7 +230,18 @@ class RoomRepository(
                 }
             }
         }
+    }
 
+    override suspend fun getAllMealsOfEvent(eventId: String): List<Meal> {
+        val meals = db.mealDao().getByEventId(eventId)
+        enrichMealsWithRecipes(meals)
+        return meals
+    }
+
+    override suspend fun getMealById(eventId: String, mealId: String): Meal {
+        val meal = db.mealDao().getById(eventId, mealId)
+            ?: throw NoSuchElementException("Meal $mealId not found in event $eventId")
+        enrichMealsWithRecipes(listOf(meal))
         return meal
     }
 

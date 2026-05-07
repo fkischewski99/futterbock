@@ -74,7 +74,7 @@ fun DrawerContent(
             selected = false,
             onClick = {
                 scope.launch {
-                    appModeHolder.switchMode(AppMode.ONLINE)
+                    appModeHolder.switchMode(AppMode.OFFLINE_FIRST)
                     login.logout()
                     onLogoutNavigation()
                 }

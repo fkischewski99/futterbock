@@ -1,6 +1,7 @@
 package data.sync
 
 import co.touchlab.kermit.Logger
+import data.AppModePreferences
 import data.FireBaseRepository
 import data.local.AppDatabase
 import kotlinx.coroutines.flow.first
@@ -9,32 +10,53 @@ import services.login.FirebaseLoginAndRegister
 class InitialSyncService(
     private val db: AppDatabase,
     private val firebaseRepository: FireBaseRepository,
-    private val loginAndRegister: FirebaseLoginAndRegister
+    private val loginAndRegister: FirebaseLoginAndRegister,
+    private val networkMonitor: NetworkMonitor,
+    private val prefs: AppModePreferences
 ) {
+    suspend fun syncBaseData(): Boolean {
+        if (!networkMonitor.isOnline.value) return false
+        if (prefs.isSeedDataDownloaded()) return true
+
+        return try {
+            Logger.i("InitialSync: Syncing base data (recipes, ingredients, materials)")
+
+            val recipes = firebaseRepository.getAllRecipes()
+            recipes
+                .filter { it.uid.isNotBlank() }
+                .onEach { it.shoppingIngredients.forEach { si -> si.ingredient = null } }
+            db.recipeDao().insertAll(recipes.filter { it.uid.isNotBlank() })
+            Logger.i("InitialSync: Synced ${recipes.size} recipes")
+
+            val ingredients = firebaseRepository.getAllIngredients()
+            db.ingredientDao().insertAll(ingredients.filter { it.uid.isNotBlank() })
+            Logger.i("InitialSync: Synced ${ingredients.size} ingredients")
+
+            val materials = firebaseRepository.getAllMaterials()
+            db.materialDao().insertAll(materials.filter { it.uid.isNotBlank() })
+            Logger.i("InitialSync: Synced ${materials.size} materials")
+
+            prefs.setSeedDataDownloaded(true)
+            Logger.i("InitialSync: Base data sync complete")
+            true
+        } catch (e: Exception) {
+            Logger.e("InitialSync: Base data sync failed: ${e.message}", e)
+            false
+        }
+    }
+
     suspend fun syncAllUserData() {
+        if (!networkMonitor.isOnline.value) return
         if (!loginAndRegister.isAuthenticated()) return
 
         try {
             val group = loginAndRegister.getCustomUserGroup()
             Logger.i("InitialSync: Starting full sync for group $group")
 
-            val recipes = firebaseRepository.getAllRecipes()
-            recipes
-                .filter { it.uid.isNotBlank() }
-                .onEach { it.shoppingIngredients.forEach { si -> si.ingredient = null } }
-                .forEach { db.recipeDao().insert(it) }
-            Logger.i("InitialSync: Synced ${recipes.size} recipes")
-
-            val ingredients = firebaseRepository.getAllIngredients()
-            ingredients.filter { it.uid.isNotBlank() }.forEach { db.ingredientDao().insert(it) }
-            Logger.i("InitialSync: Synced ${ingredients.size} ingredients")
-
-            val materials = firebaseRepository.getAllMaterials()
-            materials.filter { it.uid.isNotBlank() }.forEach { db.materialDao().insert(it) }
-            Logger.i("InitialSync: Synced ${materials.size} materials")
+            syncBaseData()
 
             val events = firebaseRepository.getEventList(group).first()
-            events.forEach { db.eventDao().insert(it) }
+            db.eventDao().insertAll(events)
             Logger.i("InitialSync: Synced ${events.size} events")
 
             events.forEach { event ->
@@ -42,17 +64,16 @@ class InitialSyncService(
                     val participantTimes = firebaseRepository.getParticipantsOfEvent(event.uid, true)
                     participantTimes.forEach { pt ->
                         pt.eventId = event.uid
-                        db.participantTimeDao().insert(pt)
-                        if (pt.participant != null) {
-                            db.participantDao().insert(pt.participant!!)
-                        }
+                    }
+                    db.participantTimeDao().insertAll(participantTimes)
+                    val participants = participantTimes.mapNotNull { it.participant }
+                    if (participants.isNotEmpty()) {
+                        db.participantDao().insertAll(participants)
                     }
 
                     val meals = firebaseRepository.getAllMealsOfEvent(event.uid)
-                    meals.forEach { meal ->
-                        meal.eventId = event.uid
-                        db.mealDao().insert(meal)
-                    }
+                    meals.forEach { it.eventId = event.uid }
+                    db.mealDao().insertAll(meals)
 
                     val shoppingList = firebaseRepository.getMultiDayShoppingList(event.uid)
                     if (shoppingList != null) {
@@ -60,7 +81,9 @@ class InitialSyncService(
                     }
 
                     val eventMaterials = firebaseRepository.getMaterialListOfEvent(event.uid)
-                    eventMaterials.forEach { db.materialDao().insert(it) }
+                    if (eventMaterials.isNotEmpty()) {
+                        db.materialDao().insertAll(eventMaterials)
+                    }
                 } catch (e: Exception) {
                     Logger.e("InitialSync: Error syncing event ${event.uid}: ${e.message}")
                 }

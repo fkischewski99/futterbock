@@ -100,7 +100,7 @@ fun LoginScreen(
                         try {
                             onOfflineSelected()
                         } catch (e: Exception) {
-                            loginError = "Fehler beim Laden der Daten. Bitte überprüfe deine Internetverbindung."
+                            loginError = "Fehler beim Laden der Rezepte. Bitte überprüfe deine Internetverbindung."
                         } finally {
                             loading = false
                         }

@@ -105,7 +105,7 @@ class HandleParticipantsActions(
         }
         eventRepository.deleteParticipantOfEvent(
             currentState.event.uid,
-            participantId = participantToDelete.uid
+            participantId = participantToDelete.participantRef
         )
         return ResultState.Success(
             currentState.copy(

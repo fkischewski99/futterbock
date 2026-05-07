@@ -6,8 +6,8 @@ actual class AppModePreferences actual constructor() {
     private val defaults = NSUserDefaults.standardUserDefaults
 
     actual fun getAppMode(): AppMode {
-        val name = defaults.stringForKey("app_mode") ?: return AppMode.ONLINE
-        return try { AppMode.valueOf(name) } catch (_: Exception) { AppMode.ONLINE }
+        val name = defaults.stringForKey("app_mode") ?: return AppMode.OFFLINE_FIRST
+        return try { AppMode.valueOf(name) } catch (_: Exception) { AppMode.OFFLINE_FIRST }
     }
 
     actual fun setAppMode(mode: AppMode) {

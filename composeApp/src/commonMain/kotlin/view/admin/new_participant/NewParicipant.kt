@@ -32,6 +32,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
@@ -115,6 +118,18 @@ fun NewParicipant(
 ) {
 
     val focusManager = LocalFocusManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val successMessage = (state as? ResultState.Success)?.data?.successMessage
+
+    LaunchedEffect(successMessage) {
+        if (successMessage != null) {
+            snackbarHostState.showSnackbar(
+                message = successMessage,
+                duration = SnackbarDuration.Short
+            )
+            onAction(ActionsNewParticipant.DismissSuccess)
+        }
+    }
 
     AppTheme {
         Scaffold(
@@ -123,6 +138,7 @@ fun NewParicipant(
                 .pointerInput(Unit) {
                     detectTapGestures(onTap = { focusManager.clearFocus() })
                 },
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             topBar = {
                 TopAppBar(title = {
                     Text(text = "Teilnehmende hinzufügen")

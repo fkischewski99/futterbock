@@ -7,7 +7,6 @@ import data.local.AppDatabase
 import data.local.RoomRepository
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.encodeToString
@@ -66,16 +65,8 @@ class OfflineFirstRepository(
         }
     }
 
-    override suspend fun getEventById(eventId: String): Event? {
-        if (isOnline) {
-            try {
-                val event = firebaseRepository.getEventById(eventId)
-                if (event != null) roomRepository.saveExistingEvent(event)
-                return event
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getEventById(eventId)
-    }
+    override suspend fun getEventById(eventId: String): Event? =
+        roomRepository.getEventById(eventId)
 
     override suspend fun createNewEvent(): Event {
         val event = roomRepository.createNewEvent()
@@ -92,56 +83,19 @@ class OfflineFirstRepository(
         }
     }
 
-    override suspend fun getEventList(group: String): Flow<List<Event>> {
-        if (isOnline) {
-            try {
-                return firebaseRepository.getEventList(group).onEach { events ->
-                    events.forEach { event ->
-                        db.eventDao().insert(event)
-                    }
-                }
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getEventList(group)
-    }
+    override suspend fun getEventList(group: String): Flow<List<Event>> =
+        roomRepository.getEventList(group)
 
     // --- Participants ---
 
-    override suspend fun getNumberOfParticipants(eventId: String): Int {
-        if (isOnline) {
-            try { return firebaseRepository.getNumberOfParticipants(eventId) }
-            catch (_: Exception) {}
-        }
-        return roomRepository.getNumberOfParticipants(eventId)
-    }
+    override suspend fun getNumberOfParticipants(eventId: String): Int =
+        roomRepository.getNumberOfParticipants(eventId)
 
-    override suspend fun getParticipantsOfEvent(eventId: String, withParticipant: Boolean): List<ParticipantTime> {
-        if (isOnline) {
-            try {
-                val participantTimes = firebaseRepository.getParticipantsOfEvent(eventId, withParticipant)
-                participantTimes.forEach { pt ->
-                    pt.eventId = eventId
-                    db.participantTimeDao().insert(pt)
-                    if (pt.participant != null) {
-                        db.participantDao().insert(pt.participant!!)
-                    }
-                }
-                return participantTimes
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getParticipantsOfEvent(eventId, withParticipant)
-    }
+    override suspend fun getParticipantsOfEvent(eventId: String, withParticipant: Boolean): List<ParticipantTime> =
+        roomRepository.getParticipantsOfEvent(eventId, withParticipant)
 
-    override suspend fun getAllParticipantsOfStamm(): Flow<List<Participant>> {
-        if (isOnline) {
-            try {
-                return firebaseRepository.getAllParticipantsOfStamm().onEach { participants ->
-                    participants.forEach { db.participantDao().insert(it) }
-                }
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getAllParticipantsOfStamm()
-    }
+    override suspend fun getAllParticipantsOfStamm(): Flow<List<Participant>> =
+        roomRepository.getAllParticipantsOfStamm()
 
     override suspend fun deleteParticipantOfEvent(eventId: String, participantId: String) {
         roomRepository.deleteParticipantOfEvent(eventId, participantId)
@@ -180,24 +134,11 @@ class OfflineFirstRepository(
         }
     }
 
-    override suspend fun getParticipantById(participantId: String): Participant? {
-        if (isOnline) {
-            try {
-                val participant = firebaseRepository.getParticipantById(participantId)
-                if (participant != null) db.participantDao().insert(participant)
-                return participant
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getParticipantById(participantId)
-    }
+    override suspend fun getParticipantById(participantId: String): Participant? =
+        roomRepository.getParticipantById(participantId)
 
-    override suspend fun findParticipantByName(firstName: String, lastName: String): Participant? {
-        if (isOnline) {
-            try { return firebaseRepository.findParticipantByName(firstName, lastName) }
-            catch (_: Exception) {}
-        }
-        return roomRepository.findParticipantByName(firstName, lastName)
-    }
+    override suspend fun findParticipantByName(firstName: String, lastName: String): Participant? =
+        roomRepository.findParticipantByName(firstName, lastName)
 
     override suspend fun updateParticipantTime(eventId: String, participant: ParticipantTime) {
         roomRepository.updateParticipantTime(eventId, participant)
@@ -208,63 +149,14 @@ class OfflineFirstRepository(
 
     // --- Recipes ---
 
-    override suspend fun getAllRecipes(): List<Recipe> {
-        if (isOnline) {
-            try {
-                val recipes = firebaseRepository.getAllRecipes()
-                recipes
-                    .filter { it.uid.isNotBlank() }
-                    .onEach { it.shoppingIngredients.forEach { si -> si.ingredient = null } }
-                    .forEach { db.recipeDao().insert(it) }
-                return recipes
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getAllRecipes()
-    }
+    override suspend fun getAllRecipes(): List<Recipe> =
+        roomRepository.getAllRecipes()
 
-    override suspend fun getUserCreatedRecipes(): List<Recipe> {
-        if (isOnline) {
-            try {
-                val recipes = firebaseRepository.getUserCreatedRecipes()
-                recipes
-                    .filter { it.uid.isNotBlank() }
-                    .onEach { it.shoppingIngredients.forEach { si -> si.ingredient = null } }
-                    .forEach { db.recipeDao().insert(it) }
-                return recipes
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getUserCreatedRecipes()
-    }
+    override suspend fun getUserCreatedRecipes(): List<Recipe> =
+        roomRepository.getUserCreatedRecipes()
 
-    override suspend fun getRecipeById(recipeId: String): Recipe? {
-        if (isOnline) {
-            try {
-                val recipe = firebaseRepository.getRecipeById(recipeId)
-                if (recipe != null && recipe.uid.isNotBlank()) {
-                    val toCache = Recipe().apply {
-                        uid = recipe.uid; name = recipe.name; description = recipe.description
-                        cookingInstructions = recipe.cookingInstructions; notes = recipe.notes
-                        dietaryHabit = recipe.dietaryHabit; materials = recipe.materials
-                        pageInCookbook = recipe.pageInCookbook; price = recipe.price
-                        season = recipe.season; foodIntolerances = recipe.foodIntolerances
-                        source = recipe.source; time = recipe.time; skillLevel = recipe.skillLevel
-                        type = recipe.type
-                        shoppingIngredients = recipe.shoppingIngredients.map { si ->
-                            ShoppingIngredient().apply {
-                                uid = si.uid; ingredientRef = si.ingredientRef
-                                nameEnteredByUser = si.nameEnteredByUser; amount = si.amount
-                                unit = si.unit; title = si.title; shoppingDone = si.shoppingDone
-                                note = si.note; source = si.source
-                            }
-                        }
-                    }
-                    db.recipeDao().insert(toCache)
-                }
-                return recipe
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getRecipeById(recipeId)
-    }
+    override suspend fun getRecipeById(recipeId: String): Recipe? =
+        roomRepository.getRecipeById(recipeId)
 
     override suspend fun createRecipe(recipe: Recipe) {
         roomRepository.createRecipe(recipe)
@@ -289,31 +181,11 @@ class OfflineFirstRepository(
 
     // --- Meals ---
 
-    override suspend fun getAllMealsOfEvent(eventId: String): List<Meal> {
-        if (isOnline) {
-            try {
-                val meals = firebaseRepository.getAllMealsOfEvent(eventId)
-                meals.forEach { meal ->
-                    meal.eventId = eventId
-                    db.mealDao().insert(meal)
-                }
-                return meals
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getAllMealsOfEvent(eventId)
-    }
+    override suspend fun getAllMealsOfEvent(eventId: String): List<Meal> =
+        roomRepository.getAllMealsOfEvent(eventId)
 
-    override suspend fun getMealById(eventId: String, mealId: String): Meal {
-        if (isOnline) {
-            try {
-                val meal = firebaseRepository.getMealById(eventId, mealId)
-                meal.eventId = eventId
-                db.mealDao().insert(meal)
-                return meal
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getMealById(eventId, mealId)
-    }
+    override suspend fun getMealById(eventId: String, mealId: String): Meal =
+        roomRepository.getMealById(eventId, mealId)
 
     override suspend fun createNewMeal(eventId: String, day: Instant): Meal {
         val meal = roomRepository.createNewMeal(eventId, day)
@@ -339,54 +211,19 @@ class OfflineFirstRepository(
 
     // --- Ingredients ---
 
-    override suspend fun getIngredientById(ingredientId: String): Ingredient {
-        if (isOnline) {
-            try {
-                val ingredient = firebaseRepository.getIngredientById(ingredientId)
-                db.ingredientDao().insert(ingredient)
-                return ingredient
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getIngredientById(ingredientId)
-    }
+    override suspend fun getIngredientById(ingredientId: String): Ingredient =
+        roomRepository.getIngredientById(ingredientId)
 
-    override suspend fun getMealsWithRecipeAndIngredients(eventId: String): List<Meal> {
-        if (isOnline) {
-            try {
-                val meals = firebaseRepository.getMealsWithRecipeAndIngredients(eventId)
-                meals.forEach { meal ->
-                    meal.eventId = eventId
-                    db.mealDao().insert(meal)
-                }
-                return meals
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getMealsWithRecipeAndIngredients(eventId)
-    }
+    override suspend fun getMealsWithRecipeAndIngredients(eventId: String): List<Meal> =
+        roomRepository.getMealsWithRecipeAndIngredients(eventId)
 
-    override suspend fun getAllIngredients(): List<Ingredient> {
-        if (isOnline) {
-            try {
-                val ingredients = firebaseRepository.getAllIngredients()
-                ingredients.filter { it.uid.isNotBlank() }.forEach { db.ingredientDao().insert(it) }
-                return ingredients
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getAllIngredients()
-    }
+    override suspend fun getAllIngredients(): List<Ingredient> =
+        roomRepository.getAllIngredients()
 
     // --- Shopping Lists ---
 
-    override suspend fun getMultiDayShoppingList(eventId: String): MultiDayShoppingList? {
-        if (isOnline) {
-            try {
-                val list = firebaseRepository.getMultiDayShoppingList(eventId)
-                if (list != null) db.multiDayShoppingListDao().insert(list)
-                return list
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getMultiDayShoppingList(eventId)
-    }
+    override suspend fun getMultiDayShoppingList(eventId: String): MultiDayShoppingList? =
+        roomRepository.getMultiDayShoppingList(eventId)
 
     override suspend fun saveMultiDayShoppingList(eventId: String, multiDayShoppingList: MultiDayShoppingList) {
         roomRepository.saveMultiDayShoppingList(eventId, multiDayShoppingList)
@@ -395,10 +232,8 @@ class OfflineFirstRepository(
         }
     }
 
-    override suspend fun getDailyShoppingList(eventId: String, date: LocalDate): DailyShoppingList? {
-        val multiDayList = getMultiDayShoppingList(eventId)
-        return multiDayList?.dailyLists?.get(date)
-    }
+    override suspend fun getDailyShoppingList(eventId: String, date: LocalDate): DailyShoppingList? =
+        roomRepository.getDailyShoppingList(eventId, date)
 
     override suspend fun saveDailyShoppingList(eventId: String, date: LocalDate, dailyShoppingList: DailyShoppingList) {
         val multiDayList = getMultiDayShoppingList(eventId)
@@ -433,16 +268,8 @@ class OfflineFirstRepository(
         }
     }
 
-    override suspend fun getMaterialListOfEvent(eventId: String): List<Material> {
-        if (isOnline) {
-            try {
-                val materials = firebaseRepository.getMaterialListOfEvent(eventId)
-                materials.forEach { db.materialDao().insert(it) }
-                return materials
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getMaterialListOfEvent(eventId)
-    }
+    override suspend fun getMaterialListOfEvent(eventId: String): List<Material> =
+        roomRepository.getMaterialListOfEvent(eventId)
 
     override suspend fun deleteMaterialById(eventId: String, materialId: String) {
         roomRepository.deleteMaterialById(eventId, materialId)
@@ -451,14 +278,6 @@ class OfflineFirstRepository(
         }
     }
 
-    override suspend fun getAllMaterials(): List<Material> {
-        if (isOnline) {
-            try {
-                val materials = firebaseRepository.getAllMaterials()
-                materials.filter { it.uid.isNotBlank() }.forEach { db.materialDao().insert(it) }
-                return materials
-            } catch (_: Exception) {}
-        }
-        return roomRepository.getAllMaterials()
-    }
+    override suspend fun getAllMaterials(): List<Material> =
+        roomRepository.getAllMaterials()
 }

@@ -1,16 +1,14 @@
 package data.local.dao
 
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Update
 import androidx.room.Upsert
 
 interface BaseDao<T> {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insert(entity: T)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertAll(entities: List<T>)
 
     @Update

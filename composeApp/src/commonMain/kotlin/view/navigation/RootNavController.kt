@@ -10,8 +10,8 @@ import androidx.navigation.toRoute
 import data.AppMode
 import data.AppModeHolder
 import data.EventRepository
+import data.sync.InitialSyncService
 import org.koin.compose.koinInject
-import services.SeedDataService
 import services.login.LoginAndRegister
 import view.admin.csv_import.CsvImportScreen
 import view.admin.new_participant.NewParticipantScreen
@@ -41,7 +41,7 @@ fun RootNavController(
     val loginService = koinInject<LoginAndRegister>()
     val eventRepository = koinInject<EventRepository>()
     val appModeHolder = koinInject<AppModeHolder>()
-    val seedDataService = koinInject<SeedDataService>()
+    val initialSyncService = koinInject<InitialSyncService>()
 
     NavHost(
         navController = navController,
@@ -55,7 +55,7 @@ fun RootNavController(
                 navigateToRegister = { navController.navigate(Routes.Register) },
                 navigateToHome = { navController.navigate(Routes.Home) },
                 onOfflineSelected = {
-                    seedDataService.downloadSeedDataIfNeeded()
+                    initialSyncService.syncBaseData()
                     appModeHolder.switchMode(AppMode.OFFLINE_ONLY)
                     navController.navigate(Routes.Home) {
                         popUpTo(Routes.Login) { inclusive = true }
@@ -139,7 +139,9 @@ fun RootNavController(
 }
 
 fun getStartDestination(loginService: LoginAndRegister, appMode: AppMode): Any {
-    if (appMode == AppMode.OFFLINE_ONLY) return Routes.Home
-    if (loginService.isAuthenticated()) return Routes.Home
-    return Routes.Login
+    return when {
+        appMode == AppMode.OFFLINE_ONLY -> Routes.Home
+        loginService.isAuthenticated() -> Routes.Home
+        else -> Routes.Login
+    }
 }

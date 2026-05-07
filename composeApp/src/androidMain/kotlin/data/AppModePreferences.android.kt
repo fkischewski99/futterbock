@@ -9,8 +9,8 @@ actual class AppModePreferences actual constructor() {
     }
 
     actual fun getAppMode(): AppMode {
-        val name = prefs.getString("app_mode", null) ?: return AppMode.ONLINE
-        return try { AppMode.valueOf(name) } catch (_: Exception) { AppMode.ONLINE }
+        val name = prefs.getString("app_mode", null) ?: return AppMode.OFFLINE_FIRST
+        return try { AppMode.valueOf(name) } catch (_: Exception) { AppMode.OFFLINE_FIRST }
     }
 
     actual fun setAppMode(mode: AppMode) {

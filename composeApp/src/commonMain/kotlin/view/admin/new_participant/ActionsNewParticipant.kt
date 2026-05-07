@@ -27,4 +27,5 @@ interface ActionsNewParticipant : BaseAction {
     }
 
     data object Save : ActionsNewParticipant
+    data object DismissSuccess : ActionsNewParticipant
 }

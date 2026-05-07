@@ -11,4 +11,7 @@ interface IngredientDao : BaseDao<Ingredient> {
 
     @Query("SELECT * FROM ingredients WHERE uid = :uid")
     suspend fun getById(uid: String): Ingredient?
+
+    @Query("SELECT * FROM ingredients WHERE uid IN (:ids)")
+    suspend fun getByIds(ids: List<String>): List<Ingredient>
 }

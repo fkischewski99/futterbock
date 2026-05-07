@@ -15,6 +15,9 @@ interface RecipeDao : BaseDao<Recipe> {
     @Query("SELECT * FROM recipes WHERE uid = :uid")
     suspend fun getById(uid: String): Recipe?
 
+    @Query("SELECT * FROM recipes WHERE uid IN (:ids)")
+    suspend fun getByIds(ids: List<String>): List<Recipe>
+
     @Query("DELETE FROM recipes WHERE uid = :uid")
     suspend fun deleteById(uid: String)
 }

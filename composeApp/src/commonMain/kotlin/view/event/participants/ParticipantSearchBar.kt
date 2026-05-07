@@ -226,12 +226,15 @@ fun ParticipantSearchBar(
                                                     )
                                         }.sortedBy { it.firstName }.forEach {
                                             Row(
-                                                modifier = Modifier.padding(16.dp).clickable {
-                                                    searchText = ""
-                                                    participantsAddedInThisStep =
-                                                        participantsAddedInThisStep + it
-                                                    onAction(EditParticipantActions.AddParticipant(it))
-                                                }
+                                                modifier = Modifier.fillMaxWidth()
+                                                    .clickable {
+                                                        searchText = ""
+                                                        participantsAddedInThisStep =
+                                                            participantsAddedInThisStep + it
+                                                        onAction(EditParticipantActions.AddParticipant(it))
+                                                    }
+                                                    .padding(16.dp),
+                                                verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Text(text = it.firstName.trim() + " " + it.lastName.trim())
                                             }

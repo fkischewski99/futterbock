@@ -3,9 +3,9 @@ package data.sync
 import co.touchlab.kermit.Logger
 import data.FireBaseRepository
 import data.local.AppDatabase
-import kotlinx.coroutines.*
-import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDate
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import model.*
 
@@ -15,17 +15,14 @@ class SyncManager(
     private val networkMonitor: NetworkMonitor
 ) {
     private val json = Json { ignoreUnknownKeys = true }
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    fun startObserving() {
-        scope.launch {
-            networkMonitor.isOnline
-                .collect { online ->
-                    if (online) {
-                        processPendingOperations()
-                    }
+    suspend fun startObserving() {
+        networkMonitor.isOnline
+            .collect { online ->
+                if (online) {
+                    processPendingOperations()
                 }
-        }
+            }
     }
 
     suspend fun processPendingOperations() {
@@ -41,7 +38,7 @@ class SyncManager(
                 Logger.d("SyncManager: Completed operation ${op.operationType} for ${op.entityId}")
             } catch (e: Exception) {
                 Logger.e("SyncManager: Failed operation ${op.operationType} for ${op.entityId}: ${e.message}")
-                break
+                db.pendingOperationDao().deleteById(op.id)
             }
         }
     }
@@ -110,7 +107,4 @@ class SyncManager(
         }
     }
 
-    fun stop() {
-        scope.cancel()
-    }
 }

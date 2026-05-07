@@ -14,6 +14,9 @@ class Material : ListItem<Material> {
     var source: Source = Source.ENTERED_BY_USER
     var amount: Int = 0
 
+    @kotlinx.serialization.Transient
+    var eventId: String? = null
+
     override fun getListItemTitle(): String {
         return name
     }

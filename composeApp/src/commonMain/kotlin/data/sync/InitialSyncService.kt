@@ -22,10 +22,9 @@ class InitialSyncService(
             Logger.i("InitialSync: Syncing base data (recipes, ingredients, materials)")
 
             val recipes = firebaseRepository.getAllRecipes()
-            recipes
                 .filter { it.uid.isNotBlank() }
                 .onEach { it.shoppingIngredients.forEach { si -> si.ingredient = null } }
-            db.recipeDao().insertAll(recipes.filter { it.uid.isNotBlank() })
+            db.recipeDao().insertAll(recipes)
             Logger.i("InitialSync: Synced ${recipes.size} recipes")
 
             val ingredients = firebaseRepository.getAllIngredients()
@@ -81,6 +80,7 @@ class InitialSyncService(
                     }
 
                     val eventMaterials = firebaseRepository.getMaterialListOfEvent(event.uid)
+                    eventMaterials.forEach { it.eventId = event.uid }
                     if (eventMaterials.isNotEmpty()) {
                         db.materialDao().insertAll(eventMaterials)
                     }

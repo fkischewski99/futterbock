@@ -342,14 +342,13 @@ class RoomRepository(
 
     override suspend fun saveMaterialList(eventId: String, materialList: List<Material>) {
         materialList.forEach { material ->
+            material.eventId = eventId
             db.materialDao().insert(material)
         }
     }
 
     override suspend fun getMaterialListOfEvent(eventId: String): List<Material> {
-        // Materials are stored globally; event-scoped material list uses the same table
-        // For now, return all materials. Event-specific filtering can be added later.
-        return db.materialDao().getAll()
+        return db.materialDao().getByEventId(eventId)
     }
 
     override suspend fun deleteMaterialById(eventId: String, materialId: String) {

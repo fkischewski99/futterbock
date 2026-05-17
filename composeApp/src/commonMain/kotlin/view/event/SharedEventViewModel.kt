@@ -88,19 +88,6 @@ class SharedEventViewModel(
         }
     }
 
-    suspend fun saveMealAndAwait() {
-        actionMutex.withLock {
-            val currentState = eventState.value.getSuccessData() ?: return
-            _eventState.value = handleEditMeal.handleAction(currentState, EditMealActions.SaveMeal)
-        }
-    }
-
-    suspend fun updateAllMealsAndAwait() {
-        actionMutex.withLock {
-            val currentState = eventState.value.getSuccessData() ?: return
-            _eventState.value = handleEditParticipant.handleAction(currentState, EditParticipantActions.UpdateAllMeals)
-        }
-    }
 
 
     fun initializeScreen(eventIdPrm: String?) {

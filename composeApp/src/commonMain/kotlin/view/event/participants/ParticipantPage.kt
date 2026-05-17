@@ -23,14 +23,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import model.ParticipantTime
-import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import view.event.EventState
 import view.event.SharedEventViewModel
@@ -52,7 +50,6 @@ fun ParticipantScreen(
 ) {
     val sharedEventViewModel: SharedEventViewModel = koinInject()
     val state = sharedEventViewModel.eventState.collectAsStateWithLifecycle()
-    val coroutineScope = rememberCoroutineScope()
 
     ParticipantPage(
         state = state.value,
@@ -60,12 +57,6 @@ fun ParticipantScreen(
             when (action) {
                 is NavigationActions -> handleNavigation(navController, action)
                 else -> sharedEventViewModel.onAction(action)
-            }
-        },
-        onNavigateBack = {
-            coroutineScope.launch {
-                sharedEventViewModel.updateAllMealsAndAwait()
-                navController.navigateUp()
             }
         }
     )
@@ -76,8 +67,7 @@ fun ParticipantScreen(
 @Composable
 fun ParticipantPage(
     state: ResultState<EventState>,
-    onAction: (BaseAction) -> Unit,
-    onNavigateBack: () -> Unit
+    onAction: (BaseAction) -> Unit
 ) {
 
     var showDatePicker by remember { mutableStateOf(false) }
@@ -89,7 +79,10 @@ fun ParticipantPage(
                 title = { Text("Teilnehmendenliste") },
                 navigationIcon = {
                     NavigationIconButton(
-                        onLeave = onNavigateBack
+                        onLeave = {
+                            onAction(EditParticipantActions.UpdateAllMeals)
+                            onAction(NavigationActions.GoBack)
+                        }
                     )
                 }
             )

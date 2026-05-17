@@ -9,6 +9,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import model.Event
@@ -66,50 +68,37 @@ class SharedEventViewModel(
         HandleCookingGroupActions(
             eventRepository = eventRepository
         )
-
+    private val actionMutex = Mutex()
 
     fun onAction(editEventActions: BaseAction) {
-        when (editEventActions) {
-            is EditMealActions -> handleEditMealActions(editEventActions)
-            is EditEventActions -> handleEventActions(editEventActions)
-            is EditParticipantActions -> handleEditParticipantActions(editEventActions)
-            is CookingGroupActions -> handleCookingGroupActions(editEventActions)
+        viewModelScope.launch(Dispatchers.IO) {
+            actionMutex.withLock {
+                val currentState = eventState.value.getSuccessData() ?: return@launch
+                if (editEventActions is LoadingAction)
+                    _eventState.value = ResultState.Loading
+
+                _eventState.value = when (editEventActions) {
+                    is EditMealActions -> handleEditMeal.handleAction(currentState, editEventActions)
+                    is EditEventActions -> handleEditEvent.handleAction(currentState, editEventActions)
+                    is EditParticipantActions -> handleEditParticipant.handleAction(currentState, editEventActions)
+                    is CookingGroupActions -> handleCookingGroups.handleAction(currentState, editEventActions)
+                    else -> return@launch
+                }
+            }
         }
     }
 
-    private fun handleEventActions(editEventActions: EditEventActions) {
-        val currentState = eventState.value.getSuccessData() ?: return
-        viewModelScope.launch(Dispatchers.IO) {
-            if (editEventActions is LoadingAction)
-                _eventState.value =
-                    ResultState.Loading
-
-            _eventState.value =
-                handleEditEvent.handleAction(currentState, editEventActions)
+    suspend fun saveMealAndAwait() {
+        actionMutex.withLock {
+            val currentState = eventState.value.getSuccessData() ?: return
+            _eventState.value = handleEditMeal.handleAction(currentState, EditMealActions.SaveMeal)
         }
     }
 
-    private fun handleEditMealActions(editEventActions: EditMealActions) {
-        val currentState = eventState.value.getSuccessData() ?: return
-        viewModelScope.launch(Dispatchers.IO) {
-            _eventState.value =
-                handleEditMeal.handleAction(currentState, editEventActions)
-        }
-    }
-
-    private fun handleEditParticipantActions(editEventActions: EditParticipantActions) {
-        val currentState = eventState.value.getSuccessData() ?: return
-        viewModelScope.launch(Dispatchers.IO) {
-            _eventState.value =
-                handleEditParticipant.handleAction(currentState, editEventActions)
-        }
-    }
-
-    private fun handleCookingGroupActions(action: CookingGroupActions) {
-        val currentState = eventState.value.getSuccessData() ?: return
-        viewModelScope.launch(Dispatchers.IO) {
-            _eventState.value =
-                handleCookingGroups.handleAction(currentState, action)
+    suspend fun updateAllMealsAndAwait() {
+        actionMutex.withLock {
+            val currentState = eventState.value.getSuccessData() ?: return
+            _eventState.value = handleEditParticipant.handleAction(currentState, EditParticipantActions.UpdateAllMeals)
         }
     }
 

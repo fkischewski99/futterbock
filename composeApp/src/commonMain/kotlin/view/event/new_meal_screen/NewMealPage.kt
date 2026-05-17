@@ -47,6 +47,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,6 +65,7 @@ import model.RecipeSelection
 import model.RecipeType
 import model.Season
 import model.TimeRange
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import services.event.ParticipantCanEatRecipe
 import view.event.EventState
@@ -93,6 +95,7 @@ fun EditMealScreen(
     val canParticipantEat: ParticipantCanEatRecipe = koinInject()
     val ingredientViewModel: view.event.categorized_shopping_list.IngredientViewModel = koinInject()
     val ingredientsState = ingredientViewModel.state.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     NewMealPage(
         state = state.value,
@@ -112,6 +115,12 @@ fun EditMealScreen(
 
                 is NavigationActions -> handleNavigation(navController, action)
                 else -> sharedEventViewModel.onAction(action)
+            }
+        },
+        onNavigateBack = {
+            coroutineScope.launch {
+                sharedEventViewModel.saveMealAndAwait()
+                navController.navigateUp()
             }
         },
         participantCanEatRecipe = { participant: ParticipantTime, recipeSelection: RecipeSelection ->
@@ -135,6 +144,7 @@ fun NewMealPage(
     allRecipes: List<Recipe>,
     allIngredients: List<model.Ingredient>,
     onAction: (BaseAction) -> Unit,
+    onNavigateBack: () -> Unit,
     participantCanEatRecipe: (ParticipantTime, RecipeSelection) -> Boolean,
     getRecipeEatingError: suspend (ParticipantTime, RecipeSelection) -> String?,
 ) {
@@ -147,6 +157,7 @@ fun NewMealPage(
         topBar = {
             SearchBarComponent(
                 onAction = onAction,
+                onNavigateBack = onNavigateBack,
                 state = state,
                 allRecipes = allRecipes,
                 allIngredients = allIngredients,
@@ -268,6 +279,7 @@ fun SearchBarComponent(
     allRecipes: List<Recipe>,
     allIngredients: List<model.Ingredient>,
     onAction: (BaseAction) -> Unit,
+    onNavigateBack: () -> Unit,
     isSearchBarActive: Boolean,
     onSearchBarActiveChange: (Boolean) -> Unit
 ) {
@@ -293,11 +305,7 @@ fun SearchBarComponent(
                         onSearch = { onSearchBarActiveChange(false) },
                         isActive = isSearchBarActive,
                         onActiveChange = onSearchBarActiveChange,
-                        onNavigateBack = {
-                            onAction(EditMealActions.SaveMeal)
-                            onAction(NavigationActions.GoBack)
-
-                        }
+                        onNavigateBack = onNavigateBack
                     )
                 },
                 expanded = isSearchBarActive,

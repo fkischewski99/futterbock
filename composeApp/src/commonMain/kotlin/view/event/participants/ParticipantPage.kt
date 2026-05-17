@@ -80,8 +80,8 @@ fun ParticipantPage(
                 navigationIcon = {
                     NavigationIconButton(
                         onLeave = {
-                            onAction(NavigationActions.GoBack)
                             onAction(EditParticipantActions.UpdateAllMeals)
+                            onAction(NavigationActions.GoBack)
                         }
                     )
                 }

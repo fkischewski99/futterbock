@@ -296,7 +296,6 @@ fun SearchBarComponent(
                         onNavigateBack = {
                             onAction(EditMealActions.SaveMeal)
                             onAction(NavigationActions.GoBack)
-
                         }
                     )
                 },
